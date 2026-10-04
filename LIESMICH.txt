@@ -1,0 +1,8 @@
+Quantenobjekt – PWA
+====================
+Installation auf iPhone/iPad:
+1. Ordner auf einen HTTPS-Webspace hochladen (z.B. GitHub Pages, Netlify Drop, Vercel). Service Worker benötigen HTTPS.
+2. Adresse in Safari öffnen → Teilen-Symbol → "Zum Home-Bildschirm".
+3. Vom Home-Bildschirm starten: Vollbild, ohne Browserleiste, offline nutzbar.
+Bedienung: Objekt antippen (Wellen, Energie), ziehen (drehen/schieben), links Presets, oben "Steuerung öffnen".
+Einstellungen und Preset werden lokal gespeichert.
