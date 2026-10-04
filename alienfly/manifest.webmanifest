@@ -1,7 +1,7 @@
 {
- "name": "Summsel",
- "short_name": "Summsel",
- "description": "Summsel fliegt herum – tipp ihn an!",
+ "name": "alienfly",
+ "short_name": "alienfly",
+ "description": "Ein kleines Wesen fliegt herum – tipp es an!",
  "lang": "de",
  "start_url": "./",
  "scope": "./",
