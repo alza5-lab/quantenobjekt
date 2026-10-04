@@ -1,0 +1,4 @@
+Quantenobjekt 2 – PWA (eigener Pfad /quantenobjekt/v2/)
+Installation iPhone: https://alza5-lab.github.io/quantenobjekt/v2/ in Safari öffnen → Teilen → "Zum Home-Bildschirm".
+Bedienung: Tippen = Welle, lang drücken = laden (Kondensator), loslassen = Stoßwelle, wischen = Drehimpuls (Euler-Kreisel),
+mehrere Finger = Interferenz. Oben "Steuerung öffnen": 12 Regler, zweiter Attraktor, Phasenraum-Spur. Info-Knopf "i": alle Formeln.
