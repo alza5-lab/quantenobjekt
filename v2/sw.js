@@ -1,6 +1,6 @@
-// Quantenobjekt 2 – Service Worker (Scope /quantenobjekt/v2/), Version 72d64bb7
+// Quantenobjekt 2 – Service Worker (Scope /quantenobjekt/v2/), Version c98a4223
 // Netzwerk zuerst für HTML/Manifest (immer aktuell), Cache zuerst für Icons. Nutzt NUR den eigenen Cache.
-const PREFIX='quantenobjekt2-', CACHE=PREFIX+'72d64bb7';
+const PREFIX='quantenobjekt2-', CACHE=PREFIX+'c98a4223';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith(PREFIX)&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });

@@ -138,6 +138,8 @@
     <b>2 · Doppelpol</b> (2p_z): Agenten wandern auf Dipol-Feldlinien <code>r = L·sin²θ</code> von Pol zu Pol – Fontänen oben und unten.<br>
     <b>3 · Statisch suchend</b> (3d_xy, ruhiges Zentrum): vier Arme; an den Spitzen sucht jeder Agent mit einem Ornstein-Uhlenbeck-Prozess mit Wirbel <code>dq = (−κq + Ω·q⊥)dt + σ·dW</code> (Kringel) und kehrt zurück.<br>
     <b>4 · Gegenteil</b> (rotierendes 2p<sub>±1</sub>, 4× Dynamik/Energie): Ring stehender Zickzack-Wellen <code>r = R + A·(−1)^k·|sin 2θ|·cos ωt</code>, logarithmische Spiralen <code>r = r₀e^(−bφ)</code>, Satelliten mit Bögen an den Ecken.</p>
+    <p><b>Furchen</b> (Regler): domänenverzerrtes Grat-Rauschen <code>g = 1 − smoothstep(0, w, |N(p + ε·v_curl)|)</code>, dessen Koordinaten entlang der Feldlinien des Modus gestreckt sind – Spiral-Rillen (Loop), Meridiane <code>r = L·sin²θ</code> (Doppelpol), radiale Arm-Kanäle (Statisch suchend), zickzack-Breitenringe (Gegenteil), Gehirnwindungen (Frei). Die Rillen werden eingedrückt (<code>Δr = −0.06·F·g</code>), ihr Grund leuchtet, Signalwellen wandern hindurch.<br>
+    <b>Verbindungen</b>: leuchtende Fäden Kern↔Satelliten, Satellit↔Satellit und Spitze→nächster Satellit, als schwingende Bézier-Kurven <code>B(u) = (1−u)²A + 2u(1−u)C(t) + u²B</code>; Signalpunkte laufen mit <code>u = frac(v·t + φ)</code> entlang.</p>
     <h3>10 · Lebenszyklus  <small>(optional, 4×16 s)</small></h3>
     <p><b>Loop Shift</b> (Urknall: Stoßwelle, alle Agenten aus dem Zentrum) → <b>Statisch</b> (Kristall/Würfel, Zeit fast eingefroren) → <b>Soup Life</b> (Ballung, viele Tropfen, starke Reaktions-Diffusion) → <b>Entropie</b> (Brownsche Diffusion <code>⟨|x|²⟩ = 6Dt</code>, Leuchten erlischt). Angezeigt wird die Shannon-Entropie <code>S = −Σ p·ln p</code> der Agentenverteilung. Deine Regler bleiben dabei unverändert.</p>
     <h3>11 · Licht</h3>
@@ -262,7 +264,9 @@ uniform vec4 uMode;                 // l, m, φ0, Normierung (0 = keine Mode)
 uniform float uModeD;               // A·e^(−γt)·cos(ωt)
 uniform float uRDAmp, uTremble, uTime;
 uniform vec4 uOrb;                  // Orbital-Typ, Gewicht, Phase ωt
-out vec3 vN; out vec3 vW; out vec3 vO; out float vDisp; out vec3 vDir; out float vMode;
+uniform vec4 uFur;                  // Furchen: Stärke, Feldtyp (Modus), Ausrichtung, Zeit
+out vec3 vN; out vec3 vW; out vec3 vO; out float vDisp; out vec3 vDir; out float vMode; out float vFur;
+float gFur=0.0;
 ${NOISE}
 ${RDFN}
 ${SHFN}
@@ -300,6 +304,20 @@ float modeY(vec3 d){
   int l=int(uMode.x+0.5), m=int(uMode.y+0.5);
   return legendreP(l,m,clamp(d.y,-1.0,1.0))*cos(float(m)*atan(d.z,d.x)+uMode.z)*uMode.w;
 }
+// Furchen: domänenverzerrtes Grat-Rauschen, entlang der Feldlinien des Modus gestreckt
+//   1 Loop: Spiral-Rillen (Rosette) · 2 Doppelpol: Meridiane (Dipol-Feldlinien) · 3 Statisch: radiale Arm-Rillen
+//   4 Gegenteil: zickzack-Breitenringe · 0 Frei: isotrope Gehirnwindungen (Gyri)
+float furrow(vec3 d, vec3 wv){
+  if(uFur.x<=0.001) return 0.0;
+  vec3 w=uRot*d; int t=int(uFur.y+0.5); vec3 p=d*2.3;
+  if(t==1){ float a=w.y*2.6+uFur.w*0.05; float c=cos(a), s=sin(a); vec2 xz=mat2(c,-s,s,c)*w.xz; p=vec3(xz/(length(xz)+0.15)*2.6, w.y*0.7); }
+  else if(t==2){ p=vec3(w.xz/(length(w.xz)+0.12)*2.9, w.y*0.55); }
+  else if(t==3){ p=vec3(w.xy/(length(w.xy)+0.12)*2.9, w.z*0.9+length(w.xy)*0.45); }
+  else if(t==4){ p=vec3(w.xz*0.75, w.y*5.0+0.28*sin(atan(w.z,w.x)*8.0)); }
+  p=mix(d*2.3,p,uFur.z)+wv*0.45+vec3(0.0,uFur.w*0.03,0.0);
+  float f=snoise(p), f2=snoise(p*2.15+vec3(3.1,-1.7,5.3));
+  return max(1.0-smoothstep(0.0,0.21,abs(f)), 0.55*(1.0-smoothstep(0.0,0.11,abs(f2))));
+}
 float dispAt(vec3 d, out float ym){
   // Curl-Strömung: v = ∇N1 × ∇N2 ist divergenzfrei
   vec3 q=d*0.95+uFlow;
@@ -310,6 +328,7 @@ float dispAt(vec3 d, out float ym){
   float n=0.0, f=1.0, a=0.62;
   for(int i=0;i<3;i++){ n+=a*exp(-uTension*f*f)*snoise(w*f*1.35); f*=2.05; a*=0.5; }
   float disp=(0.55*g1.w+n)*uAmp;
+  gFur=furrow(d,w-q); disp-=uFur.x*0.06*gFur;
   // Kuramoto-Regionen
   for(int i=0;i<6;i++) disp+=uOsc[i].w*exp((dot(d,uOsc[i].xyz)-1.0)*4.5);
   // gedämpfte Wellengleichung auf der Kugel (Superposition -> Interferenz bei Mehrfachberührung)
@@ -339,7 +358,7 @@ void main(){
   vec3 t1=normalize(cross(d, abs(d.y)<0.99?vec3(0,1,0):vec3(1,0,0)));
   vec3 t2=cross(d,t1);
   const float e=0.01; float dd,d1,d2,y0,y1,y2;
-  vec3 P=surf(d,dd,y0);
+  vec3 P=surf(d,dd,y0); vFur=gFur;
   vec3 P1=surf(normalize(d+t1*e),d1,y1);
   vec3 P2=surf(normalize(d+t2*e),d2,y2);
   vec3 n=normalize(cross(P1-P,P2-P)); if(dot(n,P)<0.0) n=-n;
@@ -354,7 +373,7 @@ const VS_DROP = `#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
 uniform mat4 uProj, uView; uniform vec3 uC; uniform float uR; uniform vec3 uAxis; uniform float uNeck, uTime, uSeed;
-out vec3 vN; out vec3 vW; out vec3 vO; out float vDisp; out vec3 vDir; out float vMode;
+out vec3 vN; out vec3 vW; out vec3 vO; out float vDisp; out vec3 vDir; out float vMode; out float vFur;
 ${NOISE}
 vec3 dp(vec3 d){
   float w=snoise(d*1.6+vec3(uSeed,0.0,uTime*0.8))*0.10;
@@ -367,7 +386,7 @@ void main(){
   vec3 t2=cross(d,t1);
   vec3 P=dp(d), P1=dp(normalize(d+t1*0.02)), P2=dp(normalize(d+t2*0.02));
   vec3 n=normalize(cross(P1-P,P2-P)); if(dot(n,d)<0.0) n=-n;
-  vO=d*0.55+vec3(uSeed,uSeed*0.3,0.0); vDisp=0.05; vDir=d; vMode=1.0;
+  vO=d*0.55+vec3(uSeed,uSeed*0.3,0.0); vDisp=0.05; vDir=d; vMode=1.0; vFur=0.0;
   vW=uC+P; vN=n;
   gl_Position=uProj*uView*vec4(vW,1.0);
 }`;
@@ -375,8 +394,8 @@ void main(){
 /* ---------- Objekt: Fragment-Shader (Glas, Marmor, Fresnel, Irisieren, Muster, Knotenlinien) ---------- */
 const FS_OBJ = `#version 300 es
 precision highp float;
-in vec3 vN; in vec3 vW; in vec3 vO; in float vDisp; in vec3 vDir; in float vMode;
-uniform vec3 uCam; uniform mat3 uRot;
+in vec3 vN; in vec3 vW; in vec3 vO; in float vDisp; in vec3 vDir; in float vMode; in float vFur;
+uniform vec3 uCam; uniform mat3 uRot; uniform vec4 uFur;
 uniform vec3 cDeep,cBody,cCore,cGlow,cRim,cSpec;
 uniform float uDensity,uEnergy,uLight,uPulse,uFlash,uEnc,uTime,uRDVis,uModeA,uCharge;
 uniform vec3 uFlowF; uniform vec4 uOrb;
@@ -422,6 +441,10 @@ void main(){
   float rdLine=pow(max(1.0-abs(rd-0.19)*7.0,0.0),2.0)*uRDVis;
   col=mix(col,col*0.45+cDeep*0.55,rdM*0.7);
   col+=cGlow*rdLine*0.5;
+  // Furchen: dunkle Rillen mit leuchtendem Grund, Signale wandern durch die Kanäle
+  float fu=vFur*uFur.x, sig=pow(0.5+0.5*sin(dot(vDir,vec3(5.0,7.0,3.0))*2.2-uTime*2.6),6.0);
+  col=mix(col,col*0.3+cDeep*0.45,fu*0.75);
+  col+=mix(cGlow,cCore,0.4)*pow(vFur,3.0)*uFur.x*(0.3+1.1*sig);
   col+=cGlow*pow(edge,2.2)*1.1;
   float F=0.04+0.96*pow(edge,5.0);
   float cosT=sqrt(max(1.0-(1.0-ndv*ndv)/(1.45*1.45),0.0));
@@ -438,7 +461,7 @@ void main(){
   vec3 dark=col+cSpec*s;
   vec3 light=col*(1.0-clamp(s*1.2,0.0,0.95));
   col=mix(dark,light,uLight);
-  float gN=(0.10+3.6*pow(edge,2.2)+0.1*veinSum+1.2*nod+0.4*rdLine)*boost;
+  float gN=(0.10+3.6*pow(edge,2.2)+0.1*veinSum+1.2*nod+0.4*rdLine+0.7*pow(vFur,3.0)*uFur.x*sig)*boost;
   float gF=(0.22+max(vDisp,0.0)*6.0+0.3*uPulse+1.2*uCharge)*boost;
   oCol=vec4(col*uEnc,1.0);
   oGlow=vec4(gN,gF,s*0.6*(1.0-uLight),1.0)*uEnc;
@@ -772,21 +795,22 @@ const SL=[
   {k:'chaos',    label:'Chaos',                   min:0,max:1,step:0.01,   def:0.4, hint:'Mischung Lorenz ↔ zweiter Attraktor · treibt Muster-Regime'},
   {k:'tropfen',  label:'Tropfen',                 min:0,max:1,step:0.01,   def:0.55,hint:'Rayleigh-Plateau-Abschnürung: Rate & Zahl der Satelliten'},
   {k:'resonanz', label:'Resonanz',                min:0,max:1,step:0.01,   def:0.55,hint:'Rayleigh-Eigenschwingungen Y_l^m · Schwelle & Stärke'},
-  {k:'muster',   label:'Muster',                  min:0,max:1,step:0.01,   def:0.45,hint:'Gray-Scott-Reaktions-Diffusion auf der Oberfläche'}
+  {k:'muster',   label:'Muster',                  min:0,max:1,step:0.01,   def:0.45,hint:'Gray-Scott-Reaktions-Diffusion auf der Oberfläche'},
+  {k:'furchen',  label:'Furchen',                 min:0,max:1,step:0.01,   def:0.55,hint:'organische Rillen entlang der Feldlinien des Modus (Gyri, Myzel-Kanäle)'}
 ];
 const ATTR2=['Rössler','Thomas','Aizawa'];
 const STORE='shivas_ocean.quantenobjekt.v2';
 const S={}; SL.forEach(s=>S[s.k]=s.def);
-let preset=2, attr2=0, trailOn=false, modeIdx=1, filOn=true, cycOn=false;
+let preset=2, attr2=0, trailOn=false, modeIdx=1, filOn=true, cycOn=false, conOn=true;
 try{ const j=JSON.parse(localStorage.getItem(STORE)||'null');
   if(j){ if(j.s) SL.forEach(s=>{ const v=+j.s[s.k]; if(Number.isFinite(v)) S[s.k]=Math.min(s.max,Math.max(s.min,v)); });
          if(Number.isInteger(j.p) && j.p>=0 && j.p<PRESETS.length) preset=j.p;
          if(Number.isInteger(j.a) && j.a>=0 && j.a<ATTR2.length) attr2=j.a;
          trailOn=!!j.tr;
          if(Number.isInteger(j.m) && j.m>=0 && j.m<=4) modeIdx=j.m;
-         if(j.fi!==undefined) filOn=!!j.fi; cycOn=!!j.cy; } }catch(e){}
+         if(j.fi!==undefined) filOn=!!j.fi; if(j.cn!==undefined) conOn=!!j.cn; cycOn=!!j.cy; } }catch(e){}
 let saveT=0;
-function flush(){ clearTimeout(saveT); try{ localStorage.setItem(STORE,JSON.stringify({s:S,p:preset,a:attr2,tr:trailOn,m:modeIdx,fi:filOn,cy:cycOn})); }catch(e){} }
+function flush(){ clearTimeout(saveT); try{ localStorage.setItem(STORE,JSON.stringify({s:S,p:preset,a:attr2,tr:trailOn,m:modeIdx,fi:filOn,cy:cycOn,cn:conOn})); }catch(e){} }
 function save(now){ clearTimeout(saveT); if(now===true) flush(); else saveT=setTimeout(flush,150); }
 addEventListener('pagehide',flush); document.addEventListener('visibilitychange',()=>{ if(document.hidden) flush(); });
 const Pm={}; SL.forEach(s=>Pm[s.k]=S[s.k]);
@@ -818,6 +842,7 @@ const ex=document.createElement('div'); ex.className='qo-row';
 ex.innerHTML=`<label>Zweiter Attraktor</label><output></output><div class="qo-seg">${ATTR2.map((n,i)=>`<button data-i="${i}">${n}</button>`).join('')}</div>
   <label class="qo-chk"><input type="checkbox" id="qo-trail"> Phasenraum-Spur zeigen</label>
   <label class="qo-chk"><input type="checkbox" id="qo-fil"> Filamente (Myzel-Spuren &amp; gestrichelte Verbindungen)</label>
+  <label class="qo-chk"><input type="checkbox" id="qo-con"> Verbindungen (leuchtende Fäden mit wandernden Signalen)</label>
   <label class="qo-chk"><input type="checkbox" id="qo-cyc"> Lebenszyklus: Loop Shift → Statisch → Soup Life → Entropie</label>`;
 panel.appendChild(ex);
 const segBtns=[...ex.querySelectorAll('.qo-seg button')], trailChk=ex.querySelector('#qo-trail');
@@ -827,8 +852,9 @@ segBtns.forEach(b=>b.onclick=()=>setAttr(+b.dataset.i));
 trailChk.onchange=()=>setTrail(trailChk.checked);
 const filChk=ex.querySelector('#qo-fil'), cycChk=ex.querySelector('#qo-cyc');
 function setFil(b){ filOn=!!b; filChk.checked=filOn; save(true); }
+const conChk=ex.querySelector('#qo-con'); function setCon(b){ conOn=!!b; conChk.checked=conOn; save(true); } conChk.onchange=()=>setCon(conChk.checked);
 filChk.onchange=()=>setFil(filChk.checked); cycChk.onchange=()=>setCycle(cycChk.checked);
-setAttr(attr2); setTrail(trailOn); setFil(filOn); cycChk.checked=cycOn;
+setAttr(attr2); setTrail(trailOn); setFil(filOn); setCon(conOn); cycChk.checked=cycOn;
 const btns=document.createElement('div'); btns.className='qo-btns';
 btns.innerHTML='<button id="qo-reset">Zurücksetzen</button><button id="qo-info2">Info · Mathematik</button>';
 panel.appendChild(btns);
@@ -870,7 +896,7 @@ const sim={
   pulse:0, order:0, grab:null,
   drops:[], dropT:0.6, mode:null, modeCool:0, charge:0, shocks:[],
   trail:new Float32Array(TRAILN*3), trailI:0, trailN:0,
-  rdSeeds:[], rdSeedT:0, rdF:0.04, rdK:0.06, orbCur:MODES[modeIdx].orb, orbW:0, orbPhase:0
+  rdSeeds:[], rdSeedT:0, rdF:0.04, rdK:0.06, orbCur:MODES[modeIdx].orb, orbW:0, orbPhase:0, furT:modeIdx, furW:0, furTime:0
 };
 for(let i=0;i<sim.N;i++){
   sim.th.push(R0()*Math.PI*2); sim.om.push(1+(R0()-0.5)*0.26);
@@ -1108,6 +1134,8 @@ function step(dt){
   if(sim.orbCur!==tgtOrb){ sim.orbW=Math.max(0,sim.orbW-dt*1.4); if(sim.orbW<0.02) sim.orbCur=tgtOrb; }
   else sim.orbW+=(wT-sim.orbW)*(1-Math.exp(-dt*1.5));
   sim.orbPhase+=dt*0.7*Pe.flowMul;
+  if(sim.furT!==modeIdx){ sim.furW=Math.max(0,sim.furW-dt*1.2); if(sim.furW<0.02) sim.furT=modeIdx; } else sim.furW+=(1-sim.furW)*(1-Math.exp(-dt*1.2));
+  sim.furTime+=dt*Pe.flowMul;
   agentsStep(dt);
 }
 
@@ -1229,7 +1257,7 @@ function agentsStep(dt){
   }
 }
 // Zeichnen
-const AGL_MAX=16000, agLines=new Float32Array(AGL_MAX*4), agPts=new Float32Array(AG_N*5);
+const AGL_MAX=16000, agLines=new Float32Array(AGL_MAX*4), agPts=new Float32Array((AG_N+64)*5);
 const agLBuf=gl.createBuffer(), agLVao=gl.createVertexArray();
 gl.bindVertexArray(agLVao); gl.bindBuffer(gl.ARRAY_BUFFER,agLBuf); gl.bufferData(gl.ARRAY_BUFFER,agLines.byteLength,gl.DYNAMIC_DRAW);
 gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,4,gl.FLOAT,false,0,0);
@@ -1266,6 +1294,22 @@ function drawAgents(R,pl,projM,T){
     for(const [rr,dashed,al2] of [[0.2,false,0.55],[0.34,true,0.4],[0.5,true,0.22]]) for(let s=0;s<48;s++){ if(dashed&&s%2) continue;
       const a0=s/48*6.2832, a1=(s+1)/48*6.2832; push(cx+Math.cos(a0)*rr,cy+Math.sin(a0)*rr,cz,al2, cx+Math.cos(a1)*rr,cy+Math.sin(a1)*rr,cz,al2); } }
   const nR=n-nT-nL;
+  // Verbindungen: leuchtende, organisch schwingende Fäden Kern↔Satelliten, Satellit↔Satellit, Spitzen→nächster Satellit
+  const pulses=[]; const rb=RB*sim.breath, tt=sim.t, spd=0.35*Pe.flowMul*(1+sim.E);
+  const thread=(A,B,alpha,seed,np)=>{ const mx=(A[0]+B[0])/2, my=(A[1]+B[1])/2, mz=(A[2]+B[2])/2, dx=B[0]-A[0], dy=B[1]-A[1], L=Math.hypot(dx,dy)+1e-4;
+    const sw=0.22*L*Math.sin(tt*0.9+seed*2.3), c=[mx-dy/L*sw, my+dx/L*sw, mz+0.15*L*Math.cos(tt*0.7+seed)];
+    const pt=u=>{ const v=1-u, w2=0.03*Math.sin(u*18+tt*3+seed); return [v*v*A[0]+2*v*u*c[0]+u*u*B[0]-dy/L*w2, v*v*A[1]+2*v*u*c[1]+u*u*B[1]+dx/L*w2, v*v*A[2]+2*v*u*c[2]+u*u*B[2]]; };
+    const SG=18; let q0=pt(0);
+    for(let s=1;s<=SG;s++){ const q1=pt(s/SG), f=alpha*(0.55+0.45*Math.sin(s/SG*Math.PI)); push(q0[0],q0[1],q0[2],f,q1[0],q1[1],q1[2],f); q0=q1; }
+    for(let k=0;k<np;k++){ const u=((tt*spd+seed*0.618+k/np)%1+1)%1; pulses.push([...pt(u), alpha*Math.sin(u*Math.PI)]); } };
+  if(conOn){
+    const P3=i=>[rp[i*3],rp[i*3+1],rp[i*3+2]];
+    for(let i=0;i<NSAT;i++){ const S3=P3(i), r=Math.hypot(...S3)+1e-4; thread(S3.map(v=>v/r*rb*0.92),S3,0.85,i,2);
+      thread(S3,P3((i+1)%NSAT),0.45,i+7.3,1); }
+    for(let i=NSAT;i<AG_N;i+=3){ let bj=0,bd=1e9; for(let j=0;j<NSAT;j++){ const d=Math.hypot(rp[i*3]-rp[j*3],rp[i*3+1]-rp[j*3+1],rp[i*3+2]-rp[j*3+2]); if(d<bd){bd=d;bj=j;} }
+      if(bd<1.6) thread(P3(bj),P3(i),0.35*(1-bd/1.6),i*0.37,pulses.length<60?1:0); }
+  }
+  const nC=n-nT-nL-nR;
   gl.bindBuffer(gl.ARRAY_BUFFER,agLBuf); gl.bufferSubData(gl.ARRAY_BUFFER,0,agLines,0,n*4);
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(false);
   let P=P_LINE; gl.useProgram(P.p); m4(P,'uProj',projM); m4(P,'uView',view); f1(P,'uEnc',ENC); gl.bindVertexArray(agLVao);
@@ -1273,14 +1317,18 @@ function drawAgents(R,pl,projM,T){
   if(nT){ f3(P,'uCol',mixc(pl.glow,pl.core,0.45,0.55)); gl.drawArrays(gl.LINES,0,nT); }
   if(nL){ f3(P,'uCol',mixc(pl.rim,pl.core,0.35,0.6)); gl.drawArrays(gl.LINES,nT,nL); }
   if(nR){ f3(P,'uCol',mixc(pl.core,pl.glow,0.3,0.5)); gl.drawArrays(gl.LINES,nT+nL,nR); }
+  if(nC){ f3(P,'uCol',mixc(pl.glow,pl.spec,0.35,0.9)); gl.drawArrays(gl.LINES,nT+nL+nR,nC); }
   // leuchtende Knoten
   for(let i=0;i<AG_N;i++){ agPts[i*5]=rp[i*3]+off[0]; agPts[i*5+1]=rp[i*3+1]+off[1]; agPts[i*5+2]=rp[i*3+2]+off[2];
     agPts[i*5+3]=i<NSAT?0.13:0.05; agPts[i*5+4]=al*(i<NSAT?1:0.85); }
-  gl.bindBuffer(gl.ARRAY_BUFFER,agPBuf); gl.bufferSubData(gl.ARRAY_BUFFER,0,agPts);
+  const NP=Math.min(64,pulses.length);
+  for(let k=0;k<NP;k++){ const q=pulses[k], o=(AG_N+k)*5; agPts[o]=q[0]+off[0]; agPts[o+1]=q[1]+off[1]; agPts[o+2]=q[2]+off[2]; agPts[o+3]=0.075; agPts[o+4]=al*q[3]; }
+  gl.bindBuffer(gl.ARRAY_BUFFER,agPBuf); gl.bufferSubData(gl.ARRAY_BUFFER,0,agPts,0,(AG_N+NP)*5);
   P=P_PT; gl.useProgram(P.p); m4(P,'uProj',projM); m4(P,'uView',view); f1(P,'uEnc',ENC); f1(P,'uPx',projM[5]*T.h*0.5);
   gl.bindVertexArray(agPVao);
   f3(P,'uCol',mixc(pl.spec,pl.glow,0.35,1.1)); gl.drawArrays(gl.POINTS,0,NSAT);
   f3(P,'uCol',mixc(pl.core,pl.spec,0.4,1.0)); gl.drawArrays(gl.POINTS,NSAT,AG_N-NSAT);
+  if(NP){ f3(P,'uCol',mixc(pl.spec,pl.glow,0.2,1.4)); gl.drawArrays(gl.POINTS,AG_N,NP); }
   gl.depthMask(true);
 }
 let hudFlash=0;
@@ -1435,7 +1483,7 @@ function sceneParams(isThumb,idx){
     density:Pe.dichte, energy:Math.min(1.5,Pe.energie+sim.E*0.25), pulse:sim.pulse, flash:isThumb?0:sim.flash,
     flowF:sim.flow.map(v=>v*0.6), lobe:sim.lobe,
     dropU, dropS, mode, modeD:(!isThumb&&m)?m.disp:0, modeA:(!isThumb&&m)?Math.min(1,m.env*14):0,
-    rdAmp:rdOn*0.07, rdVis:rdOn, orb:isThumb?[0,0,0,0]:[sim.orbCur,sim.orbW,sim.orbPhase,0], tremble:isThumb?0:0.03*sim.charge, charge:isThumb?0:sim.charge, shock
+    rdAmp:rdOn*0.07, rdVis:rdOn, orb:isThumb?[0,0,0,0]:[sim.orbCur,sim.orbW,sim.orbPhase,0], fur:isThumb?[Pe.furchen*0.6,0,0,0]:[Pe.furchen,sim.furT,sim.furW,sim.furTime], tremble:isThumb?0:0.03*sim.charge, charge:isThumb?0:sim.charge, shock
   };
 }
 function norm4(q){ const l=Math.hypot(...q); return q.map(v=>v/l); }
@@ -1444,7 +1492,7 @@ function setFS(P,pl,R,rot){
   f3(P,'cDeep',pl.deep); f3(P,'cBody',pl.body); f3(P,'cCore',pl.core); f3(P,'cGlow',pl.glow); f3(P,'cRim',pl.rim); f3(P,'cSpec',pl.spec);
   f1(P,'uDensity',R.density); f1(P,'uEnergy',R.energy); f1(P,'uLight',pl.light); f1(P,'uPulse',R.pulse); f1(P,'uFlash',R.flash);
   f1(P,'uEnc',ENC); f1(P,'uTime',sim.t); f3(P,'uFlowF',R.flowF); f1(P,'uRDVis',R.rdVis); f1(P,'uModeA',R.modeA); f1(P,'uCharge',R.charge);
-  t1(P,'uRD',3,rdTex[rdCur]); f4(P,'uOrb',R.orb);
+  t1(P,'uRD',3,rdTex[rdCur]); f4(P,'uOrb',R.orb); f4(P,'uFur',R.fur);
 }
 function drawScene(T, R, pl, projM, isThumb){
   gl.bindFramebuffer(gl.FRAMEBUFFER,T.drawFB); gl.viewport(0,0,T.w,T.h);
@@ -1467,7 +1515,7 @@ function drawScene(T, R, pl, projM, isThumb){
   f3(P,'uFlow',R.flow); f1(P,'uAmp',R.amp); f1(P,'uWarp',R.warp); f1(P,'uTension',R.tension); f1(P,'uShape',R.shape);
   f4(P,'uSH',R.sh); f3(P,'uAniso',R.aniso); f4(P,'uOsc',R.osc); f4(P,'uRip',R.rip); fa(P,'uRipT',R.ripT); f3(P,'uWave',R.wave);
   f4(P,'uDrop',R.dropU); fa(P,'uDropS',R.dropS); f4(P,'uMode',R.mode); f1(P,'uModeD',R.modeD);
-  f1(P,'uRDAmp',R.rdAmp); f1(P,'uTremble',R.tremble); f4(P,'uOrb',R.orb);
+  f1(P,'uRDAmp',R.rdAmp); f1(P,'uTremble',R.tremble); f4(P,'uOrb',R.orb); f4(P,'uFur',R.fur);
   setFS(P,pl,R,R.rot);
   const mesh=isThumb?MESH_LO:MESH_MAIN; gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES,mesh.count,gl.UNSIGNED_INT,0);
   // Tropfen
@@ -1564,7 +1612,7 @@ setTimeout(hideHint,9000);
 window.QO={
   manual(on){ manual=!!on; last=performance.now(); },
   advance(dt,n=1){ for(let i=0;i<n;i++) step(dt); frame(); updateHud(); },
-  mode(i){ setMode(i); }, filaments(b){ setFil(b); }, cycle(b){ setCycle(b); }, cycleJump(ph){ cyc.prevPh=cyc.ph; cyc.ph=ph; cyc.tl=0; if(ph===0) bigBang(); },
+  mode(i){ setMode(i); }, filaments(b){ setFil(b); }, connections(b){ setCon(b); }, cycle(b){ setCycle(b); }, cycleJump(ph){ cyc.prevPh=cyc.ph; cyc.ph=ph; cyc.tl=0; if(ph===0) bigBang(); },
   tapClient(x,y){ pressStart('t',x,y); pressEnd('t'); },
   tapCenter(){ this.tapClient(innerWidth/2+colShift*innerWidth/2-innerWidth*0.06,innerHeight/2-innerHeight*0.04); },
   press(id,x,y){ pressStart(id,x,y); }, move(id,x,y){ pressMove(id,x,y); }, release(id){ pressEnd(id); },
