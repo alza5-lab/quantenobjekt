@@ -419,7 +419,7 @@ function updBit(b,dt,p){b.age+=dt;b.spike*=Math.exp(-dt*4.5);
   b.ct+=dt;const ct=b.ct;b.c=ct<.16?ct/.16:Math.exp(-(ct-.16)/(p.smooth?.42:.32));
   if(ct<.2){const T=3.4*g.speed*p.speed*(.45+.55*Math.min(b.E,1.2))*(steering?1.3:1);b.vel=add3(b.vel,mul3(b.ax,T*dt))}
   // Wunschrichtung
-  let des=[0,.12,0];
+  let des=[0,.35*(.55-b.pos[1]/AR.H),0];
   if(cw)des=add3(des,mul3(norm3(coh),p.coh));
   des=add3(des,mul3(ali,.12));des=add3(des,sep);
   {let fg=foodG(b.pos);const fl=len3(fg);if(fl>1)fg=mul3(fg,1/fl);des=add3(des,mul3(fg,.85*p.chem))}
@@ -822,7 +822,7 @@ function drawDash(force){if(!dashOpen)return;const p=PR;
     x.strokeStyle='rgba(111,230,214,.8)';x.beginPath();for(let i=0;i<120;i++){const v=S.rHist[(S.rI+i)%120],X=tx+i/119*(w-tx-2),Y=h-3-v*(h-68);i?x.lineTo(X,Y):x.moveTo(X,Y)}x.stroke()}
   {const[x,w,h]=c2('cLay');const rh=h/9;x.font='7.5px ui-monospace,Menlo,monospace';
     for(let l=0;l<9;l++){const y0=rh*l+rh*.6;x.fillStyle='rgba(232,237,239,.45)';x.fillText('L'+(l+1),0,y0+2);x.strokeStyle=LAYC[l];x.globalAlpha=.85;x.beginPath();
-      for(let i=0;i<240;i++){const v=S.layHist[((S.layI+i)%240)*9+l],X=16+i/239*(w-18),Y=y0-Math.min(rh*.9,v*rh*.45)+Math.sin(i*1.7+l)*.4;i?x.lineTo(X,Y):x.moveTo(X,Y)}x.stroke();x.globalAlpha=1}}
+      for(let i=0;i<240;i++){const v=S.layHist[((S.layI+i)%240)*9+l],X=16+i/239*(w-18),Y=y0-Math.min(rh*.95,Math.log1p(Math.max(0,v))*rh*.42)+Math.sin(i*1.7+l)*.4;i?x.lineTo(X,Y):x.moveTo(X,Y)}x.stroke();x.globalAlpha=1}}
   {const[x,w,h]=c2('cEl');const L=live();let tb=S.sel&&!S.sel.dead?S.sel:L.slice().sort((a,b)=>b.E-a.E)[0];const Y=v=>4+(40-v)/120*(h-14);
     x.font='7px ui-monospace,Menlo,monospace';x.fillStyle='rgba(232,237,239,.4)';[40,0,-70].forEach(v=>{x.fillText(v,0,Y(v)+3);x.strokeStyle='rgba(150,225,215,.1)';x.beginPath();x.moveTo(16,Y(v));x.lineTo(w,Y(v));x.stroke()});
     x.fillText('t (ms)',w-28,h-1);
@@ -834,7 +834,7 @@ function drawDash(force){if(!dashOpen)return;const p=PR;
   {const[x,w,h]=c2('cSp');const N=256,M=48,mags=[];let mean=0;for(let i=0;i<N;i++)mean+=S.vHist[i];mean/=N;let mx=1e-6;
     for(let k=1;k<=M;k++){let re=0,im=0;for(let n=0;n<N;n++){const v=S.vHist[(S.vI+n)%N]-mean,a=TAU*k*n/N;re+=v*Math.cos(a);im-=v*Math.sin(a)}const m=Math.hypot(re,im);mags.push(m);mx=Math.max(mx,m)}
     const bw=(w-4)/M;for(let k=0;k<M;k++){const v=mags[k]/mx,hh=v*(h-14);x.fillStyle=`hsl(${260-k/M*200},85%,${55+v*15}%)`;x.globalAlpha=.85;x.fillRect(2+k*bw,h-10-hh,bw-1,hh)}x.globalAlpha=1;
-    x.font='7px ui-monospace,Menlo,monospace';x.fillStyle='rgba(232,237,239,.4)';x.fillText('0',2,h-1);x.fillText('Hz (Neuronenzeit) 45',w-80,h-1)}
+    x.font='7px ui-monospace,Menlo,monospace';x.fillStyle='rgba(232,237,239,.4)';x.fillText('0',2,h-1);x.fillText('45 Hz',w-26,h-1)}
   {const[x,w,h]=c2('cEn');const L=S.bits.filter(b=>!b.dead);const n=Math.max(L.length,1),bw=Math.min(14,(w-20)/MAXB),Y=v=>h-10-v/1.6*(h-16);
     x.strokeStyle='rgba(233,180,76,.35)';x.setLineDash([2,3]);const thr=1.3/Math.pow(p.growth,.35);x.beginPath();x.moveTo(0,Y(thr));x.lineTo(w,Y(thr));x.stroke();x.setLineDash([]);
     L.forEach((b,i)=>{x.fillStyle=css(bitColor(b,p));x.globalAlpha=b.build<1?.4:.85;const y=Y(clamp(b.E,0,1.6));x.fillRect(4+i*(bw+2),y,bw,h-10-y)});x.globalAlpha=1;
