@@ -1,0 +1,7 @@
+Quantenobjekt 3 – PWA (Ordner v3/)
+==================================
+Adresse: https://alza5-lab.github.io/quantenobjekt/v3/
+iPhone: in Safari öffnen → Teilen → "Zum Home-Bildschirm". Startet im Vollbild, offline nutzbar.
+Bedienung: Objekt/Feld antippen (Schockwelle, Energie), ziehen (drehen), links Paletten, unten Modus,
+oben "Steuerung öffnen" (Regler + Ebenen: Neuronen, Orbits, Furchen, Verbindungen, Gitter, Grenzen, Zyklus).
+Einstellungen werden lokal gespeichert (eigener Schlüssel, unabhängig von Quantenobjekt 1/2).

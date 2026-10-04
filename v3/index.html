@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05060a">
+<title>Quantenobjekt 3 · shivas_ocean</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quanten 3">
+<meta name="application-name" content="Quantenobjekt 3">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  :root{
+    --t: clamp(38px, calc((100dvh - 210px) / 9.4), 56px);
+    --gap: calc(var(--t) * 0.34);
+    --ui: rgba(14,16,22,.72);
+    --uiBorder: rgba(255,255,255,.08);
+    --txt: #e9eef5;
+    --accent: #ffc35a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#000;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  #qo-canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block;touch-action:none;outline:none}
+  /* ---------- Preset-Spalte ---------- */
+  #qo-presets{position:fixed;left:calc(env(safe-area-inset-left) + 10px);top:calc(50% - 26px);transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:var(--gap);z-index:5}
+  .qo-thumb{width:var(--t);height:var(--t);border-radius:calc(var(--t)*.26);padding:0;margin:0;cursor:pointer;
+    background:transparent;border:1.5px solid rgba(140,160,255,.16);transition:border-color .25s, box-shadow .25s, transform .2s}
+  .qo-thumb:active{transform:scale(.94)}
+  .qo-thumb.sel{border:3px solid #fff;box-shadow:0 0 14px rgba(255,255,255,.25)}
+  body.light .qo-thumb.sel{border-color:#a7adbb;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+  .qo-thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* ---------- Steuerung ---------- */
+  #qo-bar{position:fixed;top:env(safe-area-inset-top);left:50%;transform:translateX(-50%);z-index:8;
+    width:min(560px, calc(100vw - 20px));display:flex;flex-direction:column;align-items:stretch}
+  #qo-toggle{appearance:none;border:0;border-bottom:1px solid var(--uiBorder);background:var(--ui);color:var(--txt);
+    font-size:14px;letter-spacing:.02em;padding:9px 12px;cursor:pointer;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    border-radius:0 0 12px 12px;transition:border-radius .2s}
+  #qo-bar.open #qo-toggle{border-radius:0}
+  #qo-panel{background:rgba(12,14,19,.86);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    border-radius:0 0 14px 14px;overflow:hidden auto;max-height:0;transition:max-height .35s ease, padding .35s ease;padding:0 16px;
+    touch-action:pan-y;-webkit-overflow-scrolling:touch}
+  #qo-bar.open #qo-panel{max-height:calc(100dvh - 60px - env(safe-area-inset-top));padding:10px 16px 14px}
+  .qo-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;padding:6px 0}
+  .qo-row label{font-size:13px;color:#dfe6f0}
+  .qo-row small{grid-column:1 / -1;font-size:10.5px;color:#8792a3;margin-top:-1px}
+  .qo-row output{font-size:12px;color:#9fb0c4;font-variant-numeric:tabular-nums;min-width:58px;text-align:right}
+  .qo-row input{grid-column:1 / -1;width:100%;-webkit-appearance:none;appearance:none;height:26px;background:transparent;margin:0;touch-action:pan-x}
+  .qo-row input::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,#2a3346,var(--accent))}
+  .qo-row input::-moz-range-track{height:4px;border-radius:4px;background:linear-gradient(90deg,#2a3346,var(--accent))}
+  .qo-row input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;margin-top:-8px;background:#fff;
+    box-shadow:0 0 0 3px rgba(255,255,255,.12),0 0 12px var(--accent)}
+  .qo-row input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 12px var(--accent)}
+  #qo-farbe::-webkit-slider-runnable-track{background:linear-gradient(90deg,#00e0ff,#7a5cff,#ff3cf0,#ff5a12,#ffe14a,#3dff8a,#00e0ff)}
+  .qo-sec{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7f8a9a;margin:10px 0 4px}
+  .qo-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .qo-chip{appearance:none;border:1px solid var(--uiBorder);background:rgba(255,255,255,.05);color:#b8c2d0;border-radius:999px;
+    padding:6px 11px;font-size:12px;cursor:pointer}
+  .qo-chip.on{background:color-mix(in srgb, var(--accent) 26%, transparent);border-color:var(--accent);color:#fff}
+  .qo-btns{display:flex;gap:8px;padding-top:10px}
+  .qo-btns button,#qo-info-btn,#qo-info-close{appearance:none;border:1px solid var(--uiBorder);background:rgba(255,255,255,.06);color:var(--txt);
+    border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer}
+  .qo-btns button{flex:1}
+  #qo-info-btn{position:fixed;right:calc(env(safe-area-inset-right) + 12px);bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:6;
+    width:38px;height:38px;border-radius:50%;padding:0;font:600 15px Georgia,serif;background:var(--ui);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  /* ---------- Modus-Leiste ---------- */
+  #qo-modes{position:fixed;left:calc(env(safe-area-inset-left) + 10px);right:calc(env(safe-area-inset-right) + 60px);
+    bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:6;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;
+    max-width:560px;margin:0 auto}
+  .qo-mode{appearance:none;border:1px solid var(--uiBorder);background:var(--ui);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    color:#c7d0dc;border-radius:12px;padding:6px 4px 5px;font-size:10.5px;line-height:1.15;cursor:pointer;min-height:44px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:border-color .25s,color .25s}
+  .qo-mode b{font-weight:600;font-size:10.5px}
+  .qo-mode i{font-style:normal;font-size:9.5px;color:#7f8a9a;letter-spacing:.04em}
+  .qo-mode.sel{border-color:var(--accent);color:#fff;box-shadow:0 0 12px color-mix(in srgb, var(--accent) 35%, transparent)}
+  .qo-mode.sel i{color:var(--accent)}
+  body.light .qo-mode,body.light #qo-toggle,body.light #qo-info-btn{background:rgba(250,250,252,.8);color:#333}
+  body.light .qo-mode.sel{color:#000}
+  #qo-hint{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px);transform:translateX(-50%);z-index:4;font-size:12.5px;
+    letter-spacing:.08em;color:rgba(230,240,255,.55);pointer-events:none;transition:opacity 1.2s;white-space:nowrap}
+  #qo-phase{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 44px);transform:translateX(-50%);z-index:4;font-size:11.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:rgba(230,240,255,.6);pointer-events:none;transition:opacity .6s;opacity:0;white-space:nowrap}
+  body.light #qo-hint,body.light #qo-phase{color:rgba(40,40,50,.55)}
+  /* ---------- Info ---------- */
+  #qo-info{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);
+    padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px)}
+  #qo-info.show{display:flex}
+  #qo-info .card{max-width:640px;max-height:100%;overflow:auto;background:rgba(14,16,22,.95);border:1px solid var(--uiBorder);border-radius:16px;
+    padding:18px 18px 14px;font-size:13px;line-height:1.5;color:#d7dee8;-webkit-user-select:text;user-select:text;touch-action:pan-y}
+  #qo-info h2{margin:0 0 6px;font-size:17px;color:#fff;font-weight:600}
+  #qo-info h3{margin:14px 0 2px;font-size:13.5px;color:var(--accent);font-weight:600}
+  #qo-info p{margin:2px 0}
+  #qo-info code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#ffd0f6;background:rgba(255,255,255,.05);padding:1px 4px;border-radius:4px}
+  #qo-info blockquote{margin:16px 0 4px;padding:10px 14px;border-left:3px solid var(--accent);background:rgba(255,255,255,.04);border-radius:8px;
+    font-size:15px;letter-spacing:.02em;color:#fff}
+  #qo-info blockquote span{display:block;font-size:11px;color:#9aa6b6;margin-top:4px;letter-spacing:.08em}
+  #qo-info .sig{margin-top:14px;font-size:11px;color:#7f8a9a}
+  #qo-info-close{float:right}
+  #qo-err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;z-index:30;background:#05070a;color:#cfd8e3}
+</style>
+</head>
+<body>
+<canvas id="qo-canvas" tabindex="0" aria-label="Interaktives Quantenobjekt 3"></canvas>
+<div id="qo-presets" role="radiogroup" aria-label="Voreinstellungen"></div>
+<div id="qo-bar">
+  <button id="qo-toggle" aria-expanded="false">Steuerung öffnen</button>
+  <div id="qo-panel"></div>
+</div>
+<div id="qo-phase"></div>
+<div id="qo-modes" role="radiogroup" aria-label="Modus"></div>
+<button id="qo-info-btn" aria-label="Info zu den mathematischen Modellen">i</button>
+<div id="qo-hint">Berühre das Objekt · wähle unten einen Modus</div>
+
+<div id="qo-info" role="dialog" aria-modal="true">
+  <div class="card">
+    <button id="qo-info-close">Schließen</button>
+    <h2>Quantenobjekt 3 – die Mathematik dahinter</h2>
+    <p>Kern, Wolke und rund 1&nbsp;600 Agenten (Axone, Satelliten, Funken) werden in jedem Bild neu aus geschlossenen Formeln und
+      integrierten dynamischen Systemen berechnet. Jeder Agent hat eigene Phase, Frequenz, Rauschsaat und einen eigenen Radius – nichts ist vorab animiert.</p>
+
+    <h3>Grundstruktur · Wasserstoff-Orbitale |ψ<sub>nlm</sub>|²</h3>
+    <p>Echte Eigenfunktionen <code>ψ = R<sub>nl</sub>(r)·Y<sub>lm</sub>(θ,φ)</code> in Bohr-Einheiten:
+      <code>1s ∝ e^(−r)</code>, <code>2s ∝ (2−r)e^(−r/2)</code> (Knotenkugel bei r=2a₀), <code>2p<sub>z</sub> ∝ r·cosθ·e^(−r/2)</code>,
+      <code>3d<sub>xy</sub> ∝ r²·sin²θ·sin2φ·e^(−r/3)</code> (vierlappiges Kreuz) und der rotierende Zustand <code>2p<sub>±1</sub> ∝ r·sinθ·e^(±iφ)·e^(−r/2)</code>.
+      Die Wolke ist ein Volumen-Raymarching von <code>∫|ψ|² ds</code> entlang jedes Sehstrahls. Farbe = Phase: Vorzeichen von ψ (zwei Farben)
+      bzw. beim rotierenden Zustand <code>arg ψ − ωt</code> als umlaufender Farbkreis (Wahrscheinlichkeitsstrom <code>j ∝ m/r·φ̂</code>).
+      Der Glaskern ist die Winkelfläche <code>r(θ,φ) = a + b·|Y<sub>lm</sub>|</code>; der Regler morpht stufenlos zwischen den Orbitalen.</p>
+
+    <h3>Modus 1 · Egozentrischer Loop (↔ 1s)</h3>
+    <p>Jeder Agent läuft auf einer eigenen Epizykel-Rosette <code>z(t) = R[(1−q)e^(iωt) + q·e^(−i(k−1+δ)ωt) + ε·e^(7iωt)]</code>
+      (Hypotrochoide). Die Verstimmung δ lässt die Rosette präzedieren (Apsidendrehung), die Bahnebene präzediert zusätzlich um die Knotenlinie.
+      Die Radien R sind aus der 1s-Radialverteilung <code>P(r)=4r²e^(−2r)</code> gezogen (Gamma(3,½)). Gestrichelte Kreise: Bohr-Radien ∝ n².</p>
+
+    <h3>Modus 2 · Doppelpol (↔ 2p)</h3>
+    <p>Feldlinien des magnetischen Dipols <code>r = L·sin²θ</code>, <code>B ∝ (2cosθ r̂ + sinθ θ̂)/r³</code>: Teilchen schießen als Fontäne
+      vom Pol hoch und fallen zum Äquator, gespiegelt nach unten. Ein Teil ist im Feld gefangen: Pendeln zwischen Spiegelpunkten
+      <code>θ(t)=π/2+θ<sub>m</sub>·sin ω<sub>b</sub>t</code>, Gyration mit Radius <code>ρ ∝ 1/|B|</code> und azimutaler Drift (wie im Van-Allen-Gürtel).
+      L folgt der 2p-Verteilung <code>r⁴e^(−r)</code>. Gestrichelt: Äquatorebene (Knotenebene von 2p<sub>z</sub>).</p>
+
+    <h3>Modus 3 · Statisch suchend (↔ 3d)</h3>
+    <p>Ruhiges Zentrum, vier Arme entlang der Keulen von 3d<sub>xy</sub> (Längen aus <code>r⁶e^(−2r/3)</code>). An den Spitzen suchen Agenten mit einem
+      <b>Lévy-Flug</b> (Sprunglängen Pareto-verteilt <code>ℓ = ℓ₀·u^(−1/α)</code>, α=1,5), überlagert mit Simplex-Brown-Bewegung und Kräusel-Schleifen.
+      Signale laufen die Axone nach außen. Gestrichelt: die beiden Knotenebenen x=0 und y=0 des Orbitals.</p>
+
+    <h3>Modus 4 · Gegenteil (4× Dynamik)</h3>
+    <p>Ring aus stehenden Wellen <code>r(φ,t) = R₀ + A₁ sin(24φ) cos(ω₂₄t) + A₂ sin(6φ) cos(ω₆t)</code> mit Resonanzfrequenzen einer
+      Kugelmembran <code>ω<sub>l</sub> ∝ √(l(l+1))</code> (Chladni/Kugelflächenfunktion), dazu wachsende Spiralen, auslaufende Bogen-Wellenfronten
+      an vier Quellen und Resonanz-Funken an den Schwingungsbäuchen – alles mit vierfacher Zeit und hoher Energie.</p>
+
+    <h3>Neuronale Ebene (Bild 1 · somatisch)</h3>
+    <p>Logarithmische Spiralfasern <code>r = R·e^(bψ)</code> auf Schalen um den goldenen Kern, differentielle Rotation <code>ω ∝ R^(−3/2)</code>.
+      Gold im Inneren, Blau/Weiß außen; Knoten feuern mit eigener Frequenz, Signalpulse wandern entlang der Fasern nach außen.</p>
+
+    <h3>Orbit-Ebene (Bild 2 · kosmisch)</h3>
+    <p>Satelliten auf Kepler-Ellipsen: <code>M = E − e·sinE</code> (Newton-iteriert), mittlere Bewegung <code>n ∝ a^(−3/2)</code> (3. Kepler-Gesetz).
+      Orange Einflusszonen = Hill-Sphären <code>r<sub>H</sub> = a·∛(m/3M)</code>. Hohmann-Transfers wechseln zwischen Bahnen über die Halbellipse
+      <code>a<sub>t</sub> = (r₁+r₂)/2</code> in der Zeit <code>π·√(a<sub>t</sub>³/μ)</code> – als orange gestrichelte Spiralbahn.</p>
+
+    <h3>Zyklus (Bild 3 · Zeit-Meta-Ebene)</h3>
+    <p>Loop Shift / Urknall: Skalenfaktor <code>a(t) ∝ t^(2/3)</code> (Friedmann, materiedominiert) → Statisch: Kristallisation zum Würfel
+      (Superellipsoid <code>|x|^p+|y|^p+|z|^p = 1</code>, Agenten rasten auf ein kubisches Gitter ein, die Zeit friert ein) → Ursuppe: Metaball-Blasenwolke
+      (glattes Maximum <code>log Σ e^(k·r_i)</code>), Blasen driften als Ornstein-Uhlenbeck-Prozess → Entropie: ballistische Zerstreuung plus Diffusion
+      <code>σ ∝ √t</code> → zurück zum Urknall.</p>
+
+    <h3>Furchen</h3>
+    <p>Organische Rinnen wie Hirnwindungen oder Myzel: domänenverzerrtes Grat-Rauschen <code>F = (1−|N(p)|)⁵ + 0,45·(1−|N(2p+0,6N)|)⁶</code>
+      wird in das Glas eingegraben. Die Domäne wird entlang der Feldlinien des Orbitals gestreckt (2p längs der Dipolachse, 3d längs der Keulen).
+      Im Rinnengrund wird nach Beer-Lambert mehr absorbiert, die Flanken streuen Licht. In der Wolke folgen Rillen <code>cos(12φ + 2,5·sin 2r)</code> den Feld- und Knotenlinien.</p>
+    <h3>Verbindungen</h3>
+    <p>Leuchtende Fäden verbinden Satelliten, Neuronenknoten und Agenten mit dem Kern und untereinander – quadratische Bézier-Kurven
+      <code>B(s) = (1−s)²A + 2s(1−s)C + s²B</code>, deren Kontrollpunkt C organisch durchhängt und zittert. Jeder Faden wächst, hält und löst sich
+      in eigenem Takt und sucht sich danach neue Partner; Signalpulse laufen vom Knoten zum Kern.</p>
+
+    <h3>Gitter &amp; Grenzen (Bild 4 · Farb-Algorithmus)</h3>
+    <p>Gitter: ein kubisches Raster reduziert den Raum (Würfel/Gitter), synästhetisch nach Position eingefärbt und dort hell, wo es die Objektgrenze schneidet.
+      Grenzen: Iso-Konturen <code>log₂∫|ψ|²ds = const</code> der Wolke, farbcodiert nach Niveau, und auf dem Glas Krümmung
+      <code>κ ≈ |∂n|/|∂x|</code> plus Höhenlinien als Spektralfarbe.</p>
+
+    <h3>Kern, Berührung, Regler</h3>
+    <p>Glas wie im Quantenobjekt 1: Snellius-Brechung, Beer-Lambert-Marmor über drei Tiefen, Fresnel (Schlick), Dünnschicht-Irisieren, Bloom.
+      Herzschlag aus 6 Kuramoto-Oszillatoren <code>θ̇ᵢ = ωᵢ + (K/N)Σ sin(θⱼ−θᵢ)</code>; <b>Element-Wechselwirkung</b> = K, zieht auch die Agenten-Frequenzen
+      zur gemeinsamen Frequenz (Mittelfeld-Kopplung). <b>Externe Einflüsse</b> = Lorenz-Attraktor-Kopplung und Curl-Noise-Verwirbelung <code>v = ∇N₁×∇N₂</code>.
+      Berührung: gedämpfte Kugelwelle <code>∂²u/∂t² = c²∇²u − γ∂u/∂t</code> auf dem Glas und eine Schockwelle durch alle Agenten, Energie <code>Ė = −E/τ + Impulse</code>.</p>
+
+    <blockquote>„Nicht alles neu erfinden. Sondern neu verbinden.“<span>— LUCA MATTEO BALZANO</span></blockquote>
+    <p class="sig">Quantenobjekt 3 · für shivas_ocean · reines WebGL2, keine Bibliotheken</p>
+  </div>
+</div>
+<div id="qo-err"></div>
+<script>
+(() => {
+'use strict';
+/* =====================================================================
+   Quantenobjekt 3 – self-contained WebGL2 (no libraries) · shivas_ocean
+   Ebenen: Glaskern (Orbital-Winkelfläche) · Orbitalwolke |ψ|² (Volumen)
+           · Agenten (Modus-Bewegung, Neuronen, Orbits) · Gitter · Bloom
+   ===================================================================== */
+const $ = (s) => document.querySelector(s);
+const canvas = $('#qo-canvas');
+const gl = canvas.getContext('webgl2', {antialias:false, alpha:false, depth:false, stencil:false,
+  premultipliedAlpha:false, powerPreference:'high-performance', preserveDrawingBuffer:false});
+function fail(msg){ const e=$('#qo-err'); e.style.display='flex'; e.textContent=msg; }
+if(!gl){ fail('Dieses Gerät/Browser unterstützt kein WebGL2 – bitte Safari/Chrome aktualisieren.'); return; }
+
+const HF = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
+const IFMT = HF ? gl.RGBA16F : gl.RGBA8, TYPE = HF ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+const ENC = HF ? 1.0 : 0.25;
+const MAXS = gl.getParameter(gl.MAX_SAMPLES) || 0;
+const PTMAX = (gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE)||[1,64])[1];
+
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed);
+  t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* =====================================================================
+   GLSL
+   ===================================================================== */
+const NOISE = `
+// ---- 3D Simplex-Rauschen (Ashima/Gustavson, 2022) + analytischer Gradient ----
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+10.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+void simplexSetup(vec3 v, out vec3 x0, out vec3 x1, out vec3 x2, out vec3 x3,
+                  out vec3 p0, out vec3 p1, out vec3 p2, out vec3 p3){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy)); x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g;
+  vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+  x1=x0-i1+C.xxx; x2=x0-i2+C.yyy; x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy;
+  vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0;
+  vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  p0=vec3(a0.xy,h.x); p1=vec3(a0.zw,h.y); p2=vec3(a1.xy,h.z); p3=vec3(a1.zw,h.w);
+  vec4 nr=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=nr.x; p1*=nr.y; p2*=nr.z; p3*=nr.w;
+}
+float snoise(vec3 v){
+  vec3 x0,x1,x2,x3,p0,p1,p2,p3; simplexSetup(v,x0,x1,x2,x3,p0,p1,p2,p3);
+  vec4 m=max(0.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+  return 105.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}
+// returns (∇N, N): kernel m⁴(x·g), d/dx = -8m³x(x·g) + m⁴g
+vec4 snoiseD(vec3 v){
+  vec3 x0,x1,x2,x3,p0,p1,p2,p3; simplexSetup(v,x0,x1,x2,x3,p0,p1,p2,p3);
+  vec4 m=max(0.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+  vec4 m2=m*m, m3=m2*m, m4=m2*m2;
+  vec4 px=vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3));
+  vec3 g=-8.0*(m3.x*px.x*x0+m3.y*px.y*x1+m3.z*px.z*x2+m3.w*px.w*x3)
+         +m4.x*p0+m4.y*p1+m4.z*p2+m4.w*p3;
+  return 105.0*vec4(g,dot(m4,px));
+}
+`;
+
+const VS_FULL = `#version 300 es
+layout(location=0) in vec2 aPos; out vec2 vUv;
+void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.0,1.0); }`;
+
+/* ---------- Glaskern: Vertex-Shader (Orbital-Winkelfläche + Dynamik) ---------- */
+const VS_OBJ = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPos;
+uniform mat4 uProj, uView; uniform mat3 uRot;
+uniform vec3 uOffset; uniform float uScale, uBreath;
+uniform vec3 uFlow; uniform float uAmp, uWarp, uTension, uShape, uCube, uSoup, uPhaseT;
+uniform vec3 uAniso;
+uniform vec4 uOsc[6];
+uniform vec4 uRip[8]; uniform float uRipT[8];
+uniform vec3 uWave;
+uniform vec4 uBub[9];
+uniform float uFurch;
+out vec3 vN; out vec3 vW; out vec3 vO; out float vDisp; out float vFur;
+${NOISE}
+const vec3 AX4=vec3(0.0,0.8,0.6);       // Achse des rotierenden 2p(m=±1)-Zustands
+// Winkelanteil |Y_lm| als Radius: r(θ,φ)=a+b·|Y|
+float orbR(int k, vec3 d){
+  if(k==0) return 1.0;                                    // 1s: Y00 = konst.
+  if(k==1) return 1.05+0.035*cos(d.y*9.0+uPhaseT*0.6);    // 2s: Y00, Radialknoten nur in der Wolke sichtbar
+  if(k==2) return 0.40+0.80*abs(d.y);                      // 2p_z: |Y10| ∝ |cosθ|  (Achse = y)
+  if(k==3) return 0.38+0.92*pow(abs(2.0*d.x*d.y),0.85);    // 3d_xy: |Y| ∝ sin²θ|sin2φ| -> vierlappiges Kreuz
+  float c=dot(d,normalize(AX4)); return 0.36+0.80*(1.0-c*c); // 2p_±1: |Y11|² ∝ sin²θ -> Torus
+}
+// Metaball-Wolke: glattes Maximum der Strahl-Kugel-Austrittsdistanzen
+float soupR(vec3 d){
+  float acc=0.0;
+  for(int i=0;i<9;i++){
+    vec3 c=uBub[i].xyz; float r=uBub[i].w;
+    float b=dot(d,c); float disc=b*b-dot(c,c)+r*r;
+    float t=disc>0.0? b+sqrt(disc) : 0.0;
+    acc+=exp(8.0*t);
+  }
+  return max(log(acc)/8.0,0.25);
+}
+vec3 shapeAt(vec3 d){
+  float sh=clamp(uShape,0.0,4.0); int k0=int(floor(sh)); int k1=min(k0+1,4); float f=sh-float(k0);
+  f=f*f*(3.0-2.0*f);
+  float r=mix(orbR(k0,d),orbR(k1,d),f);
+  // Würfel (Superellipsoid, p=10): r=(|x|^p+|y|^p+|z|^p)^(-1/p)
+  float cube=0.86*pow(pow(abs(d.x),10.0)+pow(abs(d.y),10.0)+pow(abs(d.z),10.0),-0.1);
+  r=mix(r,cube,uCube);
+  if(uSoup>0.001) r=mix(r,soupR(d),uSoup);
+  return d*r;
+}
+// Furchen: domänenverzerrtes Grat-Rauschen (ridged noise) 1−|N| -> Rinnennetz wie Hirnwindungen / Myzel.
+// Die Rinnen werden entlang der Feldlinien des aktuellen Orbitals gestreckt (anisotrope Domäne).
+float furrowAt(vec3 d, vec3 w){
+  float sh=clamp(uShape,0.0,4.0);
+  vec3 st=mix(vec3(1.0),vec3(1.6,0.45,1.6),clamp(sh-1.0,0.0,1.0)*(1.0-clamp(sh-2.0,0.0,1.0)));  // 2p: Rinnen längs der Dipolachse
+  st=mix(st,vec3(0.7,0.7,1.5),clamp(1.0-abs(sh-3.0),0.0,1.0));                                  // 3d: Rinnen längs der Keulen
+  vec3 p=w*st*2.1;
+  float n1=snoise(p+vec3(0.0,uPhaseT*0.04,0.0));
+  float n2=snoise(p*2.07+n1*0.6+11.3);
+  float r=pow(1.0-abs(n1),5.0)+0.45*pow(1.0-abs(n2),6.0);
+  return r;
+}
+float gFur=0.0;
+float dispAt(vec3 d){
+  vec3 q=d*0.95+uFlow;
+  vec4 g1=snoiseD(q);
+  vec4 g2=snoiseD(q*1.13+vec3(19.1,-7.3,4.7));
+  vec3 w=q+cross(g1.xyz,g2.xyz)*uWarp;                     // Curl-Strömung v=∇N1×∇N2
+  float n=0.0, fr=1.0, a=0.62;
+  for(int i=0;i<3;i++){ n+=a*exp(-uTension*fr*fr)*snoise(w*fr*1.35); fr*=2.05; a*=0.5; }   // Spannung: e^(-σk²)
+  float disp=(0.55*g1.w+n)*uAmp*(1.0-0.75*uCube);
+  gFur=uFurch>0.001? furrowAt(d,w) : 0.0;
+  disp-=uFurch*0.030*gFur*(1.0-0.8*uCube);                // Rinnen eingraben
+  for(int i=0;i<6;i++) disp+=uOsc[i].w*exp((dot(d,uOsc[i].xyz)-1.0)*4.5);                     // Kuramoto
+  for(int i=0;i<8;i++){                                                                        // gedämpfte Kugelwelle
+    vec4 R=uRip[i]; if(R.w<=0.0) continue;
+    float tau=uRipT[i];
+    float th=acos(clamp(dot(d,R.xyz),-1.0,1.0));
+    float fr2=th-uWave.x*tau;
+    float env=exp(-uWave.y*tau);
+    float wave=sin(fr2*uWave.z)*exp(-fr2*fr2*2.2)/sqrt(sin(th)+0.25);
+    float dent=-exp(-th*th*10.0)*exp(-tau*4.0);
+    disp+=R.w*env*(0.045*wave+0.16*dent);
+  }
+  return disp;
+}
+vec3 surf(vec3 d, out float disp){ disp=dispAt(d); return shapeAt(d)*(1.0+disp)*uAniso*uBreath; }
+void main(){
+  vec3 d=normalize(aPos);
+  vec3 t1=normalize(cross(d, abs(d.y)<0.99?vec3(0,1,0):vec3(1,0,0)));
+  vec3 t2=cross(d,t1);
+  const float e=0.01; float dd,d1,d2;
+  vec3 P=surf(d,dd); float fu=gFur;
+  vec3 P1=surf(normalize(d+t1*e),d1);
+  vec3 P2=surf(normalize(d+t2*e),d2);
+  vec3 n=normalize(cross(P1-P,P2-P)); if(dot(n,P)<0.0) n=-n;
+  vO=P; vDisp=dd; vFur=fu;
+  vec3 W=uRot*(P*uScale)+uOffset;
+  vW=W; vN=uRot*n;
+  gl_Position=uProj*uView*vec4(W,1.0);
+}`;
+
+/* ---------- Glaskern: Fragment (Glas, Marmor, Fresnel, Phase, Grenzen) ---------- */
+const FS_OBJ = `#version 300 es
+precision highp float;
+in vec3 vN; in vec3 vW; in vec3 vO; in float vDisp; in float vFur;
+uniform vec3 uCam; uniform mat3 uRot; uniform float uFurch;
+uniform vec3 cDeep,cBody,cCore,cGlow,cRim,cSpec,cFar,cNode;
+uniform float uDensity,uEnergy,uLight,uPulse,uFlash,uEnc,uTime,uShape,uPhaseT,uGrenz,uFade;
+uniform vec3 uFlowF;
+layout(location=0) out vec4 oCol;
+layout(location=1) out vec4 oGlow;
+${NOISE}
+float marble(vec3 p){
+  vec3 q=p*(0.42+uDensity*0.7)+uFlowF;
+  float a=snoise(q);
+  float b=snoise(q*2.0+vec3(a*1.8,-a*1.2,a*0.7)+5.2);
+  float c=snoise(q*4.1+vec3(b*0.9)-3.1);
+  return b*0.8+c*0.2;
+}
+vec3 spec3(float h){ return 0.5+0.5*cos(6.28318*(h+vec3(0.0,0.33,0.67))); }
+// Phase des Orbitals an der Richtung d: Vorzeichen von ψ (reell) bzw. arg ψ (m=±1)
+vec3 phaseTint(vec3 d){
+  float sh=clamp(uShape,0.0,4.0);
+  float sgn2=sign(d.y), sgn3=sign(d.x*d.y);
+  vec3 a=vec3(1.0);
+  vec3 pos=mix(vec3(1.0),cCore*1.3+0.2,0.55), neg=mix(vec3(1.0),cNode*1.4+0.1,0.6);
+  vec3 t2=sgn2>0.0?pos:neg, t3=sgn3>0.0?pos:neg;
+  vec3 ax=normalize(vec3(0.0,0.8,0.6)); vec3 u1=normalize(cross(ax,vec3(1,0,0))); vec3 u2=cross(ax,u1);
+  float ph=atan(dot(d,u2),dot(d,u1))-uPhaseT;
+  vec3 t4=mix(vec3(1.0),spec3(ph/6.28318)*1.5,0.6);
+  a=mix(a,t2,clamp(1.0-abs(sh-2.0),0.0,1.0));
+  a=mix(a,t3,clamp(1.0-abs(sh-3.0),0.0,1.0));
+  a=mix(a,t4,clamp(sh-3.0,0.0,1.0));
+  return a;
+}
+void main(){
+  vec3 N=normalize(vN); vec3 V=normalize(uCam-vW);
+  float ndv=clamp(dot(N,V),0.0,1.0);
+  float edge=1.0-ndv;
+  vec3 rdO=transpose(uRot)*refract(-V,N,1.0/1.45);          // Snellius
+  vec3 acc=vec3(0.0); float T=1.0; float veinSum=0.0;
+  float dens=0.30+0.45*uDensity;
+  for(int i=0;i<3;i++){                                      // Beer-Lambert, 3 Schichten
+    float t=0.08+float(i)*0.30;
+    float m=marble(vO+rdO*t);
+    float vein=pow(1.0-abs(m),9.0+5.0*uDensity);
+    float cell=smoothstep(-0.25,0.45,m);
+    vec3 c=mix(cDeep,cBody,cell)+cCore*vein*(0.65-float(i)*0.15);
+    acc+=T*c*dens; veinSum+=T*vein;
+    T*=1.0-dens*0.55;
+  }
+  vec3 tint=phaseTint(normalize(vO));
+  vec3 col=acc*(0.62+0.5*ndv)*tint;
+  // Furchen: Rinnengrund absorbiert (Beer-Lambert tiefer), Rinnenflanken streuen Licht (Kaustik-Saum)
+  float fg=smoothstep(0.35,0.95,vFur)*uFurch, fe=smoothstep(0.15,0.45,vFur)*(1.0-smoothstep(0.55,0.9,vFur))*uFurch;
+  col*=1.0-0.45*fg; col+=cCore*fe*0.35+cGlow*fg*0.12*(0.5+0.5*sin(uTime*1.3+vFur*6.0));
+  col+=cGlow*pow(edge,2.2)*1.1;
+  float F=0.04+0.96*pow(edge,5.0);                          // Fresnel (Schlick)
+  float cosT=sqrt(max(1.0-(1.0-ndv*ndv)/(1.45*1.45),0.0));  // Dünnschicht 2nd·cosθt
+  float opd=2.0*1.45*(0.55+vDisp*3.0+0.1*sin(uTime*0.3))*cosT;
+  vec3 irid=spec3(opd*1.6);
+  col+=mix(cGlow*1.3,irid*mix(cGlow,cRim,0.5)*1.6,0.3)*F*2.6+cRim*pow(edge,8.0)*0.8;
+  // Grenzen (Bild 4): Krümmung κ≈|∂n|/|∂x| als Spektralfarbe + Höhenlinien |x|=konst
+  if(uGrenz>0.001){
+    float kap=length(fwidth(N))/max(length(fwidth(vW)),1e-4);
+    float lev=length(vO)*9.0; float w=fwidth(lev);
+    float iso=1.0-clamp(abs(fract(lev)-0.5)/max(w*1.2,1e-4)-0.0,0.0,1.0);
+    iso=1.0-clamp((0.5-abs(fract(lev)-0.5))/max(w,1e-4),0.0,1.0);
+    vec3 kc=spec3(0.62-clamp(kap*0.18,0.0,0.9));
+    col=mix(col,col*0.6+kc*0.55,0.55*uGrenz)+kc*iso*1.2*uGrenz;
+  }
+  vec3 L1=normalize(vec3(-0.45,0.75,0.65)), L2=normalize(vec3(0.6,-0.35,0.55));
+  float s=pow(max(dot(N,normalize(L1+V)),0.0),260.0)*2.2+pow(max(dot(N,normalize(L2+V)),0.0),90.0)*0.25;
+  float boost=(0.78+0.55*uPulse+0.9*uFlash)*(0.55+0.85*uEnergy)*uFade;
+  col*=boost;
+  vec3 dark=col+cSpec*s;
+  vec3 light=col*(1.0-clamp(s*1.2,0.0,0.95));
+  col=mix(dark,light,uLight);
+  float gN=(0.10+3.6*pow(edge,2.2)+0.1*veinSum)*boost;
+  float gF=(0.22+max(vDisp,0.0)*6.0+0.3*uPulse)*boost;
+  oCol=vec4(col*uEnc,1.0);
+  oGlow=vec4((gN*cRim*0.8+gF*cFar*0.45+s*0.6*(1.0-uLight)*cSpec),1.0)*uEnc;
+}`;
+
+/* ---------- Orbitalwolke: Volumen-Raymarching von |ψ_nlm|² ---------- */
+const FS_VOL = `#version 300 es
+precision highp float;
+in vec2 vUv;
+uniform vec2 uRes; uniform float uFx,uFy,uShift,uCamZ;
+uniform vec3 uCen; uniform mat3 uRot; uniform float uRad;
+uniform float uShape,uDens,uEn,uGrenz,uEnc,uLight,uPhaseT,uFade,uGain,uFurch;
+uniform vec3 cA,cB,cC;
+uniform float uScl[5]; uniform float uPk[5];
+layout(location=0) out vec4 oCol; layout(location=1) out vec4 oGlow;
+float hash(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
+vec3 spec3(float h){ return 0.5+0.5*cos(6.28318*(h+vec3(0.0,0.33,0.67))); }
+const vec3 AX4=vec3(0.0,0.8,0.6);
+// Wasserstoff-Eigenfunktionen (a0=1), Normierung über uPk (Maximum von |ψ|²)
+// liefert (ψ_re, ψ_im)
+vec2 psi(int k, vec3 x){
+  float r=length(x);
+  if(k==0) return vec2(exp(-r),0.0);                       // ψ100 ∝ e^(-r)
+  if(k==1) return vec2((2.0-r)*exp(-0.5*r),0.0);           // ψ200 ∝ (2-r)e^(-r/2)
+  if(k==2) return vec2(x.y*exp(-0.5*r),0.0);               // ψ210 ∝ r cosθ e^(-r/2)
+  if(k==3) return vec2(x.x*x.y*exp(-r/3.0),0.0);           // ψ32(xy) ∝ xy e^(-r/3)
+  vec3 ax=normalize(AX4); vec3 u1=normalize(cross(ax,vec3(1,0,0))); vec3 u2=cross(ax,u1);
+  return vec2(dot(x,u1),dot(x,u2))*exp(-0.5*r);            // ψ21±1 ∝ (x±iy) e^(-r/2)
+}
+void orb(int k, vec3 xo, out float d, out vec3 c){
+  vec2 p=psi(k,xo*uScl[k]);
+  d=dot(p,p)/uPk[k];
+  if(k<4){ c=p.x>=0.0?cA:cB; if(k<2) c=mix(cC,c,0.5); }
+  else { float ph=atan(p.y,p.x)-uPhaseT; c=mix(spec3(ph/6.28318),cA,0.25)*1.2; }   // arg ψ − ωt
+}
+void main(){
+  vec2 ndc=vUv*2.0-1.0;
+  vec3 ro=vec3(0.0,0.0,uCamZ);
+  vec3 rd=normalize(vec3((ndc.x-uShift)/uFx, ndc.y/uFy, -1.0));
+  vec3 oc=ro-uCen; float b=dot(oc,rd); float cc=dot(oc,oc)-uRad*uRad; float disc=b*b-cc;
+  float D=0.0; vec3 col=vec3(0.0);
+  if(disc>0.0){
+    float sq=sqrt(disc); float t0=-b-sq, t1=-b+sq;
+    const int NS=30; float dt=(t1-t0)/float(NS);
+    float t=t0+dt*hash(gl_FragCoord.xy+fract(uPhaseT));
+    float sh=clamp(uShape,0.0,4.0); int k0=int(floor(sh)); int k1=min(k0+1,4); float f=sh-float(k0); f=f*f*(3.0-2.0*f);
+    mat3 rT=transpose(uRot);
+    for(int i=0;i<NS;i++){
+      vec3 xo=rT*(ro+rd*t-uCen);
+      float d0; vec3 c0; orb(k0,xo,d0,c0);
+      if(f>0.01){ float d1; vec3 c1; orb(k1,xo,d1,c1); c0=mix(c0*d0,c1*d1,f); d0=mix(d0,d1,f); c0/=max(d0,1e-6); }
+      float fall=1.0-smoothstep(uRad*0.75,uRad,length(xo));
+      // Furchen in der Wolke: Rillen cos(12φ + 2.5 sin 2r) um die Achse -> Kanäle folgen Feld-/Knotenlinien
+      float az=atan(xo.z,xo.x), rr=length(xo);
+      fall*=1.0-uFurch*0.45*pow(0.5+0.5*cos(12.0*az+2.5*sin(2.0*rr+uPhaseT*0.2)+3.0*xo.y),3.0);
+      d0*=fall;
+      D+=d0*dt; col+=c0*d0*dt;
+      t+=dt;
+    }
+  }
+  D*=uGain; col*=uGain;
+  float g=(0.35+0.65*uEn)*uFade;
+  vec3 em=col*g*(0.30+0.7*uDens);
+  // Grenzen (Bild 4): Iso-Konturen log2(∫|ψ|²ds)=konst, farbcodiert nach Niveau
+  float lev=log2(D+1e-5)*1.6;
+  float w=fwidth(lev);
+  float line=1.0-clamp((0.5-abs(fract(lev)-0.5))/max(w*1.1,1e-4),0.0,1.0);
+  line*=smoothstep(0.0005,0.01,D)*step(w,0.6);
+  vec3 lc=spec3(0.75-floor(lev)*0.11);
+  em+=lc*line*uGrenz*0.55*uFade;
+  oCol=vec4(em*0.55*uEnc,0.0);
+  oGlow=vec4((em*0.75+lc*line*uGrenz*0.15)*uEnc,0.0);
+}`;
+
+/* ---------- Agenten: jede Linie = Spur eines unabhängigen Agenten ----------
+   gl_VertexID -> (Agent, Segment, Ende). Keine Vertexpuffer: Position wird für
+   Spurparameter s∈[0,1] (0 = Kopf) analytisch berechnet.                      */
+const AGENT_COMMON = `
+precision highp float; precision highp int;
+uniform mat4 uProj,uView; uniform mat3 uRot; uniform vec3 uOff;
+uniform float uT, uScaleA;
+uniform int uModeA, uModeB; uniform float uMix;
+uniform float uK, uExt, uEn, uDyn, uPulse;
+uniform vec3 uFlow;
+uniform vec4 uCyc; uniform float uCycT; uniform vec4 uBub[9];
+uniform vec4 uRipA[6]; uniform float uRipAT[6];
+uniform float uNeur, uOrb, uPx, uConn;
+uniform int uSeg;
+uniform vec3 cFib,cNode,cOrb,cGuide,cRim;
+${NOISE}
+const float PI=3.14159265, TAU=6.2831853;
+const int NG=48, NO=64, NN=256, NC=112;   // Gruppen: Hilfslinien | Orbits | Neuronen | Verbindungen | Modus-Agenten
+uint hashu(uint x){ x^=x>>16; x*=0x7feb352du; x^=x>>15; x*=0x846ca68bu; x^=x>>16; return x; }
+float h1(int id,int k){ return float(hashu(uint(id)*0x9E3779B9u+uint(k)*0x85EBCA6Bu+0x27d4eb2fu))*(1.0/4294967295.0); }
+// Gamma(k,θ) für ganzzahliges k: −θ·Σ ln Uᵢ  (Radialverteilungen r^(2l+2)e^(−2r/n))
+float gammaS(int id,int k,float th){ float s=0.0; for(int j=0;j<7;j++){ if(j>=k) break; s-=log(max(h1(id,40+j),1e-6)); } return s*th; }
+vec3 rotX(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(p.x,c*p.y-s*p.z,s*p.y+c*p.z); }
+vec3 rotZ(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(c*p.x-s*p.y,s*p.x+c*p.y,p.z); }
+float cpl(float w,float W){ return mix(w,W,uK*0.75); }    // Mittelfeld-Kopplung der Frequenzen
+float kepler(float M,float e){ float E=M; for(int i=0;i<4;i++) E-=(E-e*sin(E)-M)/(1.0-e*cos(E)); return E; }  // M=E−e sinE
+vec3 off3(){ return vec3(2.0,2.0,2.0); }
+
+/* ---------------- Modus 1: Egozentrischer Loop (Epizykel-Rosetten, 1s) ---------------- */
+vec3 mLoop(int id,float s,float t,out float a,out vec3 col,out float sig){
+  float r1=h1(id,1),r2=h1(id,2),r3=h1(id,3),r4=h1(id,4),r5=h1(id,5),r6=h1(id,6),r7=h1(id,7);
+  float g=gammaS(id,3,0.5);                               // 1s: P(r)=4r²e^(−2r)
+  bool core=r1<0.14;
+  float R=core? 0.48+0.22*r2 : min(0.66+0.52*g,2.45);
+  float kk=2.0+floor(r2*4.0);
+  float w=cpl((0.34+0.42*r3)/sqrt(R),0.46)*(r4<0.2?-1.0:1.0)*(core?2.2:1.0);
+  float q=0.16+0.34*r5;
+  float det=0.06*(r6-0.5);                                // Verstimmung -> Präzession
+  float L=PI/abs(w)*(0.5+0.55*r7);
+  float tt=t-s*L+r1*97.0;
+  float w2=-(kk-1.0+det)*w;
+  vec2 z=(1.0-q)*vec2(cos(w*tt),sin(w*tt))+q*vec2(cos(w2*tt),sin(w2*tt));
+  z+=0.07*r6*vec2(cos(7.0*w*tt+r3*TAU),sin(7.0*w*tt+r3*TAU));
+  z*=R;
+  float inc=0.12+1.15*r6*r6, node=TAU*r7+0.05*tt;        // Bahnneigung, Knotenpräzession
+  vec3 p=rotZ(rotX(vec3(z,0.0),inc),node);
+  a=pow(1.0-s,1.3)*(core?0.8:1.0);
+  col=mix(cFib,cNode,smoothstep(0.7,2.0,R));
+  sig=fract(t*(0.18+0.25*r5)+r3);
+  return p;
+}
+/* ---------------- Modus 2: Doppelpol (Dipolfeld, 2p) ---------------- */
+vec3 dipole(float L,float th,float phi,float hemi){
+  float r=L*sin(th)*sin(th);
+  return vec3(r*sin(th)*cos(phi), r*cos(th)*hemi, r*sin(th)*sin(phi));
+}
+vec3 mDipol(int id,float s,float t,out float a,out vec3 col,out float sig){
+  float r1=h1(id,1),r2=h1(id,2),r3=h1(id,3),r4=h1(id,4),r5=h1(id,5),r6=h1(id,6),r7=h1(id,7);
+  float g=gammaS(id,5,1.0);                               // 2p: P(r)∝r⁴e^(−r)
+  float L=clamp(0.78+0.27*g,0.8,2.55);
+  float phi0=TAU*r1, hemi=r2<0.5?1.0:-1.0;
+  vec3 p;
+  col=mix(cFib,cNode,smoothstep(1.0,2.2,L));
+  sig=fract(t*0.3+r6);
+  if(r3<0.64){                                            // Fontäne entlang r=L sin²θ
+    float w=cpl(0.11+0.13*r4,0.16);
+    float th0=asin(sqrt(min(0.5/L,0.95)));
+    float uh=fract(w*t+r5);
+    float u=uh-s*(0.30+0.25*r7);
+    float uu=clamp(u,0.0,1.0);
+    float th=mix(th0,PI*0.5,pow(uu,0.8));                 // schnell am Pol (|B| groß), langsam am Äquator
+    float phi=phi0+0.05*t*(r6-0.5);
+    p=dipole(L,th,phi,hemi);
+    a=step(0.0,u)*smoothstep(0.0,0.08,uu)*smoothstep(1.0,0.75,uu)*pow(1.0-s,0.8);
+  } else {                                                // gefangen: Spiegelpunkte, Gyration, Drift
+    float wb=cpl(0.55+0.6*r4,0.7), thm=0.30+0.55*r5;
+    float tt=t-s*2.4+r1*40.0;
+    float th=PI*0.5+thm*sin(wb*tt+TAU*r6);
+    float phi=phi0+(0.05+0.09*r7)*tt*hemi;                // Gradient-Krümmungs-Drift
+    vec3 gc=dipole(L,th,phi,1.0);
+    vec3 T=normalize(dipole(L,th+0.01,phi,1.0)-gc);
+    vec3 n1=vec3(-sin(phi),0.0,cos(phi)); vec3 n2=normalize(cross(T,n1));
+    float r=max(L*sin(th)*sin(th),0.2);
+    float B=sqrt(1.0+3.0*cos(th)*cos(th))/(r*r*r);       // |B| ∝ √(1+3cos²θ)/r³
+    float rho=clamp(0.045/sqrt(B),0.0,0.11);              // Gyrationsradius ∝ 1/|B| (gedämpft)
+    float wg=9.0+6.0*r2;
+    p=gc+rho*(n1*cos(wg*tt)+n2*sin(wg*tt));
+    a=pow(1.0-s,1.2)*0.9;
+    col=mix(col,cRim,0.25);
+  }
+  return p;
+}
+/* ---------------- Modus 3: Statisch suchend (3d-Arme + Lévy-Suche) ---------------- */
+vec3 levyT(int id,int j){                                 // Pareto-Sprung ℓ=ℓ0·u^(−1/α), α=1.5
+  float u=max(h1(id*977+j,11),0.02);
+  float l=min(0.07*pow(u,-1.0/1.5),0.62);
+  vec3 d=normalize(vec3(h1(id*977+j,12),h1(id*977+j,13),h1(id*977+j,14))-0.5+1e-3);
+  return d*l;
+}
+vec3 mSuch(int id,float s,float t,out float a,out vec3 col,out float sig){
+  float r1=h1(id,1),r2=h1(id,2),r3=h1(id,3),r4=h1(id,4),r5=h1(id,5),r6=h1(id,6),r7=h1(id,7);
+  int k=int(r1*4.0); float ang=PI*0.25+float(k)*PI*0.5;
+  vec3 D=normalize(vec3(cos(ang),sin(ang),(k==0||k==2)?0.18:-0.18));   // Keulen von 3d_xy
+  vec3 P1=normalize(cross(D,vec3(0,0,1))); vec3 P2=cross(D,P1);
+  float g=gammaS(id,7,1.5);                               // 3d: P(r)∝r⁶e^(−2r/3)
+  float Larm=clamp(1.75+0.06*(g-10.5),1.35,2.35);
+  sig=fract(t*(0.25+0.3*r6)+r7);
+  vec3 p;
+  if(r2<0.42){                                            // Axon-Bündel des Arms
+    float x=mix(0.52,Larm,1.0-s);
+    float spread=(0.03+0.10*x/Larm);
+    p=D*x+P1*spread*(r3-0.5)*2.0+P2*spread*(r4-0.5)*1.4;
+    p+=P1*0.025*sin(0.35*t+x*2.5+r5*TAU);                 // ruhiges Wiegen
+    a=0.55*smoothstep(0.0,0.08,s)*smoothstep(1.0,0.8,s)+0.25;
+    col=mix(cFib,cNode,smoothstep(0.6,2.0,x));
+  } else if(r2<0.9){                                      // Suchende Spitze
+    float rate=0.35+0.5*r3;
+    float tt=t-s*(2.6+1.4*r4)+r5*50.0;
+    float jf=tt*rate+r6*10.0; int j=int(floor(jf)); float f=fract(jf);
+    vec3 tip=D*(Larm+0.05);
+    vec3 lv=mix(levyT(id,j),levyT(id,j+1),smoothstep(0.0,0.3,f));   // schneller Sprung, dann Verweilen
+    vec3 sd=vec3(r3*31.0,r4*17.0,r5*23.0);
+    vec3 br=vec3(snoise(sd+vec3(tt*0.45,0,0)),snoise(sd+vec3(0,tt*0.45,7.0)),snoise(sd+vec3(5.0,0,tt*0.45)));  // Brown-Bewegung
+    float wc=(3.0+3.0*r7)*(r1<0.5?1.0:-1.0); float rc=(0.035+0.07*r6)*(0.6+0.4*sin(0.9*tt+r2*9.0));
+    vec3 curl=(P1*cos(wc*tt)+P2*sin(wc*tt)+D*0.4*sin(wc*0.5*tt))*rc;  // Kräusel-Schleifen
+    p=tip+lv+br*0.11+curl;
+    a=pow(1.0-s,1.1);
+    col=mix(cNode,cFib,0.25);
+  } else {                                                // ruhiges Zentrum
+    float w=cpl(0.15+0.1*r3,0.18), R=0.55+0.15*r4;
+    float tt=t-s*3.0+r5*30.0;
+    p=rotZ(rotX(vec3(R*cos(w*tt),R*sin(w*tt),0.0),r6*PI),r7*TAU);
+    a=0.35*(1.0-s);
+    col=cFib;
+  }
+  return p;
+}
+/* ---------------- Modus 4: Gegenteil (stehende Wellen, Resonanz, 4×) ---------------- */
+vec3 mGegen(int id,float s,float t,out float a,out vec3 col,out float sig){
+  float r1=h1(id,1),r2=h1(id,2),r3=h1(id,3),r4=h1(id,4),r5=h1(id,5),r6=h1(id,6),r7=h1(id,7);
+  float t4=t*4.0;
+  const float R0=1.5;
+  float w24=0.08*sqrt(24.0*25.0), w6=0.08*sqrt(42.0);     // ω_l ∝ √(l(l+1))
+  sig=fract(t4*0.2+r6);
+  vec3 p;
+  if(r1<0.42){                                            // Ring stehender Zickzack-Wellen
+    float phi=r2*TAU+(s-0.5)*0.75;
+    float R=R0+0.12*(r3-0.5);
+    float A1=0.10+0.05*r4;
+    float rr=R+A1*sin(24.0*phi+r5*0.6)*cos(w24*t4+r6*0.8)+0.13*sin(6.0*phi)*cos(w6*t4);
+    p=vec3(rr*cos(phi),rr*sin(phi),0.16*sin(3.0*phi+0.3*t4)+0.05*(r7-0.5));
+    a=pow(sin(PI*s),0.6)*0.85;
+    col=mix(cFib,cRim,0.35+0.3*r7);
+  } else if(r1<0.62){                                     // Spiralen im Inneren
+    float tt=t4-s*2.2+r3*60.0;
+    float ca=r2*TAU+0.08*tt, cr=0.75+0.45*r4;
+    vec3 c=vec3(cr*cos(ca),cr*sin(ca),0.15*(r5-0.5));
+    float wc=(2.0+2.5*r6)*(r7<0.5?1.0:-1.0);
+    float rc=0.04+0.15*(0.5+0.5*sin(0.35*tt+r5*TAU));     // atmender Spiralradius
+    p=c+rc*vec3(cos(wc*tt),sin(wc*tt),0.3*sin(wc*0.5*tt));
+    a=pow(1.0-s,1.2);
+    col=mix(cNode,cFib,0.4);
+  } else if(r1<0.86){                                     // auslaufende Bogen-Wellenfronten an 4 Quellen
+    int k=int(r2*4.0); float al=float(k)*PI*0.5+0.12*sin(t*0.3);
+    float u=fract(t4*(0.09+0.04*r3)+r4);
+    vec3 Q=vec3(R0*cos(al),R0*sin(al),0.0);
+    float rho=0.12+0.85*u;
+    float th=al+(s-0.5)*(2.0-0.9*u);
+    p=Q+vec3(rho*cos(th),rho*sin(th),0.05*(r5-0.5));
+    a=pow(1.0-u,1.3)*pow(sin(PI*s),0.7);
+    col=mix(cRim,cNode,u);
+  } else {                                                // Resonanz-Funken an den Schwingungsbäuchen
+    float phi=(floor(r2*24.0)+0.25)*TAU/24.0;
+    float tt=t4-s*0.35;
+    float rr=R0+0.42*sin(w24*tt+r3*TAU)*(0.6+0.4*r4);
+    p=vec3(rr*cos(phi),rr*sin(phi),0.0);
+    a=pow(1.0-s,2.0)*1.2;
+    col=vec3(1.0,0.95,0.9)*0.6+cRim*0.4;
+  }
+  return p;
+}
+vec3 modeFn(int m,int id,float s,float t,out float a,out vec3 col,out float sig){
+  if(m==0) return mLoop(id,s,t,a,col,sig);
+  if(m==1) return mDipol(id,s,t,a,col,sig);
+  if(m==2) return mSuch(id,s,t,a,col,sig);
+  return mGegen(id,s,t,a,col,sig);
+}
+/* ---------------- gestrichelte Hilfs-/Trennlinien je Modus ---------------- */
+vec3 guide(int m,int g,float s,out float a,out float dash){
+  a=0.0; dash=46.0; vec3 p=vec3(0.0);
+  float ang=s*TAU;
+  if(m==0){ if(g<4){ float R=0.42*float((g+2)*(g+2))*0.32; p=rotX(vec3(R*cos(ang),R*sin(ang),0.0),0.35); a=1.0; dash=30.0+10.0*float(g); } }   // Bohr ∝ n²
+  else if(m==1){
+    if(g==0){ p=vec3(mix(-2.7,2.7,s),0.0,0.0); a=1.0; dash=40.0; }                         // Äquator = Knotenebene
+    else if(g<5){ int q=g-1; float L=(q<2)?1.35:2.2; float sd=(q%2==0)?0.0:PI; float th=mix(0.05,PI-0.05,s);
+      p=dipole(L,th,sd,1.0); a=0.8; dash=36.0; }
+  } else if(m==2){
+    if(g==0){ p=vec3(0.0,mix(-2.6,2.6,s),0.0); a=1.0; dash=44.0; }                         // Knotenebene x=0
+    else if(g==1){ p=vec3(mix(-2.6,2.6,s),0.0,0.0); a=1.0; dash=44.0; }                    // Knotenebene y=0
+    else if(g<6){ int k=g-2; float an=PI*0.25+float(k)*PI*0.5; vec3 c=vec3(cos(an),sin(an),0.0)*1.85; p=c+0.42*vec3(cos(ang),sin(ang),0.0); a=0.6; dash=24.0; }
+  } else {
+    if(g==0){ p=vec3(1.5*cos(ang),1.5*sin(ang),0.0); a=0.9; dash=60.0; }                  // Ruhelage des Rings
+    else if(g==1){ p=vec3(2.15*cos(ang),2.15*sin(ang),0.0); a=0.5; dash=80.0; }
+    else if(g==2){ p=vec3(mix(-2.6,2.6,s),mix(-2.6,2.6,s),0.0)*0.707; a=0.7; dash=40.0; }
+    else if(g==3){ p=vec3(mix(-2.6,2.6,s),mix(2.6,-2.6,s),0.0)*0.707; a=0.7; dash=40.0; }
+  }
+  return p;
+}
+/* ---------------- Orbit-Ebene: Kepler, Hill-Sphären, Hohmann ---------------- */
+const float RING0=1.0, RINGD=0.5;
+vec3 orbPlane(vec2 xy,float j){ return rotZ(rotX(vec3(xy,0.0),1.12+0.04*j),0.22+0.05*j); }
+vec3 orbitL(int o,float s,float t,out float a,out float dash,out vec3 col,out float kind){
+  a=0.0; dash=0.0; col=cGuide; kind=0.0; vec3 p=vec3(0.0);
+  if(o<4){ float R=RING0+RINGD*float(o); float an=s*TAU; p=orbPlane(R*vec2(cos(an),sin(an)),float(o)); a=0.55; dash=50.0+16.0*float(o); return p; }
+  if(o<44){                                               // Satelliten auf Kepler-Ellipsen
+    int j=o%4; float aa=(RING0+RINGD*float(j))*(1.0+0.05*(h1(o,2)-0.5)); float e=0.12*h1(o,3);
+    float n=0.75*pow(aa,-1.5);                            // 3. Kepler-Gesetz
+    float M=n*(t-s*1.4)+TAU*h1(o,4);
+    float E=kepler(M,e);
+    vec2 xy=aa*vec2(cos(E)-e,sqrt(1.0-e*e)*sin(E));
+    xy=vec2(xy.x*cos(TAU*h1(o,5))-xy.y*sin(TAU*h1(o,5)),xy.x*sin(TAU*h1(o,5))+xy.y*cos(TAU*h1(o,5)));
+    p=orbPlane(xy,float(j)); a=0.45*pow(1.0-s,1.5); col=mix(cGuide,cNode,0.5);
+    kind=(o%3==0)?1.0:0.5;                                // 1 = mit Hill-Einflusszone
+    return p;
+  }
+  if(o<52){                                               // Hohmann-Transfer zwischen Bahn j und j+1
+    int j=o%3; float ra=RING0+RINGD*float(j), rb=ra+RINGD;
+    float at=0.5*(ra+rb), e=(rb-ra)/(rb+ra);
+    float n1=0.75*pow(ra,-1.5), n2=0.75*pow(rb,-1.5), nt=0.75*pow(at,-1.5);
+    float Tt=PI/nt, w1=1.1*TAU/n1, w2=0.8*TAU/n2, Tc=w1+Tt+w2+Tt;
+    float tt=t-s*Tt*0.9+h1(o,6)*Tc;
+    float c=floor(tt/Tc), x=tt-c*Tc;
+    float base=c*(n1*w1+n2*w2+TAU)+TAU*h1(o,7);
+    float an,r;
+    if(x<w1){ an=base+n1*x; r=ra; }
+    else if(x<w1+Tt){ float E=kepler(nt*(x-w1),e); float nu=2.0*atan(sqrt((1.0+e)/(1.0-e))*sin(E*0.5),cos(E*0.5)); r=at*(1.0-e*cos(E)); an=base+n1*w1+nu; }
+    else if(x<w1+Tt+w2){ an=base+n1*w1+PI+n2*(x-w1-Tt); r=rb; }
+    else { float E=kepler(PI+nt*(x-w1-Tt-w2),e); float nu=2.0*atan(sqrt((1.0+e)/(1.0-e))*sin(E*0.5),cos(E*0.5)); if(nu<0.0) nu+=TAU;
+      r=at*(1.0-e*cos(E)); an=base+n1*w1+PI+n2*w2+(nu-PI); }
+    p=orbPlane(r*vec2(cos(an),sin(an)),float(j)); a=0.9*pow(1.0-s,0.7); dash=34.0; col=cOrb; kind=1.5;
+    return p;
+  }
+  if(o<54){ float x=mix(-2.6,2.6,s); p=(o==52)?orbPlane(vec2(x,0.0),0.0):orbPlane(vec2(0.0,x),0.0); a=0.3; dash=60.0; return p; }  // Fadenkreuz
+  return p;
+}
+/* ---------------- Neuronale Spiralfasern (Bild 1) ---------------- */
+vec3 neural(int id,float s,float t,out float a,out vec3 col,out float sig){
+  float r1=h1(id,1),r2=h1(id,2),r4=h1(id,4),r5=h1(id,5),r6=h1(id,6),r7=h1(id,7),r8=h1(id,8);
+  float j=float(id%4); float Rs=0.70+0.34*j;
+  float w=0.12*pow(Rs,-1.5);                              // differentielle Rotation ω∝R^(−3/2)
+  float span=1.3+1.7*r5;
+  float an=TAU*r4+w*t+s*span;
+  float rr=Rs*exp(0.24*(s-0.35)*span);                    // log. Spirale r=R·e^(bψ)
+  vec3 p=vec3(rr*cos(an),rr*sin(an),0.06*sin(13.0*s*span+r6*TAU+t*0.3));
+  p=rotZ(rotX(p,r1*1.3),r2*TAU);
+  a=pow(sin(PI*min(s*1.1,1.0)),0.7)*uNeur;
+  col=mix(cFib*1.15,cNode,smoothstep(0.8,1.9,rr));
+  sig=fract(t*(0.12+0.2*r7)+r8);
+  return p;
+}
+/* ---------------- Zyklus: Urknall → Statisch → Ursuppe → Entropie ---------------- */
+vec3 cycle(vec3 p,int id,inout float a){
+  p*=uCyc.x;                                              // Friedmann a(t)∝t^(2/3)
+  if(uCyc.y>0.001){ float gs=0.36; p=mix(p,round(p/gs)*gs,uCyc.y*0.9); }                 // kubisches Gitter
+  if(uCyc.z>0.001){ int b=int(h1(id,31)*8.999); vec4 B=uBub[b]; vec3 c=B.xyz*1.75; float r=B.w*1.75;
+    vec3 d=p-c; p=mix(p,c+normalize(d+1e-4)*r*(0.85+0.3*h1(id,32)),uCyc.z*0.92); }          // Blasenoberflächen
+  if(uCyc.w>0.001){ vec3 dir=normalize(vec3(h1(id,33),h1(id,34),h1(id,35))-0.5+1e-3);
+    float tt=uCycT; vec3 dif=vec3(snoise(vec3(float(id)*0.1,tt,0.0)),snoise(vec3(tt,float(id)*0.1,3.0)),snoise(vec3(0.0,7.0,tt+float(id)*0.1)));
+    p+=(dir*(0.5+2.2*h1(id,36))*tt+dif*0.5*sqrt(tt))*uCyc.w;                               // ballistisch + Diffusion √t
+    a*=1.0-0.75*uCyc.w*clamp(tt*0.6,0.0,1.0); }
+  return p;
+}
+/* ---------------- Verbindungen: leuchtende Fäden Knoten↔Kern, Knoten↔Knoten ----------------
+   Kopf eines Agenten (Satellit, Neuronenknoten oder Modus-Agent) wird mit dem Kern oder einem zweiten
+   Knoten durch eine quadratische Bézier-Kurve B(s)=(1−s)²A+2s(1−s)C+s²B verbunden; der Kontrollpunkt C
+   hängt organisch durch (Simplex-Wackeln). Fäden wachsen, halten und lösen sich (eigener Lebenszyklus),
+   Signale laufen entlang. */
+vec3 headOf(int sel,int id,float t){
+  float a; vec3 c; float sg; float dash; float kind;
+  if(sel==0) return orbitL(4+(id%40),0.0,t,a,dash,c,kind);
+  if(sel==1) return neural(NG+NO+(id%NN),1.0,t,a,c,sg);
+  int mid=NG+NO+NN+NC+id;
+  vec3 pB=modeFn(uModeB,mid,0.0,t,a,c,sg);
+  if(uMix<0.999){ vec3 pA=modeFn(uModeA,mid,0.0,t,a,c,sg); pB=mix(pA,pB,smoothstep(0.0,1.0,uMix)); }
+  return pB;
+}
+vec3 conn(int id,float s,float t,out float a,out vec3 col,out float sig){
+  int c=id-(NG+NO+NN);
+  float r1=h1(id,1),r2=h1(id,2),r3=h1(id,3),r4=h1(id,4);
+  int sel = (c<28 && uOrb>0.05)? 0 : ((c<56)? 1 : 2);
+  // Lebenszyklus: wachsen (s läuft vom Knoten zum Ziel), halten, lösen
+  float cyc=fract(t*(0.05+0.05*r1)+r2);
+  float grow=smoothstep(0.0,0.25,cyc), fadeo=1.0-smoothstep(0.75,1.0,cyc);
+  int ep=int(floor(t*(0.05+0.05*r1)+r2));                  // jede Generation neue Partner
+  int ia=int(h1(id*131+ep,5)*1000.0), ib=int(h1(id*131+ep,6)*1000.0);
+  vec3 A=headOf(sel,ia,t);
+  bool toCore=(c%3)!=2;
+  vec3 B=toCore? normalize(A+1e-3)*0.6 : headOf(sel==0?0:2,ib,t);
+  vec3 M=0.5*(A+B);
+  vec3 side=normalize(cross(B-A,vec3(0.2,0.9,0.3))+1e-4);
+  vec3 wob=vec3(snoise(vec3(r3*40.0,t*0.3,0.0)),snoise(vec3(t*0.3,r4*40.0,5.0)),snoise(vec3(3.0,t*0.3,r1*40.0)));
+  vec3 C=M*(toCore?1.25:1.15)+side*(0.25*(r3-0.5))+wob*0.18*length(B-A);
+  float u=s;
+  vec3 p=(1.0-u)*(1.0-u)*A+2.0*u*(1.0-u)*C+u*u*B;
+  p+=wob*0.03*sin(PI*u*3.0+t);                             // feines organisches Zittern
+  a=step(u,grow+0.001)*fadeo*(0.55+0.45*sin(PI*u))*uConn;
+  col=sel==0? mix(cOrb,cNode,0.4) : mix(cNode,cFib,u);
+  sig=fract(t*(0.35+0.4*r4)+r1);                           // Signal vom Knoten zum Kern
+  return p;
+}
+// Agent auswerten: Objektraum-Position, Helligkeit, Farbe, Strichelung, Signalphase, Punkt-Art
+vec3 agent(int id,float s,out float a,out vec3 col,out float dash,out float sig,out float kind,out bool mover){
+  a=0.0; col=cGuide; dash=0.0; sig=-1.0; kind=0.0; mover=false; vec3 p=vec3(0.0);
+  if(id<NG){
+    int g=id%24; bool second=id>=24; int m=second?uModeB:uModeA; float wgt=second?uMix:(1.0-uMix);
+    if(uModeA==uModeB && second) return p;
+    if(uModeA==uModeB) wgt=1.0;
+    p=guide(m,g,s,a,dash); a*=0.28*wgt; col=cGuide; kind=-1.0; return p;
+  }
+  if(id<NG+NO){ p=orbitL(id-NG,s,uT,a,dash,col,kind); a*=uOrb; if(uOrb<0.01) a=0.0; return p; }
+  if(id<NG+NO+NN){ p=neural(id,s,uT,a,col,sig); kind=2.0; a*=0.55; return p; }
+  if(id<NG+NO+NN+NC){ p=conn(id,s,uT,a,col,sig); kind=4.0; return p; }
+  // Modus-Agenten (mit Übergang zwischen zwei Modi)
+  float aB; vec3 cB; float sB;
+  p=modeFn(uModeB,id,s,uT,aB,cB,sB);
+  a=aB; col=cB; sig=sB;
+  if(uMix<0.999){ float aA; vec3 cA; float sA; vec3 pA=modeFn(uModeA,id,s,uT,aA,cA,sA);
+    float m=smoothstep(0.0,1.0,clamp(uMix*1.15-h1(id,9)*0.15,0.0,1.0));
+    p=mix(pA,p,m); a=mix(aA,aB,m); col=mix(cA,cB,m); }
+  kind=3.0; mover=true;
+  return p;
+}
+vec4 project(vec3 p,int id,inout float a,bool mover){
+  p=cycle(p,id,a);
+  if(mover||id>=NG+NO){                                    // Curl-Noise-Verwirbelung (Externe Einflüsse)
+    vec3 q=p*0.9+uFlow;
+    vec4 g1=snoiseD(q); vec4 g2=snoiseD(q*1.13+vec3(19.1,-7.3,4.7));
+    p+=cross(g1.xyz,g2.xyz)*0.022*(0.25+uExt)*(1.0+0.6*uEn);
+  }
+  vec3 W=uRot*(p*uScaleA)+uOff*0.5;
+  for(int i=0;i<6;i++){                                   // Berührungs-Schockwelle (Kugelwelle, gedämpft)
+    vec4 R=uRipA[i]; if(R.w<=0.0) continue;
+    float tau=uRipAT[i]; vec3 d=W-R.xyz; float dist=length(d);
+    float fr=dist-2.6*tau;
+    float k=R.w*exp(-fr*fr*7.0)*exp(-1.3*tau);
+    W+=d/(dist+1e-3)*k*0.32; a*=1.0+k*2.5;
+  }
+  return uProj*uView*vec4(W,1.0);
+}`;
+
+const VS_LINE = `#version 300 es
+${AGENT_COMMON}
+out vec3 vCol; out float vA; out float vS; flat out float vDash; flat out float vSig;
+void main(){
+  int per=uSeg*2; int id=gl_VertexID/per; int rem=gl_VertexID-id*per; int seg=rem/2; int en=rem-seg*2;
+  float s=float(seg+en)/float(uSeg);
+  float a; vec3 col; float dash,sig,kind; bool mover;
+  vec3 p=agent(id,s,a,col,dash,sig,kind,mover);
+  if(a<=0.0005){ gl_Position=vec4(2.0,2.0,2.0,1.0); vA=0.0; vCol=vec3(0); vS=s; vDash=0.0; vSig=-1.0; return; }
+  gl_Position=project(p,id,a,mover);
+  float gain=(kind==3.0)?0.20:(kind==2.0?0.22:(kind==4.0?0.5:(kind<0.0?1.0:0.6)));
+  vA=a*gain*(0.45+0.75*uEn)*(1.0+0.35*uPulse);
+  vCol=col; vS=s; vDash=dash; vSig=sig;
+}`;
+const FS_LINE = `#version 300 es
+precision highp float;
+in vec3 vCol; in float vA; in float vS; flat in float vDash; flat in float vSig;
+uniform float uEnc;
+layout(location=0) out vec4 oCol; layout(location=1) out vec4 oGlow;
+void main(){
+  if(vDash>0.0 && fract(vS*vDash)>0.5) discard;
+  float sig=vSig>=0.0? exp(-pow((vS-vSig)*16.0,2.0)) : 0.0;   // Signalpuls wandert entlang der Faser
+  vec3 c=vCol*vA*(1.0+sig*5.0)+vec3(1.0,0.95,0.85)*sig*vA*2.5;
+  oCol=vec4(c*uEnc,0.0); oGlow=vec4(c*0.9*uEnc,0.0);
+}`;
+const VS_PT = `#version 300 es
+${AGENT_COMMON}
+out vec3 vCol; out float vA; flat out float vKind;
+void main(){
+  int id=gl_VertexID;
+  float a; vec3 col; float dash,sig,kind; bool mover;
+  float s=(id>=NG+NO && id<NG+NO+NN)?1.0:0.0;
+  vec3 p=agent(id,s,a,col,dash,sig,kind,mover);
+  if(id>=NG+NO && id<NG+NO+NN) a=uNeur;
+  if(kind<=0.0 || kind==4.0 || a<=0.001){ gl_Position=vec4(2.0,2.0,2.0,1.0); gl_PointSize=1.0; vA=0.0; vCol=vec3(0); vKind=0.0; return; }
+  gl_Position=project(p,id,a,mover);
+  // Knoten feuern mit eigener Frequenz: Puls = ((1+sin(ωt+φ))/2)^8
+  float fire=pow(0.5+0.5*sin(uT*(1.5+3.0*h1(id,21))*(kind==3.0?1.0:0.6)+TAU*h1(id,22)),8.0);
+  float sz; vec3 c;
+  if(kind==3.0){ sz=(1.6+1.6*h1(id,23)+3.0*fire)*uPx; c=mix(col,cNode,0.6)+vec3(fire*0.6); a*=0.55; }
+  else if(kind==2.0){ sz=(2.4+4.5*fire)*uPx; c=cNode*1.1+vec3(0.35*fire); a*=0.7; }
+  else if(kind==1.0){ sz=46.0*uPx; c=cOrb; }               // Hill-Sphäre (Ring) + Satellit
+  else if(kind==1.5){ sz=6.5*uPx; c=cOrb*1.3; }
+  else { sz=4.5*uPx; c=mix(cGuide,cNode,0.4); }
+  gl_PointSize=sz; vCol=c; vA=a*(0.45+0.75*uEn); vKind=kind;
+}`;
+const FS_PT = `#version 300 es
+precision highp float;
+in vec3 vCol; in float vA; flat in float vKind;
+uniform float uEnc;
+layout(location=0) out vec4 oCol; layout(location=1) out vec4 oGlow;
+void main(){
+  vec2 q=gl_PointCoord*2.0-1.0; float r=length(q); if(r>1.0) discard;
+  float I;
+  if(vKind==1.0){
+    float ring=exp(-pow((r-0.82)*16.0,2.0))*0.55;         // Einflusszone: dünner Ring
+    float dashA=step(0.0,sin(atan(q.y,q.x)*18.0));
+    I=ring*dashA+exp(-r*r*14.0*14.0)*2.5+0.10*exp(-r*r*3.0);
+  } else I=exp(-r*r*5.0)+exp(-r*r*40.0)*1.5;
+  vec3 c=vCol*vA*I;
+  oCol=vec4(c*uEnc,0.0); oGlow=vec4(c*1.3*uEnc,0.0);
+}`;
+
+/* ---------- Gitter (Bild 4): kubisches Raster, synästhetisch eingefärbt ---------- */
+const VS_LAT = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPos;
+uniform mat4 uProj,uView; uniform mat3 uRot; uniform vec3 uOff; uniform float uScaleA, uGrid, uGrenz, uT, uBound;
+out vec3 vCol; out float vA;
+vec3 spec3(float h){ return 0.5+0.5*cos(6.28318*(h+vec3(0.0,0.33,0.67))); }
+void main(){
+  vec3 p=aPos;
+  vec3 W=uRot*(p*uScaleA)+uOff*0.5;
+  float h=0.13*p.x+0.21*p.y+0.17*p.z+0.03*uT;             // Farbsynästhesie: Farbton = f(Ort)
+  float rr=length(p);
+  float bd=exp(-pow((rr-uBound)*2.6,2.0));                 // hell, wo das Raster die Objektgrenze schneidet
+  vCol=spec3(h)*(0.6+0.4*uGrenz);
+  vA=uGrid*(0.10+0.55*bd)*(1.0-smoothstep(2.2,3.2,rr));
+  gl_Position=uProj*uView*vec4(W,1.0);
+}`;
+const FS_LAT = `#version 300 es
+precision highp float;
+in vec3 vCol; in float vA; uniform float uEnc;
+layout(location=0) out vec4 oCol; layout(location=1) out vec4 oGlow;
+void main(){ vec3 c=vCol*vA; oCol=vec4(c*uEnc,0.0); oGlow=vec4(c*0.8*uEnc,0.0); }`;
+
+/* ---------- Aura ---------- */
+const FS_AURA = `#version 300 es
+precision highp float;
+in vec2 vUv;
+uniform vec2 uRes, uC; uniform float uR, uLight, uEnergy, uEnc; uniform vec3 uLobe, cFar;
+layout(location=0) out vec4 oCol;
+layout(location=1) out vec4 oGlow;
+${NOISE}
+void main(){
+  vec2 p=(vUv*uRes-uC)/uR;
+  float r=length(p), a=atan(p.y,p.x);
+  vec3 q=vec3(cos(a),sin(a),0.0)*1.05+uLobe;
+  float n=snoise(q)*0.7+snoise(q*2.2+4.0)*0.3;
+  float lobes=pow(clamp(n*0.6+0.5,0.0,1.0),4.0);
+  float fall=exp(-max(r-0.75,0.0)*(2.4-lobes*1.3));
+  float g=(0.06+lobes*2.6)*fall*smoothstep(0.35,0.9,r);
+  vec2 sp=(p-vec2(0.18,-1.28))*vec2(0.85,2.1);
+  float sh=exp(-dot(sp,sp)*1.4);
+  oCol=vec4(vec3(0.28,0.32,0.28)*sh*uLight*uEnc,0.0);
+  oGlow=vec4(cFar*g*(0.35+uEnergy)*0.32,1.0)*uEnc;
+}`;
+
+/* ---------- Bloom: Gauß-Pyramide ---------- */
+const FS_DOWN = `#version 300 es
+precision highp float;
+in vec2 vUv; uniform sampler2D uTex; uniform vec2 uTexel; out vec4 o;
+void main(){
+  vec2 h=uTexel;
+  vec4 s=texture(uTex,vUv)*4.0;
+  s+=texture(uTex,vUv+vec2(-h.x,-h.y)); s+=texture(uTex,vUv+vec2(h.x,-h.y));
+  s+=texture(uTex,vUv+vec2(-h.x,h.y));  s+=texture(uTex,vUv+vec2(h.x,h.y));
+  o=s/8.0;
+}`;
+const FS_UP = `#version 300 es
+precision highp float;
+in vec2 vUv; uniform sampler2D uPrev, uCur; uniform vec2 uPT; uniform float uWP, uWC; out vec4 o;
+void main(){
+  vec2 h=uPT;
+  vec3 s=texture(uPrev,vUv).rgb*4.0;
+  s+=(texture(uPrev,vUv+vec2(h.x,0)).rgb+texture(uPrev,vUv-vec2(h.x,0)).rgb+texture(uPrev,vUv+vec2(0,h.y)).rgb+texture(uPrev,vUv-vec2(0,h.y)).rgb)*2.0;
+  s+=texture(uPrev,vUv+h).rgb+texture(uPrev,vUv-h).rgb+texture(uPrev,vUv+vec2(h.x,-h.y)).rgb+texture(uPrev,vUv+vec2(-h.x,h.y)).rgb;
+  o=vec4(s/16.0*uWP+texture(uCur,vUv).rgb*uWC,1.0);
+}`;
+
+/* ---------- Komposition ---------- */
+const FS_COMP = `#version 300 es
+precision highp float;
+in vec2 vUv;
+uniform sampler2D uScene, uBloom;
+uniform vec3 uBg, uBg2;
+uniform float uLight, uBloomStr, uExpo, uEncInv, uTime, uVig;
+uniform vec2 uRes, uCen;
+out vec4 o;
+${NOISE}
+float hash(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
+void main(){
+  vec4 s4=texture(uScene,vUv); vec3 sc=s4.rgb*uEncInv;
+  float cov=clamp(s4.a,0.0,1.0);
+  vec3 b=texture(uBloom,vUv).rgb*uEncInv;
+  vec3 hdr=sc+b*uBloomStr*(1.0-0.45*cov);
+  vec2 p=(vUv-uCen)*uRes/min(uRes.x,uRes.y);
+  float rr=length(p);
+  vec3 bg=mix(uBg2,uBg,smoothstep(0.0,0.95,rr));
+  float neb=snoise(vec3(p*1.6,uTime*0.015))*0.5+snoise(vec3(p*3.7,uTime*0.02+3.0))*0.25;
+  bg*=1.0+neb*0.35*(1.0-uLight);
+  vec3 dark=1.0-(1.0-bg)*exp(-hdr*uExpo);
+  dark*=1.0-uVig*rr*rr*0.45;
+  float lum=dot(dark,vec3(0.2126,0.7152,0.0722)); dark=max(mix(vec3(lum),dark,1.25),0.0);
+  vec3 light=bg*exp(-hdr*1.15);
+  vec3 c=mix(dark,light,uLight);
+  c=pow(max(c,0.0),vec3(1.0/2.2));
+  c+=(hash(vUv*uRes+fract(uTime))-0.5)/255.0;
+  o=vec4(c,1.0);
+}`;
+const VS_THUMB = `#version 300 es
+layout(location=0) in vec2 aPos; uniform vec4 uRect; uniform vec2 uRes; out vec2 vUv;
+void main(){ vec2 uv=aPos*0.5+0.5; vUv=uv; vec2 px=uRect.xy+uv*uRect.zw; gl_Position=vec4(px/uRes*2.0-1.0,0.0,1.0); }`;
+const FS_THUMB = `#version 300 es
+precision highp float;
+in vec2 vUv; uniform sampler2D uAtlas; uniform float uIdx, uN, uRad; uniform vec4 uRect; out vec4 o;
+void main(){
+  vec2 px=vUv*uRect.zw; vec2 h=uRect.zw*0.5;
+  vec2 q=abs(px-h)-(h-uRad);
+  float d=length(max(q,0.0))+min(max(q.x,q.y),0.0)-uRad;
+  float a=clamp(0.5-d,0.0,1.0);
+  vec3 c=texture(uAtlas,vec2((uIdx+vUv.x)/uN,vUv.y)).rgb;
+  o=vec4(c,a);
+}`;
+
+/* =====================================================================
+   GL helpers
+   ===================================================================== */
+function compile(type, src){
+  const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){ const log=gl.getShaderInfoLog(s); console.error(log); throw new Error(log); }
+  return s;
+}
+function program(vs, fs){
+  const p=gl.createProgram(); gl.attachShader(p,compile(gl.VERTEX_SHADER,vs)); gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u={}; const n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);
+  for(let i=0;i<n;i++){ const inf=gl.getActiveUniform(p,i); u[inf.name.replace(/\[0\]$/,'')]=gl.getUniformLocation(p,inf.name); }
+  return {p,u};
+}
+let P_OBJ,P_AURA,P_DOWN,P_UP,P_COMP,P_THUMB,P_VOL,P_LINE,P_PT,P_LAT;
+try{
+  P_OBJ=program(VS_OBJ,FS_OBJ); P_AURA=program(VS_FULL,FS_AURA); P_DOWN=program(VS_FULL,FS_DOWN);
+  P_UP=program(VS_FULL,FS_UP); P_COMP=program(VS_FULL,FS_COMP); P_THUMB=program(VS_THUMB,FS_THUMB);
+  P_VOL=program(VS_FULL,FS_VOL); P_LINE=program(VS_LINE,FS_LINE); P_PT=program(VS_PT,FS_PT); P_LAT=program(VS_LAT,FS_LAT);
+}catch(e){ fail('Shader-Fehler: '+e.message); return; }
+
+const f1=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniform1f(l,v);};
+const i1=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniform1i(l,v);};
+const f2=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniform2fv(l,v);};
+const f3=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniform3fv(l,v);};
+const f4=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniform4fv(l,v);};
+const fa=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniform1fv(l,v);};
+const m3=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniformMatrix3fv(l,false,v);};
+const m4=(P,n,v)=>{const l=P.u[n]; if(l) gl.uniformMatrix4fv(l,false,v);};
+const t1=(P,n,unit,tex)=>{const l=P.u[n]; gl.activeTexture(gl.TEXTURE0+unit); gl.bindTexture(gl.TEXTURE_2D,tex); if(l) gl.uniform1i(l,unit);};
+
+const vaoFull=gl.createVertexArray(); gl.bindVertexArray(vaoFull);
+{ const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); }
+const vaoQuad=gl.createVertexArray(); gl.bindVertexArray(vaoQuad);
+{ const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); }
+const vaoEmpty=gl.createVertexArray();      // Agenten: nur gl_VertexID
+
+function icosphere(sub){
+  const t=(1+Math.sqrt(5))/2; let v=[-1,t,0, 1,t,0, -1,-t,0, 1,-t,0, 0,-1,t, 0,1,t, 0,-1,-t, 0,1,-t, t,0,-1, t,0,1, -t,0,-1, -t,0,1];
+  let f=[0,11,5, 0,5,1, 0,1,7, 0,7,10, 0,10,11, 1,5,9, 5,11,4, 11,10,2, 10,7,6, 7,1,8, 3,9,4, 3,4,2, 3,2,6, 3,6,8, 3,8,9, 4,9,5, 2,4,11, 6,2,10, 8,6,7, 9,8,1];
+  for(let i=0;i<v.length;i+=3){const l=Math.hypot(v[i],v[i+1],v[i+2]); v[i]/=l; v[i+1]/=l; v[i+2]/=l;}
+  for(let s=0;s<sub;s++){
+    const cache=new Map(), nf=[];
+    const mid=(a,b)=>{ const key=a<b?a*1e7+b:b*1e7+a; let r=cache.get(key); if(r!==undefined) return r;
+      let x=(v[a*3]+v[b*3])/2, y=(v[a*3+1]+v[b*3+1])/2, z=(v[a*3+2]+v[b*3+2])/2; const l=Math.hypot(x,y,z);
+      v.push(x/l,y/l,z/l); r=v.length/3-1; cache.set(key,r); return r; };
+    for(let i=0;i<f.length;i+=3){ const a=f[i],b=f[i+1],c=f[i+2],ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);
+      nf.push(a,ab,ca, b,bc,ab, c,ca,bc, ab,bc,ca); }
+    f=nf;
+  }
+  const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+  const vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+  const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(f),gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  return {vao,count:f.length};
+}
+const MESH_HI=icosphere(6), MESH_LO=icosphere(4);
+
+// Gitter: kubisches Raster ±1.8, 5×5 Linien je Achse, gestrichelt (jedes 2. Teilstück)
+const LAT=(()=>{ const v=[], g=[-1.8,-0.9,0,0.9,1.8], NSUB=12;
+  for(let ax=0;ax<3;ax++) for(const a of g) for(const b of g) for(let k=0;k<NSUB;k+=2){
+    const u0=-1.8+3.6*k/NSUB, u1=-1.8+3.6*(k+1)/NSUB;
+    const P=(u)=>ax===0?[u,a,b]:ax===1?[a,u,b]:[a,b,u]; v.push(...P(u0),...P(u1)); }
+  const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+  const vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0); gl.bindVertexArray(null);
+  return {vao,count:v.length/3}; })();
+
+function mkTex(w,h,ifmt=IFMT,type=TYPE,fmt=gl.RGBA){
+  const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,ifmt,w,h,0,fmt,type,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  return t;
+}
+function mkFB(texs, depth){
+  const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+  texs.forEach((t,i)=>gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0+i,gl.TEXTURE_2D,t,0));
+  if(depth) gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,depth);
+  return f;
+}
+function mkRB(w,h,fmt,samples){ const r=gl.createRenderbuffer(); gl.bindRenderbuffer(gl.RENDERBUFFER,r);
+  if(samples>1) gl.renderbufferStorageMultisample(gl.RENDERBUFFER,samples,fmt,w,h); else gl.renderbufferStorage(gl.RENDERBUFFER,fmt,w,h); return r; }
+function makeTarget(w,h,wantMS,levels){
+  const T={w,h,objs:[],rbs:[],fbs:[]};
+  T.sceneTex=mkTex(w,h); T.glowTex=mkTex(w,h); T.objs.push(T.sceneTex,T.glowTex);
+  T.sceneFB=mkFB([T.sceneTex]); T.glowFB=mkFB([T.glowTex]); T.fbs.push(T.sceneFB,T.glowFB);
+  T.ms=null;
+  const samples=Math.min(4,MAXS);
+  if(wantMS && samples>1){
+    const c0=mkRB(w,h,IFMT,samples), c1=mkRB(w,h,IFMT,samples), dp=mkRB(w,h,gl.DEPTH_COMPONENT24,samples);
+    const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,c0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT1,gl.RENDERBUFFER,c1);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,dp);
+    if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE){ T.ms=f; T.rbs.push(c0,c1,dp); T.fbs.push(f); }
+    else { gl.deleteFramebuffer(f); [c0,c1,dp].forEach(r=>gl.deleteRenderbuffer(r)); }
+  }
+  if(T.ms){ T.drawFB=T.ms; }
+  else { const dp=mkRB(w,h,gl.DEPTH_COMPONENT24,0); T.rbs.push(dp); T.drawFB=mkFB([T.sceneTex,T.glowTex],dp); T.fbs.push(T.drawFB); }
+  T.down=[]; T.up=[]; let cw=w,ch=h;
+  for(let i=0;i<levels;i++){
+    cw=Math.max(1,cw>>1); ch=Math.max(1,ch>>1);
+    const d=mkTex(cw,ch); T.down.push({t:d,f:mkFB([d]),w:cw,h:ch}); T.objs.push(d);
+    if(i<levels-1){ const u=mkTex(cw,ch); T.up.push({t:u,f:mkFB([u]),w:cw,h:ch}); T.objs.push(u); }
+  }
+  T.down.forEach(x=>T.fbs.push(x.f)); T.up.forEach(x=>T.fbs.push(x.f));
+  T.dispose=()=>{ T.objs.forEach(t=>gl.deleteTexture(t)); T.rbs.forEach(r=>gl.deleteRenderbuffer(r)); T.fbs.forEach(f=>gl.deleteFramebuffer(f)); };
+  return T;
+}
+function resolve(T){
+  if(!T.ms) return;
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER,T.ms);
+  gl.readBuffer(gl.COLOR_ATTACHMENT0); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,T.sceneFB);
+  gl.blitFramebuffer(0,0,T.w,T.h,0,0,T.w,T.h,gl.COLOR_BUFFER_BIT,gl.NEAREST);
+  gl.readBuffer(gl.COLOR_ATTACHMENT1); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,T.glowFB);
+  gl.blitFramebuffer(0,0,T.w,T.h,0,0,T.w,T.h,gl.COLOR_BUFFER_BIT,gl.NEAREST);
+  gl.readBuffer(gl.COLOR_ATTACHMENT0);
+}
+const BLOOM_W=[0.85,0.95,0.85,0.7,0.6,0.55,0.5];
+function bloom(T){
+  gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST); gl.bindVertexArray(vaoFull);
+  gl.useProgram(P_DOWN.p);
+  let src=T.glowTex, sw=T.w, sh=T.h;
+  for(const d of T.down){ gl.bindFramebuffer(gl.FRAMEBUFFER,d.f); gl.viewport(0,0,d.w,d.h);
+    t1(P_DOWN,'uTex',0,src); f2(P_DOWN,'uTexel',[1/sw,1/sh]); gl.drawArrays(gl.TRIANGLES,0,3); src=d.t; sw=d.w; sh=d.h; }
+  gl.useProgram(P_UP.p);
+  const L=T.down.length; let prev=T.down[L-1], first=true;
+  for(let i=L-2;i>=0;i--){ const u=T.up[i];
+    gl.bindFramebuffer(gl.FRAMEBUFFER,u.f); gl.viewport(0,0,u.w,u.h);
+    t1(P_UP,'uPrev',0,prev.t); t1(P_UP,'uCur',1,T.down[i].t); f2(P_UP,'uPT',[1/prev.w,1/prev.h]);
+    f1(P_UP,'uWP',first?BLOOM_W[L-1]:1); f1(P_UP,'uWC',BLOOM_W[i]);
+    gl.drawArrays(gl.TRIANGLES,0,3); prev=u; first=false; }
+  return prev.t;
+}
+
+/* =====================================================================
+   Paletten / Presets  (fib = Axon, node = Knoten, orb = Einfluss/Transfer, guide = Hilfslinien)
+   ===================================================================== */
+const PRESETS=[
+  {name:'Neuron Gold',        bg:'#040508', bg2:'#191206', deep:'#3a1c04', body:'#c47612', core:'#fff0c0', glow:'#ffbd48', rim:'#ff3ce0', far:'#ff9418', spec:'#ffffff', accent:'#ffc35a',
+    fib:'#ffad40', node:'#74d4ff', orb:'#ff8a28', guide:'#c9d2e4'},
+  {name:'Nebula Blau/Violett', bg:'#04050f', bg2:'#0f1238', deep:'#120d63', body:'#3550ff', core:'#e2d4ff', glow:'#7b8cff', rim:'#ff3cf0', far:'#4a3cff', spec:'#ffffff', accent:'#8b7bff',
+    fib:'#9a88ff', node:'#c4f0ff', orb:'#ff9a3c', guide:'#b9c0ff'},
+  {name:'Smaragd Grün',        bg:'#000000', bg2:'#010504', deep:'#01452f', body:'#00e6c8', core:'#b8fff2', glow:'#2bfff0', rim:'#ff22d8', far:'#10ff80', spec:'#ffffff', accent:'#3dffe0',
+    fib:'#33ffc4', node:'#e4fff9', orb:'#ffa040', guide:'#a8ffe8'},
+  {name:'Magenta Plasma',      bg:'#0e030d', bg2:'#2b0828', deep:'#4a0858', body:'#d81cae', core:'#ffd6f7', glow:'#ff70e8', rim:'#7a4dff', far:'#ff27cf', spec:'#ffffff', accent:'#ff5ce0',
+    fib:'#ff6ae4', node:'#a6e6ff', orb:'#ffb04a', guide:'#ffc8f4'},
+  {name:'Eis Blau',            bg:'#040912', bg2:'#0c1b31', deep:'#1b4a7c', body:'#7cc4ff', core:'#ffffff', glow:'#b8e8ff', rim:'#8f7dff', far:'#3a96ff', spec:'#ffffff', accent:'#9fd8ff',
+    fib:'#9cd6ff', node:'#ffffff', orb:'#ffb066', guide:'#cfe8ff'},
+  {name:'Feuer Orange',        bg:'#0c0402', bg2:'#2c0e05', deep:'#701200', body:'#ff5410', core:'#fff0a8', glow:'#ffae3a', rim:'#ff1f55', far:'#ff6200', spec:'#fff4e0', accent:'#ff8a3a',
+    fib:'#ffa236', node:'#fff0c0', orb:'#ff3a2a', guide:'#ffd8b0'},
+  {name:'Weiß / Licht', light:1, bg:'#f4f4f6', bg2:'#ffffff', deep:'#8a8682', body:'#55524f', core:'#6e6a66', glow:'#5a5658', rim:'#6a5f6e', far:'#4a5550', spec:'#ffffff', accent:'#9aa3b5', ink:true,
+    fib:'#4a4846', node:'#2f5a8a', orb:'#c8661a', guide:'#7a7a80'}
+];
+function hex2rgb(h){ const n=parseInt(h.slice(1),16); return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]; }
+function hueRot(c,deg){
+  if(!deg) return c.slice(); const a=deg*Math.PI/180, cs=Math.cos(a), sn=Math.sin(a);
+  const y=0.299*c[0]+0.587*c[1]+0.114*c[2], i=0.596*c[0]-0.274*c[1]-0.322*c[2], q=0.211*c[0]-0.523*c[1]+0.312*c[2];
+  const i2=i*cs-q*sn, q2=i*sn+q*cs;
+  return [y+0.956*i2+0.621*q2, y-0.272*i2-0.647*q2, y-1.106*i2+1.703*q2].map(v=>Math.min(1,Math.max(0,v)));
+}
+const lin=(c)=>c.map(v=>Math.pow(v,2.2));
+const KEYS=['bg','bg2','deep','body','core','glow','rim','far','spec','fib','node','orb','guide'];
+function paletteFor(i,hue){
+  const p=PRESETS[i], o={light:p.light?1:0};
+  for(const k of KEYS){
+    let c=hex2rgb(p[k]);
+    if(p.ink && k!=='bg' && k!=='bg2' && k!=='spec'){ c=hueRot(c,hue); o[k]=c.map(v=>(1-v)*0.62); }
+    else o[k]=lin(k==='bg'||k==='bg2'?c:hueRot(c,hue));
+  }
+  return o;
+}
+function lerpPal(cur,tgt,a){ for(const k of KEYS){ for(let j=0;j<3;j++) cur[k][j]+= (tgt[k][j]-cur[k][j])*a; } cur.light+=(tgt.light-cur.light)*a; }
+
+/* =====================================================================
+   Zustand, Regler, Speicher  (eigener Schlüssel für v3)
+   ===================================================================== */
+const ORB_N=['1s','2s','2p','3d','2p±1'];
+const SL=[
+  {k:'farbe',    label:'Farbe',                   min:-180,max:180,step:1,  def:0,   hint:'Farbton-Verschiebung der Palette', fmt:v=>(v>0?'+':'')+Math.round(v)+'°'},
+  {k:'dynamik',  label:'Dynamik',                 min:0,max:1,step:0.01,   def:0.5, hint:'Zeitfluss der Agenten · Herzfrequenz · Lorenz-Zeit'},
+  {k:'dichte',   label:'Dichte',                  min:0,max:1,step:0.01,   def:0.55,hint:'Marmor & Absorption im Glas · Leuchtdichte der Orbitalwolke'},
+  {k:'extern',   label:'Externe Einflüsse',       min:0,max:1,step:0.01,   def:0.45,hint:'Lorenz-Kopplung · Curl-Noise-Verwirbelung der Agenten'},
+  {k:'kopplung', label:'Element-Wechselwirkung',  min:0,max:1,step:0.01,   def:0.4, hint:'Kuramoto-Kopplung K: Agenten frei ↔ synchron'},
+  {k:'spannung', label:'Spannung',                min:0,max:1,step:0.01,   def:0.5, hint:'Oberflächenspannung σ · Federhärte · Wellengeschwindigkeit'},
+  {k:'energie',  label:'Energie',                 min:0,max:1,step:0.01,   def:0.6, hint:'Leuchtkraft, Bloom, Amplituden'},
+  {k:'struktur', label:'Grundstruktur',           min:0,max:4,step:0.01,   def:0.0, hint:'Wasserstoff-Orbital: 1s → 2s → 2p → 3d → 2p±1 (rotierend)',
+    fmt:v=>{const i=Math.round(v); return Math.abs(v-i)<0.08?ORB_N[i]:ORB_N[Math.floor(v)]+'→'+ORB_N[Math.min(4,Math.floor(v)+1)];}}
+];
+const MODES=[
+  {name:'Egozentrischer Loop', short:'1s · Rosette'},
+  {name:'Doppelpol',           short:'2p · Dipol'},
+  {name:'Statisch suchend',    short:'3d · Lévy'},
+  {name:'Gegenteil',           short:'4× · Resonanz'}
+];
+const LAYERS=[
+  {k:'neur', label:'Neuronen', def:1},
+  {k:'orb',  label:'Orbits',   def:1},
+  {k:'furch',label:'Furchen',  def:1},
+  {k:'conn', label:'Verbindungen', def:1},
+  {k:'grid', label:'Gitter',   def:0},
+  {k:'grenz',label:'Grenzen',  def:0},
+  {k:'zyk',  label:'Zyklus',   def:0}
+];
+const STORE='shivas_ocean.quantenobjekt.v3';
+const S={}; SL.forEach(s=>S[s.k]=s.def);
+const LY={}; LAYERS.forEach(l=>LY[l.k]=l.def);
+let preset=0, mode=0;
+try{ const j=JSON.parse(localStorage.getItem(STORE)||'null');
+  if(j){ if(j.s) SL.forEach(s=>{ const v=+j.s[s.k]; if(Number.isFinite(v)) S[s.k]=Math.min(s.max,Math.max(s.min,v)); });
+         if(Number.isInteger(j.p) && j.p>=0 && j.p<PRESETS.length) preset=j.p;
+         if(Number.isInteger(j.m) && j.m>=0 && j.m<4) mode=j.m;
+         if(j.l) LAYERS.forEach(l=>{ if(j.l[l.k]!==undefined) LY[l.k]=j.l[l.k]?1:0; }); } }catch(e){}
+let saveT=0;
+function flush(){ clearTimeout(saveT); try{ localStorage.setItem(STORE,JSON.stringify({s:S,p:preset,m:mode,l:LY})); }catch(e){} }
+function save(now){ clearTimeout(saveT); if(now===true) flush(); else saveT=setTimeout(flush,150); }
+addEventListener('pagehide',flush); document.addEventListener('visibilitychange',()=>{ if(document.hidden) flush(); });
+const Pm={}; SL.forEach(s=>Pm[s.k]=S[s.k]);
+const Lm={}; LAYERS.forEach(l=>Lm[l.k]=LY[l.k]);
+
+/* ---------------- UI ---------------- */
+const panel=$('#qo-panel'), bar=$('#qo-bar'), toggle=$('#qo-toggle');
+const outs={}, inputs={};
+SL.forEach(s=>{
+  const row=document.createElement('div'); row.className='qo-row';
+  row.innerHTML=`<label for="qo-${s.k}">${s.label}</label><output id="qo-o-${s.k}"></output>
+    <input type="range" id="qo-${s.k}" min="${s.min}" max="${s.max}" step="${s.step}" value="${S[s.k]}"><small>${s.hint}</small>`;
+  panel.appendChild(row);
+  const inp=row.querySelector('input'), out=row.querySelector('output');
+  inputs[s.k]=inp; outs[s.k]=out;
+  const show=()=>{ out.textContent=s.fmt?s.fmt(S[s.k]):Math.round(S[s.k]*100)+'%'; };
+  inp.addEventListener('input',()=>{ S[s.k]=+inp.value; show(); save(); if(s.k==='farbe'||s.k==='struktur') thumbsDirty=true; });
+  show(); s.show=show;
+});
+{ const h=document.createElement('div'); h.className='qo-sec'; h.textContent='Ebenen'; panel.appendChild(h); }
+const chips=document.createElement('div'); chips.className='qo-chips'; panel.appendChild(chips);
+const chipEls={};
+LAYERS.forEach(l=>{ const b=document.createElement('button'); b.className='qo-chip'; b.textContent=l.label; b.setAttribute('aria-pressed',!!LY[l.k]);
+  b.onclick=()=>setLayer(l.k,!LY[l.k]); chips.appendChild(b); chipEls[l.k]=b; b.classList.toggle('on',!!LY[l.k]); });
+function setLayer(k,on){ LY[k]=on?1:0; chipEls[k].classList.toggle('on',!!on); chipEls[k].setAttribute('aria-pressed',!!on);
+  if(k==='zyk'){ sim.cyc=0; sim.cycFlash=false; } save(true); }
+const btns=document.createElement('div'); btns.className='qo-btns';
+btns.innerHTML='<button id="qo-reset">Zurücksetzen</button><button id="qo-info2">Info · Mathematik</button>';
+panel.appendChild(btns);
+$('#qo-reset').onclick=()=>{ SL.forEach(s=>{ S[s.k]=s.def; inputs[s.k].value=s.def; s.show(); }); save(); thumbsDirty=true; };
+function setControls(open){ bar.classList.toggle('open',open); toggle.textContent=open?'Steuerung schließen':'Steuerung öffnen'; toggle.setAttribute('aria-expanded',open); }
+toggle.onclick=()=>setControls(!bar.classList.contains('open'));
+const info=$('#qo-info');
+$('#qo-info-btn').onclick=$('#qo-info2').onclick=()=>info.classList.add('show');
+$('#qo-info-close').onclick=()=>info.classList.remove('show');
+info.addEventListener('click',e=>{ if(e.target===info) info.classList.remove('show'); });
+
+const presetBox=$('#qo-presets'); const thumbEls=[];
+PRESETS.forEach((p,i)=>{
+  const b=document.createElement('button'); b.className='qo-thumb'; b.setAttribute('role','radio'); b.setAttribute('aria-label',p.name); b.title=p.name;
+  b.onclick=()=>selectPreset(i); presetBox.appendChild(b); thumbEls.push(b);
+});
+function selectPreset(i){
+  preset=i; thumbEls.forEach((b,j)=>{ b.classList.toggle('sel',j===i); b.setAttribute('aria-checked',j===i); });
+  document.body.classList.toggle('light',!!PRESETS[i].light);
+  document.documentElement.style.setProperty('--accent',PRESETS[i].accent);
+  const m=document.querySelector('meta[name=theme-color]'); if(m) m.content=PRESETS[i].light?'#f4f4f6':PRESETS[i].bg;
+  save(true);   // Reglerwerte & Modus bleiben – nur Palette wechselt
+}
+const modeBox=$('#qo-modes'); const modeEls=[];
+MODES.forEach((m,i)=>{ const b=document.createElement('button'); b.className='qo-mode'; b.setAttribute('role','radio');
+  b.innerHTML=`<b>${m.name}</b><i>${m.short}</i>`; b.onclick=()=>selectMode(i); modeBox.appendChild(b); modeEls.push(b); });
+function selectMode(i,instant){
+  if(i!==sim.modeB){ sim.modeA=(sim.mix>=0.999||instant)?sim.modeB:(sim.mix<0.5?sim.modeA:sim.modeB); sim.modeB=i; sim.mix=instant?1:0; }
+  mode=i; modeEls.forEach((b,j)=>{ b.classList.toggle('sel',j===i); b.setAttribute('aria-checked',j===i); });
+  save(true);   // Regler bleiben unverändert
+}
+const pal=paletteFor(preset,S.farbe);
+let thumbsDirty=true;
+
+/* =====================================================================
+   Dynamische Systeme
+   ===================================================================== */
+const R0=rng(20261004);
+const sim={
+  t:0, T:0, lz:[1.2,-0.6,22.0],
+  N:6, th:[], om:[], dir:[],
+  pos:[0,0,0], vel:[0,0,0], breath:1, bvel:0,
+  q:[0,0,0,1], w:[0,0,0],
+  E:0, flash:0, flow:[0,0,0], lobe:[0,0,0],
+  rip:new Float32Array(32), ripT0:new Float32Array(8), ripI:0,
+  ripA:new Float32Array(24), ripAT0:new Float32Array(6), ripAI:0,
+  pulse:0, order:0, grab:null,
+  modeA:mode, modeB:mode, mix:1, phaseT:0,
+  cyc:0, cycW:[1,0,0,0], cycT:0, cycName:'', cycFlash:false, cube:0, soup:0, fade:1,
+  bub:[], bubV:[]
+};
+for(let i=0;i<sim.N;i++){
+  sim.th.push(R0()*Math.PI*2); sim.om.push(1+(R0()-0.5)*0.26);
+  const y=1-2*(i+0.5)/sim.N, r=Math.sqrt(1-y*y), a=i*2.399963;
+  sim.dir.push([Math.cos(a)*r,y,Math.sin(a)*r]);
+}
+for(let i=0;i<9;i++){ const a=i*2.399963, y=1-2*(i+0.5)/9, r=Math.sqrt(1-y*y);
+  sim.bub.push([Math.cos(a)*r*0.55, y*0.55, Math.sin(a)*r*0.55, 0.28+0.22*R0()]); sim.bubV.push([0,0,0]); }
+function lorenzF(s){ const σ=10,ρ=28,β=8/3; return [σ*(s[1]-s[0]), s[0]*(ρ-s[2])-s[1], s[0]*s[1]-β*s[2]]; }
+function lorenzStep(h){
+  const s=sim.lz, a=lorenzF(s), b=lorenzF(s.map((v,i)=>v+a[i]*h/2)), c=lorenzF(s.map((v,i)=>v+b[i]*h/2)), d=lorenzF(s.map((v,i)=>v+c[i]*h));
+  for(let i=0;i<3;i++) s[i]+=h/6*(a[i]+2*b[i]+2*c[i]+d[i]);
+}
+function heart(ph){ const g=(c,w)=>{ let d=ph-c; d-=Math.round(d); return Math.exp(-(d/w)*(d/w)); }; return g(0.06,0.05)+0.62*g(0.27,0.065); }
+function quatMul(a,b){ return [a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1], a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0],
+  a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3], a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]]; }
+function quatMat(q){ const [x,y,z,w]=q; return new Float32Array([1-2*(y*y+z*z),2*(x*y+z*w),2*(x*z-y*w), 2*(x*y-z*w),1-2*(x*x+z*z),2*(y*z+x*w), 2*(x*z+y*w),2*(y*z-x*w),1-2*(x*x+y*y)]); }
+function quatAxis(ax,ang){ const s=Math.sin(ang/2); return [ax[0]*s,ax[1]*s,ax[2]*s,Math.cos(ang/2)]; }
+const mulM3TV=(m,v)=>[m[0]*v[0]+m[1]*v[1]+m[2]*v[2], m[3]*v[0]+m[4]*v[1]+m[5]*v[2], m[6]*v[0]+m[7]*v[1]+m[8]*v[2]];
+const norm=(v)=>{ const l=Math.hypot(v[0],v[1],v[2])||1; return [v[0]/l,v[1]/l,v[2]/l]; };
+const smooth=(e0,e1,x)=>{ const t=Math.min(1,Math.max(0,(x-e0)/(e1-e0))); return t*t*(3-2*t); };
+
+// Zyklus (Bild 3): 4 Phasen à 11 s mit weichen Übergängen
+const CYC_P=11, CYC_N=['Loop Shift · Urknall','Statisch · Würfel','Ursuppe · Blasen','Entropie · Zerstreuung'];
+function cycleStep(dt){
+  const on=LY.zyk;
+  if(!on){ const a=1-Math.exp(-dt*2.5); sim.cycW[0]+=(1-sim.cycW[0])*a; for(let i=1;i<4;i++) sim.cycW[i]*=1-a;
+    sim.cube*=1-a; sim.soup*=1-a; sim.fade+=(1-sim.fade)*a; sim.cycName=''; return; }
+  sim.cyc+=dt; const ph=(sim.cyc/CYC_P)%4, k=Math.floor(ph), u=ph-k;
+  sim.cycName=CYC_N[k];
+  let bang=1, st=0, sp=0, en=0, tE=0;
+  if(k===0){ bang=Math.pow(0.03+0.97*smooth(0,0.85,u),2/3)*(1+0.08*Math.exp(-u*6)); if(!sim.cycFlash&&u<0.1){ sim.cycFlash=true; sim.E=Math.min(3,sim.E+1.4); sim.flash=2.2; } }
+  else sim.cycFlash=false;
+  if(k===1) st=smooth(0,0.25,u)*smooth(1,0.8,u);
+  if(k===2) sp=smooth(0,0.25,u)*smooth(1,0.8,u);
+  if(k===3){ en=smooth(0,0.1,u); tE=u*3.2; }
+  const tgt=[bang,st,sp,en]; const a=1-Math.exp(-dt*4);
+  for(let i=0;i<4;i++) sim.cycW[i]+=(tgt[i]-sim.cycW[i])*(i===3&&k!==3?1:a);
+  sim.cycT=tE;
+  sim.cube+=(st-sim.cube)*a; sim.soup+=(sp-sim.soup)*a;
+  const fd=k===3?1-0.8*smooth(0.2,1,u):(k===0?smooth(0,0.4,u)*0.85+0.15:1); sim.fade+=(fd-sim.fade)*a;
+}
+
+function step(dt){
+  sim.t+=dt;
+  const a=1-Math.exp(-dt*4.0);
+  SL.forEach(s=>{ Pm[s.k]+=(S[s.k]-Pm[s.k])*a; });
+  LAYERS.forEach(l=>{ Lm[l.k]+=(LY[l.k]-Lm[l.k])*(1-Math.exp(-dt*3)); });
+  lerpPal(pal,paletteFor(preset,Pm.farbe+lorenzHue()),1-Math.exp(-dt*3.0));
+  const dyn=Pm.dynamik, ext=Pm.extern, ten=Pm.spannung, en=Pm.energie;
+  cycleStep(dt);
+  // Modus-Übergang
+  if(sim.mix<1){ sim.mix=Math.min(1,sim.mix+dt/1.8); if(sim.mix>=1) sim.modeA=sim.modeB; }
+  const g4=(sim.modeB===3?1:0)*sim.mix+(sim.modeA===3?1:0)*(1-sim.mix);     // Gegenteil: hohe Energie
+  // Agenten-Uhr: Zeitfluss ∝ Dynamik, Energie; friert im Kristall ein
+  sim.T+=dt*(0.35+1.05*dyn)*(1+0.5*sim.E)*(1-0.88*sim.cycW[1]);
+  sim.phaseT+=dt*(0.6+1.6*dyn)*(1+g4);
+
+  const lh=dt*(0.10+0.30*dyn), nsub=4; for(let i=0;i<nsub;i++) lorenzStep(lh/nsub);
+  const L=[sim.lz[0]/18, sim.lz[1]/24, (sim.lz[2]-23.5)/16];
+  // Kuramoto
+  const K=0.1+3.4*Pm.kopplung, f0=(0.72+0.55*dyn)*(1+0.55*sim.E+0.8*g4)*2*Math.PI;
+  const sub=3, h=dt/sub;
+  for(let s=0;s<sub;s++){
+    const d=new Array(sim.N).fill(0);
+    for(let i=0;i<sim.N;i++){ let c=0; for(let j=0;j<sim.N;j++) c+=Math.sin(sim.th[j]-sim.th[i]); d[i]=f0*sim.om[i]+K/sim.N*c*Math.PI; }
+    for(let i=0;i<sim.N;i++) sim.th[i]+=d[i]*h;
+  }
+  let cr=0, ci=0; for(const t of sim.th){ cr+=Math.cos(t); ci+=Math.sin(t); } cr/=sim.N; ci/=sim.N;
+  sim.order=Math.hypot(cr,ci); const psi=Math.atan2(ci,cr);
+  sim.pulse=sim.order*heart(((psi/(2*Math.PI))%1+1)%1);
+  const bt=1+0.075*sim.pulse*(0.45+en);
+  sim.bvel+=(190*(bt-sim.breath)-11*sim.bvel)*dt; sim.breath+=sim.bvel*dt;
+  const k=7+45*ten, c=2*0.30*Math.sqrt(k);
+  const F=[0,0,0];
+  if(sim.grab){ for(let i=0;i<2;i++) F[i]=(sim.grab.target[i]-sim.pos[i])*k*0.9; }
+  for(let i=0;i<3;i++){ sim.vel[i]+=(-k*sim.pos[i]-c*sim.vel[i]+F[i])*dt; sim.pos[i]+=sim.vel[i]*dt; }
+  // Orientierung: Feder-Dämpfer zu einer langsam taumelnden Basislage (Lorenz-gekoppelt)
+  const qb=quatMul(quatAxis([0,0,1],0.10*Math.sin(sim.t*0.05)+0.12*L[2]*ext),
+           quatMul(quatAxis([1,0,0],0.28*Math.sin(sim.t*0.071)+0.10*L[1]*ext), quatAxis([0,1,0],0.42*Math.sin(sim.t*0.053)+0.15*L[0]*ext)));
+  const qe=quatMul(sim.q,[-qb[0],-qb[1],-qb[2],qb[3]]); const sg=qe[3]<0?-1:1;
+  for(let i=0;i<3;i++) sim.w[i]+=(-2.2*2*qe[i]*sg-1.5*sim.w[i])*dt;
+  const wl=Math.hypot(...sim.w);
+  if(wl>1e-6){ const ang=wl*dt, s=Math.sin(ang/2)/wl; sim.q=quatMul([sim.w[0]*s,sim.w[1]*s,sim.w[2]*s,Math.cos(ang/2)],sim.q); const ql=Math.hypot(...sim.q); sim.q=sim.q.map(v=>v/ql); }
+  sim.E*=Math.exp(-dt/1.6); sim.flash*=Math.exp(-dt/0.28);
+  if(g4>0.5) sim.E=Math.max(sim.E,0.35*g4);
+  const fs=(0.05+0.42*dyn)*(1+0.8*sim.E);
+  sim.flow[0]+=dt*fs*(0.30+0.35*L[0]*ext); sim.flow[1]+=dt*fs*(0.22+0.35*L[1]*ext); sim.flow[2]+=dt*fs*(0.17+0.3*L[2]*ext);
+  sim.lobe[0]=L[0]*0.6*ext+sim.t*0.02; sim.lobe[1]=L[1]*0.6*ext; sim.lobe[2]=sim.t*0.04*(0.3+dyn)+L[2]*0.3;
+  sim.L=L;
+  // Blasen: Ornstein-Uhlenbeck dv = −θv dt − κx dt + σ dW
+  for(let i=0;i<9;i++){ const b=sim.bub[i], v=sim.bubV[i];
+    for(let j=0;j<3;j++){ v[j]+=(-1.2*v[j]-0.9*(b[j]-(j===1?0:0))*0.6)*dt+(R0()-0.5)*0.9*Math.sqrt(dt); b[j]+=v[j]*dt*0.5; }
+    const l=Math.hypot(b[0],b[1],b[2]); if(l>0.75){ for(let j=0;j<3;j++) b[j]*=0.75/l; } }
+  for(let i=0;i<8;i++) if(sim.rip[i*4+3]>0 && sim.t-sim.ripT0[i]>7) sim.rip[i*4+3]=0;
+  for(let i=0;i<6;i++) if(sim.ripA[i*4+3]>0 && sim.t-sim.ripAT0[i]>4) sim.ripA[i*4+3]=0;
+}
+function lorenzHue(){ return sim.L? sim.L[2]*10*Pm.extern : 0; }
+
+/* ---------------- Interaktion ---------------- */
+function addRipple(dirObj, amp){
+  const i=sim.ripI; sim.ripI=(sim.ripI+1)%8;
+  sim.rip[i*4]=dirObj[0]; sim.rip[i*4+1]=dirObj[1]; sim.rip[i*4+2]=dirObj[2]; sim.rip[i*4+3]=amp; sim.ripT0[i]=sim.t;
+}
+function addShock(pW, amp){
+  const i=sim.ripAI; sim.ripAI=(sim.ripAI+1)%6;
+  sim.ripA[i*4]=pW[0]; sim.ripA[i*4+1]=pW[1]; sim.ripA[i*4+2]=pW[2]; sim.ripA[i*4+3]=amp; sim.ripAT0[i]=sim.t;
+}
+function impact(nW, strength, pW){
+  const rot=quatMat(sim.q), dirObj=norm(mulM3TV(rot,nW));
+  const ext=0.55+0.9*Pm.extern;
+  addRipple(dirObj, strength*ext);
+  addShock(pW||[nW[0]*CORE_R,nW[1]*CORE_R,nW[2]*CORE_R], Math.min(1.4,0.6+0.8*strength)*ext);
+  sim.E=Math.min(3,sim.E+0.55*strength); sim.flash=Math.min(2.5,sim.flash+0.9*strength);
+  for(let i=0;i<3;i++) sim.vel[i]-=nW[i]*0.9*strength*ext;
+  sim.w[0]+=-nW[1]*0.9*strength; sim.w[1]+=nW[0]*0.9*strength;
+  for(let i=0;i<sim.N;i++) sim.th[i]-=0.55*strength*Math.sin(sim.th[i]);    // Phasen-Antwortkurve
+}
+
+/* ---------------- Kamera ---------------- */
+const CAMZ=5.4, CORE_R=0.62, AG_S=1.0;
+let W=1,H=1,dpr=1,renderScale=1,agentQ=1,colShift=0,proj=new Float32Array(16),fx=1,fy=1;
+const view=new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,-CAMZ,1]);
+function perspective(fxv,fyv,shift,near,far){
+  const m=new Float32Array(16); m[0]=fxv; m[5]=fyv; m[8]=-shift; m[10]=(far+near)/(near-far); m[11]=-1; m[14]=2*far*near/(near-far); return m;
+}
+function setProj(){
+  const asp=W/H, f0=2.0;
+  if(asp>=1){ fy=f0*1.05; fx=fy/asp; } else { fx=f0; fy=f0*asp; }
+  proj=perspective(fx,fy,colShift,0.5,30);
+}
+function rayFromClient(cx,cy){
+  const x=(cx/innerWidth)*2-1, y=1-(cy/innerHeight)*2;
+  return norm([(x-colShift)/fx,y/fy,-1]);
+}
+function hitTest(cx,cy){
+  const o=[0,0,CAMZ], d=rayFromClient(cx,cy), c=sim.pos, R=CORE_R*1.25*sim.breath;
+  const oc=[o[0]-c[0],o[1]-c[1],o[2]-c[2]], b=oc[0]*d[0]+oc[1]*d[1]+oc[2]*d[2], cc=oc[0]*oc[0]+oc[1]*oc[1]+oc[2]*oc[2]-R*R;
+  const disc=b*b-cc;
+  const tP=CAMZ/(-d[2]); const pP=[d[0]*tP,d[1]*tP,0];
+  if(disc>=0){ const t=-b-Math.sqrt(disc); const p=[o[0]+d[0]*t,o[1]+d[1]*t,o[2]+d[2]*t]; return {hit:true,n:norm([p[0]-c[0],p[1]-c[1],p[2]-c[2]]),d,p}; }
+  const t=-b; const p=[o[0]+d[0]*t-c[0],o[1]+d[1]*t-c[1],o[2]+d[2]*t-c[2]];
+  return {hit:false,n:norm(p),d,dist:Math.hypot(...p),p:pP};
+}
+function planePoint(cx,cy){ const d=rayFromClient(cx,cy), t=CAMZ/(-d[2]); return [d[0]*t,d[1]*t]; }
+
+let hintGone=false;
+function hideHint(){ if(!hintGone){ hintGone=true; $('#qo-hint').style.opacity='0'; } }
+const ptrs=new Map();
+canvas.addEventListener('pointerdown',e=>{
+  e.preventDefault(); canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId);
+  if(bar.classList.contains('open')) setControls(false);
+  hideHint();
+  const h=hitTest(e.clientX,e.clientY);
+  if(h.hit){ impact(h.n,1.0,h.p); sim.grab={id:e.pointerId,target:sim.pos.slice(0,2),start:planePoint(e.clientX,e.clientY)}; }
+  else impact(h.n,0.5*Math.max(0.25,1-(h.dist-CORE_R)/3.0),h.p);   // Agentenfeld: Schockwelle am Tippunkt
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,lastRip:performance.now()});
+});
+canvas.addEventListener('pointermove',e=>{
+  const p=ptrs.get(e.pointerId); if(!p) return; e.preventDefault();
+  const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
+  const s=2.2/Math.min(innerWidth,innerHeight);
+  sim.w[1]+=dx*s*2.2; sim.w[0]+=dy*s*2.2;
+  const now=performance.now();
+  if(sim.grab && sim.grab.id===e.pointerId){
+    const pp=planePoint(e.clientX,e.clientY), off=[pp[0]-sim.grab.start[0],pp[1]-sim.grab.start[1]];
+    const l=Math.hypot(off[0],off[1]), m=0.55*Math.tanh(l*0.6)/(l||1);
+    sim.grab.target=[off[0]*m,off[1]*m];
+  }
+  if(now-p.lastRip>130 && Math.hypot(dx,dy)>1){ p.lastRip=now; const h=hitTest(e.clientX,e.clientY);
+    if(h.hit){ const rot=quatMat(sim.q); addRipple(norm(mulM3TV(rot,h.n)),0.35); }
+    addShock(h.p,0.45); sim.E=Math.min(3,sim.E+0.06); }
+});
+const endPtr=e=>{ ptrs.delete(e.pointerId); if(sim.grab && sim.grab.id===e.pointerId) sim.grab=null; };
+canvas.addEventListener('pointerup',endPtr); canvas.addEventListener('pointercancel',endPtr); canvas.addEventListener('lostpointercapture',endPtr);
+document.addEventListener('touchmove',e=>{ if(!e.target.closest('#qo-panel,#qo-info .card')) e.preventDefault(); },{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; const n=+e.key; if(n>=1&&n<=7) selectPreset(n-1);
+  if(e.key==='m'||e.key==='M') selectMode((mode+1)%4); if(e.key==='Escape') info.classList.remove('show'); });
+
+/* =====================================================================
+   Orbital-Normierung: Maxima von |ψ|² (numerisch) und Skalen a0/Welteinheit
+   ===================================================================== */
+const ORB_SCL=[2.0,4.2,3.4,6.2,3.4];
+const ORB_GAIN=[1.35,0.75,1.0,1.0,1.0];
+const ORB_PK=(()=>{ const ax=norm([0,0.8,0.6]), u1=norm([0,ax[2],-ax[1]]), u2=[ax[1]*u1[2]-ax[2]*u1[1],ax[2]*u1[0]-ax[0]*u1[2],ax[0]*u1[1]-ax[1]*u1[0]];
+  const psi=[ (x,y,z,r)=>Math.exp(-r)**2, (x,y,z,r)=>((2-r)*Math.exp(-r/2))**2, (x,y,z,r)=>(y*Math.exp(-r/2))**2,
+    (x,y,z,r)=>(x*y*Math.exp(-r/3))**2, (x,y,z,r)=>{ const a=x*u1[0]+y*u1[1]+z*u1[2], b=x*u2[0]+y*u2[1]+z*u2[2]; return (a*a+b*b)*Math.exp(-r); } ];
+  return psi.map((f,k)=>{ let mx=1e-9; const S=ORB_SCL[k]*2.4;
+    for(let i=0;i<=40;i++) for(let j=0;j<=40;j++) for(let l=0;l<=20;l++){ const x=(i/20-1)*S,y=(j/20-1)*S,z=(l/20-1)*S*0.5+(k===4?0:0); mx=Math.max(mx,f(x,y,z,Math.hypot(x,y,z))); }
+    return mx/ORB_GAIN[k]; }); })();
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+let MAIN=null, THUMB=null, atlas=null, atlasFB=null, TS=0, thumbRects=[], thumbNext=0;
+function resize(){
+  dpr=Math.min(2,window.devicePixelRatio||1);
+  const cw=Math.max(1,Math.round(innerWidth*dpr)), ch=Math.max(1,Math.round(innerHeight*dpr));
+  if(canvas.width!==cw||canvas.height!==ch){ canvas.width=cw; canvas.height=ch; }
+  W=cw; H=ch;
+  const colR=presetBox.getBoundingClientRect().right;
+  colShift=Math.min(0.22,(colR*0.5)/innerWidth*2*0.5);
+  setProj();
+  const rw=Math.max(2,Math.round(W*renderScale)), rh=Math.max(2,Math.round(H*renderScale));
+  if(!MAIN||MAIN.w!==rw||MAIN.h!==rh){ MAIN&&MAIN.dispose(); MAIN=makeTarget(rw,rh,true,7); }
+  const r0=thumbEls[0].getBoundingClientRect();
+  const ts=Math.max(32,Math.round(r0.width*dpr));
+  if(ts!==TS){ TS=ts; THUMB&&THUMB.dispose(); THUMB=makeTarget(TS,TS,false,5);
+    if(atlas){ gl.deleteTexture(atlas); gl.deleteFramebuffer(atlasFB); }
+    atlas=mkTex(TS*PRESETS.length,TS,gl.RGBA8,gl.UNSIGNED_BYTE); atlasFB=mkFB([atlas]); thumbsDirty=true; }
+  resizeThumbRects();
+}
+addEventListener('resize',resize); addEventListener('orientationchange',()=>setTimeout(resize,250));
+if(window.visualViewport) visualViewport.addEventListener('resize',resize);
+function resizeThumbRects(){ thumbRects=thumbEls.map(b=>{ const r=b.getBoundingClientRect(); return [r.left*dpr, H-r.bottom*dpr, r.width*dpr, r.height*dpr]; }); }
+
+function sceneParams(isThumb,idx){
+  const rot=isThumb? quatMat(quatMul(sim.q,norm4([Math.sin(idx*0.9)*0.3,Math.cos(idx*1.7)*0.3,0,1]))) : quatMat(sim.q);
+  const L=sim.L||[0,0,0], ext=Pm.extern, en=Pm.energie+sim.E*0.35;
+  const osc=new Float32Array(24);
+  for(let i=0;i<sim.N;i++){ const d=sim.dir[i]; osc[i*4]=d[0]; osc[i*4+1]=d[1]; osc[i*4+2]=d[2];
+    osc[i*4+3]=0.05*(heart((((sim.th[i]+(isThumb?idx:0))/(2*Math.PI))%1+1)%1)-0.25)*(0.4+0.6*Pm.energie)*(1.15-0.6*Pm.kopplung); }
+  const ripT=new Float32Array(8); for(let i=0;i<8;i++) ripT[i]=sim.t-sim.ripT0[i];
+  const rho=0.3+Pm.dichte*0.9, Tn=0.3+Pm.spannung*1.6;
+  const bub=new Float32Array(36); sim.bub.forEach((b,i)=>bub.set(b,i*4));
+  return {
+    rot, offset:isThumb?[0,0,0]:sim.pos, scale:CORE_R, breath:sim.breath,
+    flow:isThumb?sim.flow.map((v,i)=>v+idx*3.7+i):sim.flow,
+    amp:(0.05+0.11*Math.min(1.6,en))*(1.1-0.45*Pm.spannung), warp:0.004+0.010*Pm.dynamik, tension:0.05+0.75*Pm.spannung,
+    shape:Pm.struktur, cube:isThumb?0:sim.cube, soup:isThumb?0:sim.soup, bub,
+    aniso:[1+0.08*L[0]*ext, 1+0.06*L[1]*ext, 1-0.05*L[0]*ext],
+    osc, rip:isThumb?new Float32Array(32):sim.rip, ripT,
+    wave:[1.25*Math.sqrt(Tn/rho), 0.55+0.5*(1-Pm.dynamik), 8.0],
+    density:Pm.dichte, energy:Math.min(1.5,Pm.energie+sim.E*0.25), pulse:sim.pulse, flash:isThumb?0:sim.flash,
+    flowF:sim.flow.map(v=>v*0.6), lobe:sim.lobe, fade:isThumb?1:sim.fade
+  };
+}
+function norm4(q){ const l=Math.hypot(...q); return q.map(v=>v/l); }
+function setPal(P,pl){ f3(P,'cDeep',pl.deep); f3(P,'cBody',pl.body); f3(P,'cCore',pl.core); f3(P,'cGlow',pl.glow); f3(P,'cRim',pl.rim); f3(P,'cSpec',pl.spec);
+  f3(P,'cFar',pl.far); f3(P,'cNode',pl.node); f3(P,'cFib',pl.fib); f3(P,'cOrb',pl.orb); f3(P,'cGuide',pl.guide); }
+function drawScene(T, R, pl, projM, isThumb, pfx, pfy, pshift){
+  gl.bindFramebuffer(gl.FRAMEBUFFER,T.drawFB); gl.viewport(0,0,T.w,T.h);
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]);
+  gl.clearColor(0,0,0,0); gl.clearDepth(1); gl.depthMask(true); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE);
+  const c=R.offset, z=CAMZ-c[2], pf=projM;
+  const cx=((pf[0]*c[0])/z + (-pf[8]))*0.5+0.5, cy=(pf[5]*c[1]/z)*0.5+0.5;
+  const rpx=pf[0]*R.breath*CORE_R/z*0.5*T.w;
+  gl.disable(gl.DEPTH_TEST); gl.bindVertexArray(vaoFull);
+  // Aura
+  gl.useProgram(P_AURA.p);
+  f2(P_AURA,'uRes',[T.w,T.h]); f2(P_AURA,'uC',[cx*T.w,cy*T.h]); f1(P_AURA,'uR',rpx*1.25); f1(P_AURA,'uLight',pl.light);
+  f1(P_AURA,'uEnergy',R.energy*R.fade); f1(P_AURA,'uEnc',ENC); f3(P_AURA,'uLobe',R.lobe); f3(P_AURA,'cFar',pl.far);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  // Orbitalwolke |ψ|²
+  { const P=P_VOL; gl.useProgram(P.p);
+    f2(P,'uRes',[T.w,T.h]); f1(P,'uFx',pfx); f1(P,'uFy',pfy); f1(P,'uShift',pshift); f1(P,'uCamZ',CAMZ);
+    f3(P,'uCen',R.offset); m3(P,'uRot',R.rot); f1(P,'uRad',2.4);
+    f1(P,'uShape',R.shape); f1(P,'uDens',R.density); f1(P,'uEn',R.energy); f1(P,'uGrenz',isThumb?0:Lm.grenz); f1(P,'uEnc',ENC); f1(P,'uLight',pl.light);
+    f1(P,'uPhaseT',sim.phaseT); f1(P,'uFade',R.fade*(1-0.7*R.cube)*(1-0.6*R.soup)); f1(P,'uGain',1.0); f1(P,'uFurch',Lm.furch);
+    f3(P,'cA',pl.glow); f3(P,'cB',pl.node); f3(P,'cC',pl.core);
+    fa(P,'uScl',ORB_SCL); fa(P,'uPk',ORB_PK);
+    gl.drawArrays(gl.TRIANGLES,0,3); }
+  // Glaskern
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK);
+  const P=P_OBJ; gl.useProgram(P.p);
+  m4(P,'uProj',projM); m4(P,'uView',view); m3(P,'uRot',R.rot);
+  f3(P,'uOffset',R.offset); f1(P,'uScale',R.scale); f1(P,'uBreath',R.breath);
+  f3(P,'uFlow',R.flow); f1(P,'uAmp',R.amp); f1(P,'uWarp',R.warp); f1(P,'uTension',R.tension); f1(P,'uShape',R.shape);
+  f1(P,'uCube',R.cube); f1(P,'uSoup',R.soup); f1(P,'uFurch',Lm.furch); f4(P,'uBub',R.bub); f1(P,'uPhaseT',sim.phaseT);
+  f3(P,'uAniso',R.aniso); f4(P,'uOsc',R.osc); f4(P,'uRip',R.rip); fa(P,'uRipT',R.ripT); f3(P,'uWave',R.wave);
+  f3(P,'uCam',[0,0,CAMZ]); setPal(P,pl);
+  f1(P,'uDensity',R.density); f1(P,'uEnergy',R.energy); f1(P,'uLight',pl.light); f1(P,'uPulse',R.pulse); f1(P,'uFlash',R.flash);
+  f1(P,'uEnc',ENC); f1(P,'uTime',sim.t); f3(P,'uFlowF',R.flowF); f1(P,'uGrenz',isThumb?0:Lm.grenz); f1(P,'uFade',0.35+0.65*R.fade);
+  const mesh=isThumb?MESH_LO:MESH_HI; gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES,mesh.count,gl.UNSIGNED_INT,0);
+  gl.disable(gl.CULL_FACE); gl.disable(gl.DEPTH_TEST);
+  if(!isThumb) drawAgents(projM,R,pl);
+  gl.disable(gl.BLEND);
+  resolve(T);
+  return [cx,cy];
+}
+const NG=48, NO=64, NN=256, NC=112, NM=1280, SEG=32;
+function agentUniforms(P,projM,R,pl){
+  m4(P,'uProj',projM); m4(P,'uView',view); m3(P,'uRot',R.rot); f3(P,'uOff',R.offset);
+  f1(P,'uT',sim.T); f1(P,'uScaleA',AG_S); i1(P,'uModeA',sim.modeA); i1(P,'uModeB',sim.modeB); f1(P,'uMix',sim.mix);
+  f1(P,'uK',Pm.kopplung); f1(P,'uExt',Pm.extern); f1(P,'uEn',Math.min(1.6,Pm.energie+sim.E*0.3)*Math.max(0.25,sim.fade)); f1(P,'uDyn',Pm.dynamik); f1(P,'uPulse',sim.pulse);
+  f3(P,'uFlow',sim.flow.map(v=>v*0.7));
+  f4(P,'uCyc',sim.cycW); f1(P,'uCycT',sim.cycT); f4(P,'uBub',R.bub);
+  const rt=new Float32Array(6); for(let i=0;i<6;i++) rt[i]=sim.t-sim.ripAT0[i];
+  f4(P,'uRipA',sim.ripA); fa(P,'uRipAT',rt);
+  f1(P,'uNeur',Lm.neur); f1(P,'uOrb',Lm.orb); f1(P,'uConn',Lm.conn); f1(P,'uPx',MAIN.h/1000); i1(P,'uSeg',SEG);
+  setPal(P,pl); f1(P,'uEnc',ENC);
+}
+function drawAgents(projM,R,pl){
+  const nAg=NG+NO+NN+NC+Math.round(NM*agentQ);
+  // Gitter
+  if(Lm.grid>0.01 || sim.cycW[1]>0.01){ const P=P_LAT; gl.useProgram(P.p);
+    m4(P,'uProj',projM); m4(P,'uView',view); m3(P,'uRot',R.rot); f3(P,'uOff',R.offset); f1(P,'uScaleA',AG_S);
+    f1(P,'uGrid',Math.min(1,Lm.grid+sim.cycW[1]*0.8)); f1(P,'uGrenz',Lm.grenz); f1(P,'uT',sim.t); f1(P,'uBound',CORE_R*1.05); f1(P,'uEnc',ENC);
+    gl.bindVertexArray(LAT.vao); gl.drawArrays(gl.LINES,0,LAT.count); }
+  gl.bindVertexArray(vaoEmpty);
+  let P=P_LINE; gl.useProgram(P.p); agentUniforms(P,projM,R,pl);
+  gl.drawArrays(gl.LINES,0,nAg*SEG*2);
+  P=P_PT; gl.useProgram(P.p); agentUniforms(P,projM,R,pl);
+  gl.drawArrays(gl.POINTS,0,nAg);
+}
+function composite(T, bloomTex, pl, cen, energy, vx,vy,vw,vh){
+  const P=P_COMP; gl.useProgram(P.p); gl.bindVertexArray(vaoFull); gl.viewport(vx,vy,vw,vh);
+  t1(P,'uScene',0,T.sceneTex); t1(P,'uBloom',1,bloomTex);
+  f3(P,'uBg',pl.bg); f3(P,'uBg2',pl.bg2);
+  f1(P,'uLight',pl.light); f1(P,'uBloomStr',(0.30+0.45*energy)*(1.0+0.5*pl.light)); f1(P,'uExpo',1.0); f1(P,'uEncInv',1/ENC);
+  f1(P,'uTime',sim.t); f1(P,'uVig',1.0); f2(P,'uRes',[vw,vh]); f2(P,'uCen',cen);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+}
+const thumbPals=[];
+function renderThumb(i){
+  if(thumbsDirty || !thumbPals[i]) thumbPals[i]=paletteFor(i,Pm.farbe);
+  const pl=thumbPals[i];
+  const R=sceneParams(true,i); R.scale=1.0;
+  const pj=perspective(1.6,1.6,0,0.5,30);
+  const cen=drawScene(THUMB,R,pl,pj,true,1.6,1.6,0);
+  const bt=bloom(THUMB);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,atlasFB);
+  composite(THUMB,bt,pl,cen,R.energy,i*TS,0,TS,TS);
+}
+const phaseEl=$('#qo-phase'); let lastPhase='';
+function frame(){
+  const R=sceneParams(false,0);
+  const cen=drawScene(MAIN,R,pal,proj,false,fx,fy,colShift);
+  const bt=bloom(MAIN);
+  if(thumbsDirty){ for(let i=0;i<PRESETS.length;i++){ thumbPals[i]=null; renderThumb(i);} thumbsDirty=false; }
+  else { renderThumb(thumbNext); thumbNext=(thumbNext+1)%PRESETS.length; }
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  composite(MAIN,bt,pal,cen,R.energy,0,0,W,H);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  const P=P_THUMB; gl.useProgram(P.p); gl.bindVertexArray(vaoQuad); gl.viewport(0,0,W,H);
+  t1(P,'uAtlas',0,atlas); f2(P,'uRes',[W,H]); f1(P,'uN',PRESETS.length);
+  thumbRects.forEach((r,i)=>{ f4(P,'uRect',r); f1(P,'uIdx',i); f1(P,'uRad',r[2]*0.26); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); });
+  gl.disable(gl.BLEND);
+  const ph=sim.cycName? 'Zyklus · '+sim.cycName : '';
+  if(ph!==lastPhase){ lastPhase=ph; if(ph) phaseEl.textContent=ph; phaseEl.style.opacity=ph?'1':'0'; }
+}
+
+/* ---------------- Hauptschleife + adaptive Auflösung ---------------- */
+let last=performance.now(), manual=false, acc=[], frameN=0;
+function loop(now){
+  requestAnimationFrame(loop);
+  if(manual) return;
+  let dt=(now-last)/1000; last=now; dt=Math.min(Math.max(dt,0),1/20);
+  step(dt); frame(); frameN++;
+  if(frameN%45===0) resizeThumbRects();
+  acc.push(dt); if(acc.length>90){ const avg=acc.reduce((a,b)=>a+b)/acc.length; acc=[];
+    if(avg>1/42){ if(renderScale>0.55){ renderScale=Math.max(0.55,renderScale-0.15); resize(); } else if(agentQ>0.45) agentQ=Math.max(0.45,agentQ-0.2); }
+    else if(avg<1/57){ if(agentQ<1) agentQ=Math.min(1,agentQ+0.2); else if(renderScale<1){ renderScale=Math.min(1,renderScale+0.1); resize(); } } }
+}
+canvas.addEventListener('webglcontextlost',e=>{ e.preventDefault(); });
+canvas.addEventListener('webglcontextrestored',()=>location.reload());
+document.addEventListener('visibilitychange',()=>{ last=performance.now(); });
+
+selectPreset(preset); selectMode(mode,true);
+resize();
+for(let i=0;i<30;i++) step(1/60);
+requestAnimationFrame(loop);
+setTimeout(hideHint,9000);
+
+/* ---------------- Test-/Aufnahme-Schnittstelle ---------------- */
+window.QO={
+  manual(on){ manual=!!on; last=performance.now(); },
+  advance(dt,n=1){ for(let i=0;i<n;i++) step(dt); frame(); },
+  tapClient(x,y){ const h=hitTest(x,y); if(h.hit) impact(h.n,1,h.p); else impact(h.n,0.5,h.p); hideHint(); },
+  tapCenter(){ const cx=innerWidth/2+colShift*innerWidth/2; this.tapClient(cx-innerWidth*0.04,innerHeight/2-innerHeight*0.02); },
+  preset:selectPreset, mode:(i,inst)=>selectMode(i,inst), layer:setLayer, controls:setControls,
+  set(k,v){ S[k]=v; Pm[k]=v; if(inputs[k]){ inputs[k].value=v; SL.find(s=>s.k===k).show(); } save(); },
+  setRenderScale(s){ renderScale=s; resize(); },
+  hideUI(b){ ['#qo-presets','#qo-bar','#qo-info-btn','#qo-hint','#qo-modes','#qo-phase'].forEach(s=>$(s).style.visibility=b?'hidden':''); thumbRects=b?[]:thumbRects; if(!b) resizeThumbRects(); },
+  sim, S, Pm, LY, get halfFloat(){ return HF; }, get msaa(){ return !!(MAIN&&MAIN.ms); }, get quality(){ return {renderScale,agentQ}; }
+};
+})();
+</script>
+<script>
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(e=>console.warn('SW',e)));
+}
+</script>
+</body>
+</html>
