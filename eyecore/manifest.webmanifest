@@ -1,0 +1,17 @@
+{
+  "name": "EYE CORE – 5D System",
+  "short_name": "EYE CORE",
+  "description": "Erkunde die Fragmente und bringe alle Knoten in Einklang.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#05030f",
+  "theme_color": "#07041a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07041a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EYE CORE">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>EYE CORE – 5D System</title>
+<style>
+:root{--v:#b08cff;--v2:#7a5cff;--c:#5ef2ff;--m:#ff5fd8;--bg:rgba(10,6,28,.62);--ln:rgba(150,120,255,.38);
+--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#05030f;color:#e6dcff;
+position:fixed;inset:0;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+font-family:"Avenir Next Condensed","Roboto Condensed","Arial Narrow","Helvetica Neue",system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:fixed;inset:0;pointer-events:none;font-size:10px}
+.panel{background:var(--bg);border:1px solid var(--ln);box-shadow:0 0 14px rgba(120,80,255,.18),inset 0 0 10px rgba(120,80,255,.08);
+-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.ttl{color:var(--v);font-size:9px;letter-spacing:.2em;display:flex;align-items:center;gap:6px}
+.ttl::before{content:"";width:5px;height:5px;border:1px solid var(--c);transform:rotate(45deg);box-shadow:0 0 6px var(--c)}
+/* compass */
+#compass{position:absolute;top:calc(var(--sat) + 8px);left:50%;transform:translateX(-50%);width:min(56vw,420px);height:26px;overflow:hidden;
+border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);background:linear-gradient(90deg,transparent,rgba(10,6,28,.55) 20%,rgba(10,6,28,.55) 80%,transparent);
+-webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
+#compass span{position:absolute;left:50%;top:0;height:100%;display:flex;align-items:center;justify-content:center;width:30px;margin-left:-15px;font-size:10px;color:#cdbcff;will-change:transform}
+#compass span.t{font-size:0}#compass span.t::after{content:"";width:1px;height:6px;background:var(--ln)}
+#compass span.big{color:#fff;font-size:11px}
+#compass span.N{color:#ffd36a;text-shadow:0 0 8px #ffb000}
+#compass span.tg{font-size:0}#compass span.tg::after{content:"";width:7px;height:7px;border:1.5px solid var(--c);transform:rotate(45deg);box-shadow:0 0 8px var(--c);margin-top:12px}
+#cmark{position:absolute;top:calc(var(--sat) + 32px);left:50%;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid var(--c);transform:translateX(-50%);filter:drop-shadow(0 0 4px var(--c))}
+/* eye */
+#eye{position:absolute;top:calc(var(--sat) + 8px);left:calc(var(--sal) + 8px);width:150px;padding:7px 9px}
+#eye .row{display:flex;align-items:center;gap:8px}
+#eye svg{width:30px;height:30px;flex:none}
+#eye .lv{font-size:9px;color:var(--v)}#eye .lv b{display:block;font-size:16px;color:#fff;letter-spacing:.05em}
+.bar{height:3px;background:rgba(140,110,255,.18);margin-top:4px;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--v2),var(--m));box-shadow:0 0 8px var(--m);transition:width .6s}
+.bar.c i{background:linear-gradient(90deg,#2a8cff,var(--c));box-shadow:0 0 8px var(--c)}
+#res{margin-top:7px;display:flex;justify-content:space-between;font-size:9px;color:var(--c)}
+#res b{color:#fff}
+/* objective */
+#obj{position:absolute;top:calc(var(--sat) + 8px);right:calc(var(--sar) + 8px);width:min(200px,40vw);padding:7px 9px}
+#obj p{margin:5px 0 4px;font-size:10px;line-height:1.35;color:#ece4ff;text-transform:none;letter-spacing:.03em}
+#obj .cnt{font-size:13px;color:var(--c);letter-spacing:.1em}#obj .cnt b{color:#fff}
+/* top buttons */
+#tbtn{position:absolute;right:calc(var(--sar) + 8px);display:flex;gap:6px;pointer-events:auto}
+.pill{pointer-events:auto;background:var(--bg);border:1px solid var(--ln);color:#d9ccff;font:inherit;font-size:9px;letter-spacing:.14em;padding:6px 8px;min-width:40px;border-radius:2px;cursor:pointer}
+.pill:active{background:rgba(120,80,255,.35)}
+.pill b{color:var(--c);font-weight:normal}
+/* feed */
+#feed{position:absolute;left:calc(var(--sal) + 8px);width:182px;padding:6px 9px}
+#feed ul{list-style:none;margin:4px 0 0;padding:0}
+#feed li{white-space:nowrap;display:flex;justify-content:space-between;gap:6px;font-size:9px;line-height:1.7;color:#cfc2ff;animation:fin .35s}
+#feed li span{overflow:hidden;text-overflow:ellipsis}#feed li b{color:var(--c);font-weight:normal}#feed li i{color:#7c6aa8;font-style:normal}
+#feed li.hot{color:var(--m)}
+@keyframes fin{from{opacity:0;transform:translateX(-8px)}to{opacity:1}}
+/* physics */
+#phys{position:absolute;width:182px;padding:6px 9px;pointer-events:auto}
+#phys .hd{display:flex;justify-content:space-between;cursor:pointer}
+#phys .rows{margin-top:4px}
+#phys.col .rows{display:none}
+#phys .r{display:flex;justify-content:space-between;font-size:9px;line-height:1.75;color:#cfc2ff}
+#phys .r b{color:#fff;font-weight:normal}#phys .r b.mod{color:var(--m);text-shadow:0 0 6px var(--m)}
+/* zone + toast */
+#zone{position:absolute;top:calc(var(--sat) + 44px);left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity .6s;white-space:nowrap}
+#zone .a{font-size:15px;letter-spacing:.32em;color:#fff;text-shadow:0 0 12px var(--v)}
+#zone .b{font-size:9px;color:var(--c);letter-spacing:.3em;margin-top:3px}
+#zone.on{opacity:1}
+#toast{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);text-align:center;opacity:0;transition:opacity .4s,transform .4s;white-space:nowrap}
+#toast.on{opacity:1;transform:translate(-50%,-60%)}
+#toast .a{font-size:20px;letter-spacing:.3em;color:#fff;text-shadow:0 0 16px var(--c),0 0 30px var(--m)}
+#toast .b{font-size:10px;color:var(--c);letter-spacing:.24em;margin-top:5px}
+#hint{position:absolute;bottom:calc(var(--sab) + 8px);left:50%;transform:translateX(-50%);font-size:9px;color:#9d8ccc;white-space:nowrap;opacity:.85}
+/* abilities */
+.ab{pointer-events:auto;position:relative;width:46px;height:46px;border:1px solid var(--ln);background:var(--bg);color:#e8deff;border-radius:50%;
+display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;font-size:6.5px;letter-spacing:.08em;cursor:pointer;padding:0;overflow:hidden;touch-action:none}
+.ab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.4;filter:drop-shadow(0 0 3px currentColor)}
+.ab .k{position:absolute;top:2px;right:6px;font-size:7px;color:#8d7cc0}
+.ab .lb{margin-top:1px;white-space:nowrap}
+.ab::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(5,3,15,.78) calc(var(--cd,0)*360deg),transparent 0)}
+.ab.act{border-color:var(--c);box-shadow:0 0 14px var(--c),inset 0 0 10px rgba(94,242,255,.4)}
+.ab.press{transform:scale(.92)}
+.ab.deny{animation:deny .3s}
+@keyframes deny{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+#a-phase{color:#5ef2ff}#a-shift{color:#c08cff}#a-skip{color:#7cb8ff}#a-drift{color:#ffc46a}#a-gj{color:#ff5fd8}#a-jump{color:#fff}
+#abil{position:absolute;display:flex;gap:9px}
+body:not(.touch) #abil{bottom:calc(var(--sab) + 26px);left:50%;transform:translateX(-50%)}
+body:not(.touch) #a-jump{display:none}
+body:not(.touch) #joy{display:none}
+/* touch layout */
+body.touch #abil{right:calc(var(--sar) + 14px);bottom:calc(var(--sab) + 18px);width:200px;height:200px;display:block}
+body.touch #abil .ab{position:absolute}
+body.touch #a-jump{width:78px;height:78px;right:0;bottom:0;font-size:8px}
+body.touch #a-jump svg{width:30px;height:30px}
+body.touch #a-gj{width:60px;height:60px;right:88px;bottom:4px;font-size:7px}
+body.touch #a-gj svg{width:26px;height:26px}
+body.touch #a-phase{right:146px;bottom:62px}
+body.touch #a-shift{right:116px;bottom:108px}
+body.touch #a-skip{right:66px;bottom:130px}
+body.touch #a-drift{right:10px;bottom:132px}
+body.touch .ab .k{display:none}
+body.touch #hint{display:none}
+#joy{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:1px solid var(--ln);background:radial-gradient(circle,rgba(120,80,255,.12),rgba(10,6,28,.25));opacity:0;transition:opacity .2s}
+#joy.on{opacity:1}
+#joy i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;border:1px solid var(--c);background:rgba(94,242,255,.15);box-shadow:0 0 14px rgba(94,242,255,.45)}
+#joyhint{position:absolute;left:calc(var(--sal) + 34px);bottom:calc(var(--sab) + 40px);width:96px;height:96px;border-radius:50%;border:1px dashed rgba(150,120,255,.3);display:none;align-items:center;justify-content:center;font-size:8px;color:#7d6cb0;text-align:center}
+body.touch #joyhint{display:flex}
+#joyhint.hide{display:none!important}
+/* overlays */
+.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(30,14,70,.82),rgba(4,2,12,.95));z-index:10;pointer-events:auto;
+padding:calc(var(--sat) + 14px) calc(var(--sar) + 14px) calc(var(--sab) + 14px) calc(var(--sal) + 14px);overflow:auto;touch-action:pan-y}
+.ov.on{display:flex}
+.card{max-width:520px;width:100%;text-align:center}
+.logo{display:flex;align-items:center;justify-content:center;gap:14px}
+.logo svg{width:64px;height:64px}
+.logo h1{margin:0;font-size:40px;font-weight:300;letter-spacing:.24em;color:#fff;text-shadow:0 0 20px var(--v)}
+.sub{color:var(--v);font-size:11px;letter-spacing:.3em;margin-top:6px}
+.ctl{margin:20px auto 10px;text-align:left;font-size:10.5px;line-height:1.85;color:#d6c9ff;text-transform:none;letter-spacing:.04em;max-width:420px;padding:10px 14px}
+.ctl b{color:var(--c);font-weight:normal;letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
+.btn{pointer-events:auto;font:inherit;letter-spacing:.3em;font-size:12px;color:#fff;background:linear-gradient(90deg,rgba(122,92,255,.35),rgba(255,95,216,.3));border:1px solid var(--v);padding:13px 26px;margin:6px;cursor:pointer;box-shadow:0 0 18px rgba(150,100,255,.35)}
+.btn.s{font-size:10px;padding:9px 14px;background:rgba(20,10,50,.6)}
+.foot{margin-top:18px;font-size:9px;color:#8a78bf;letter-spacing:.32em}
+.ver{font-size:8.5px;color:#6c5b9a;margin-top:6px;letter-spacing:.2em}
+#final h2{font-size:26px;font-weight:300;letter-spacing:.3em;color:#fff;text-shadow:0 0 22px var(--m);margin:0 0 6px}
+#final p{text-transform:none;letter-spacing:.05em;color:#ddd0ff;font-size:13px;line-height:1.5}
+#flash{position:fixed;inset:0;pointer-events:none;background:#fff;opacity:0;mix-blend-mode:screen}
+@media (max-width:600px) and (orientation:portrait){
+ #compass{width:46vw;top:calc(var(--sat) + 6px)}#cmark{top:calc(var(--sat) + 30px)}
+ #eye{width:118px;padding:5px 7px}#eye svg{width:24px;height:24px}#eye .lv b{font-size:14px}
+ #obj{width:118px;padding:5px 7px}#obj p{font-size:8.5px}
+ #feed{width:150px}#feed li{font-size:8px}
+ #zone .a{font-size:12px;letter-spacing:.22em}#zone{top:34%}#toast{top:46%}
+}
+@media (orientation:landscape) and (max-height:500px){
+ #compass{width:38vw}
+ #eye{width:130px;padding:5px 7px}#eye svg{width:22px;height:22px}
+ #obj{width:170px;padding:5px 7px}#obj p{font-size:9px;margin:3px 0}
+ #zone{top:calc(var(--sat) + 38px)}
+ body.touch #abil{transform:scale(.86);transform-origin:right bottom}
+}
+</style>
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div id="compass"></div><div id="cmark"></div>
+  <div id="eye" class="panel">
+    <div class="row">
+      <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#7a5cff" stroke-width="1"/><path d="M20 4 L34 28 L6 28 Z M20 36 L6 12 L34 12 Z" fill="none" stroke="#b08cff" stroke-width=".8"/><path d="M8 20 Q20 10 32 20 Q20 30 8 20Z" fill="none" stroke="#5ef2ff" stroke-width="1.2"/><circle cx="20" cy="20" r="3.2" fill="#5ef2ff"/></svg>
+      <div class="lv">EYE LEVEL<b id="lvl">1</b></div>
+    </div>
+    <div class="bar"><i id="lvlbar"></i></div>
+    <div id="res"><span>◈ RESONANCE</span><b id="resp">0%</b></div>
+    <div class="bar c"><i id="resbar"></i></div>
+  </div>
+  <div id="obj" class="panel">
+    <div class="ttl">OBJECTIVE</div>
+    <p id="objtxt">Erkunde die Fragmente und bringe alle Knoten in Einklang.</p>
+    <div class="cnt"><b id="cnt">0</b> / 12</div>
+  </div>
+  <div id="tbtn">
+    <button class="pill" id="b-view" aria-label="Perspektive wechseln">VIEW <b id="viewlbl">TPV</b></button>
+    <button class="pill" id="b-layer" aria-label="Vision Layer wechseln">LAYER <b id="layerlbl">NORMAL</b></button>
+    <button class="pill" id="b-menu" aria-label="Menü">≡</button>
+  </div>
+  <div id="feed" class="panel"><div class="ttl">GLITCH FEED</div><ul id="feedl"></ul></div>
+  <div id="phys" class="panel">
+    <div class="hd ttl" id="physhd"><span>PHYSICS STATUS</span><span id="physarr">▾</span></div>
+    <div class="rows">
+      <div class="r"><span>GRAVITY</span><b id="p-g">1.00g</b></div>
+      <div class="r"><span>JUMP FORCE</span><b id="p-j">1.35x</b></div>
+      <div class="r"><span>MOMENTUM</span><b id="p-m">0.78x</b></div>
+      <div class="r"><span>AIR CONTROL</span><b id="p-a">0.65x</b></div>
+      <div class="r"><span>TIME SCALE</span><b id="p-t">1.00x</b></div>
+    </div>
+  </div>
+  <div id="zone"><div class="a" id="zonea">FRAGMENT REALM</div><div class="b" id="zoneb">SPACE LAYER</div></div>
+  <div id="toast"><div class="a" id="toasta"></div><div class="b" id="toastb"></div></div>
+  <div id="joyhint">BEWEGEN<br>hier ziehen</div>
+  <div id="joy"><i></i></div>
+  <div id="abil">
+    <button class="ab" id="a-phase" data-a="phase"><span class="k">1</span><svg viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" stroke-dasharray="2 2"/><path d="M2 12h19m-4-4 4 4-4 4"/></svg><span class="lb">PHASE</span></button>
+    <button class="ab" id="a-shift" data-a="shift"><span class="k">2</span><svg viewBox="0 0 24 24"><path d="M5 9l7-4 7 4v8l-7 4-7-4z"/><path d="M5 9l7 4 7-4M12 13v8" opacity=".6"/><path d="M12 2v-0" /></svg><span class="lb">SHIFT</span></button>
+    <button class="ab" id="a-skip" data-a="skip"><span class="k">3</span><svg viewBox="0 0 24 24"><path d="M4 6l6 6-6 6M11 6l6 6-6 6"/><circle cx="20" cy="12" r="1.6"/></svg><span class="lb">SKIP</span></button>
+    <button class="ab" id="a-drift" data-a="drift"><span class="k">4</span><svg viewBox="0 0 24 24"><path d="M7 3h10M7 21h10M8 3c0 5 8 6 8 9s-8 4-8 9M16 3c0 5-8 6-8 9s8 4 8 9"/></svg><span class="lb">DRIFT</span></button>
+    <button class="ab" id="a-gj" data-a="gj"><span class="k">E</span><svg viewBox="0 0 24 24"><ellipse cx="15" cy="12" rx="4" ry="8"/><path d="M2 16c4-1 7-4 9-8m-3 0h3v3"/></svg><span class="lb">GLITCH</span></button>
+    <button class="ab" id="a-jump" data-a="jump"><svg viewBox="0 0 24 24"><path d="M4 18c3-9 13-9 16 0"/><path d="M12 14V4m-4 4 4-4 4 4"/></svg><span class="lb">SPRUNG</span></button>
+  </div>
+  <div id="hint">WASD BEWEGEN · MAUS ZIEHEN SCHAUEN · LEERTASTE SPRUNG · E GLITCH JUMP · 1–4 GLITCHES · V ANSICHT · B LAYER · H PHYSIK · ESC MENÜ</div>
+</div>
+<div id="flash"></div>
+
+<div class="ov on" id="start">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#7a5cff"/><circle cx="32" cy="32" r="22" fill="none" stroke="#7a5cff" stroke-width=".6"/><path d="M32 6 L54 44 L10 44 Z M32 58 L10 20 L54 20 Z" fill="none" stroke="#b08cff" stroke-width=".8"/><path d="M12 32 Q32 16 52 32 Q32 48 12 32Z" fill="none" stroke="#5ef2ff" stroke-width="1.6"/><circle cx="32" cy="32" r="6" fill="none" stroke="#ff5fd8" stroke-width="1.4"/><circle cx="32" cy="32" r="2.6" fill="#fff"/></svg>
+      <h1>EYE CORE</h1>
+    </div>
+    <div class="sub">5D SYSTEM / 3D–5D UNIVERSE</div>
+    <div class="ctl panel" id="ctl"></div>
+    <button class="btn" id="b-start">SPIEL STARTEN</button>
+    <div class="foot">BUILD THE EYE. SEE THE CORE. CHANGE THE WORLD.</div>
+    <div class="ver">EYE CORE v0.1 · ERSTER SPIELBARER BUILD</div>
+  </div>
+</div>
+
+<div class="ov" id="menu">
+  <div class="card">
+    <div class="logo"><h1 style="font-size:28px">PAUSE</h1></div>
+    <div class="sub">5D SYSTEM · ONLINE</div>
+    <div class="ctl panel" id="ctl2"></div>
+    <div>
+      <button class="btn" id="b-resume">WEITER</button>
+    </div>
+    <div>
+      <button class="btn s" id="b-sound">TON: AN</button>
+      <button class="btn s" id="b-quality">GRAFIK: HOCH</button>
+      <button class="btn s" id="b-reset">NEU STARTEN</button>
+    </div>
+    <div class="foot">BUILD THE EYE. SEE THE CORE. CHANGE THE WORLD.</div>
+  </div>
+</div>
+
+<div class="ov" id="final">
+  <div class="card">
+    <h2>RESONANZ 100%</h2>
+    <div class="sub">ALLE KNOTEN IM EINKLANG</div>
+    <p>Alle 12 Fragmente schwingen im Einklang.<br>Das Auge ist erwacht – der Kern ist sichtbar.</p>
+    <button class="btn" id="b-cont">WEITER ERKUNDEN</button>
+    <button class="btn s" id="b-reset2">NEU STARTEN</button>
+    <div class="foot">BUILD THE EYE. SEE THE CORE. CHANGE THE WORLD.</div>
+  </div>
+</div>
+<script type="module" src="main.js"></script>
+</body>
+</html>
