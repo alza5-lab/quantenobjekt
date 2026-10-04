@@ -1,0 +1,8 @@
+Petrischale · Bits – Eye of Resonance (Ordner petrischale/)
+===========================================================
+Adresse: https://alza5-lab.github.io/quantenobjekt/petrischale/
+iPhone: in Safari öffnen → Teilen → "Zum Home-Bildschirm". Startet im Vollbild, offline nutzbar.
+Bedienung: + (Bit), Stop/Start, Reset, Additive Li/Adr/Dop/Acid (je einmal), Bit antippen + ziehen = steuern,
+leere Stelle antippen = Lockstoff, ziehen/pinch = Kammer drehen/zoomen, rechts "Labor" = Dashboard + Export.
+Zustand lokal gespeichert (Schlüssel shivas_ocean.petrischale.v1, unabhängig von Quantenobjekt 1/2/3).
+Eigener Service Worker nur für den Scope petrischale/ (Cache-Präfix petrischale-).
