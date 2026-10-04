@@ -1,5 +1,5 @@
-// Petrischale · Bits – Service Worker (nur Scope petrischale/, Version a3e8280b)
-const PREFIX='petrischale-', CACHE=PREFIX+'a3e8280b';
+// Petrischale · Bits – Service Worker (nur Scope petrischale/, Version 65901213)
+const PREFIX='petrischale-', CACHE=PREFIX+'65901213';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())); });
 // nur eigene alte petrischale-Caches löschen – Quantenobjekt-Caches bleiben unberührt

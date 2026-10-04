@@ -31,7 +31,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .evo .tr{position:relative;height:9px;display:flex;justify-content:space-between;align-items:center}
 .evo .tr:before{content:"";position:absolute;left:3px;right:3px;top:4px;height:1px;background:var(--line)}
 .evo .tr .fill{position:absolute;left:3px;top:4px;height:1px;background:linear-gradient(90deg,var(--teal),var(--gold));width:0;transition:width .8s}
-.evo .tr i{position:relative;width:7px;height:7px;border-radius:50%;border:1px solid var(--line);background:#08060b;transition:all .5s}
+.evo .tr i{position:relative;width:7px;height:7px;border-radius:50%;border:1px solid rgba(150,225,215,.4);background:transparent;transition:all .5s}
 .evo .tr i.on{border-color:var(--teal);background:var(--teal);box-shadow:0 0 6px var(--teal)}
 .evo .tr i.cur{border-color:var(--gold);background:var(--gold);box-shadow:0 0 8px var(--gold)}
 .evo .lb{font:8.5px var(--mono);color:var(--dim);margin-top:3px;letter-spacing:.04em}
@@ -51,6 +51,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .b.on{border-color:var(--c,var(--gold));box-shadow:0 0 12px -2px var(--c,var(--gold)) inset}
 .b.on i{color:var(--c,var(--gold))}
 .b:disabled{cursor:default}
+button:focus{outline:none}button:focus-visible{outline:1px solid rgba(111,230,214,.5);outline-offset:1px}
 .b.full{opacity:.35}
 .sep{width:1px;background:var(--line);margin:6px 1px}
 .tab{position:fixed;right:calc(var(--sar));top:46%;transform:translateY(-50%);writing-mode:vertical-rl;font:8px var(--mono);letter-spacing:.34em;text-transform:uppercase;color:var(--dim);padding:12px 5px;border:1px solid var(--line);border-right:none;border-radius:9px 0 0 9px;background:rgba(8,6,12,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:4}
@@ -59,7 +60,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .chip.show{display:flex}
 .chip button{border:1px solid var(--line);background:none;border-radius:6px;width:20px;height:20px;padding:0;font-size:11px;line-height:18px}
 .hint{position:fixed;left:0;right:0;top:52%;text-align:center;font:10px var(--mono);letter-spacing:.2em;color:var(--faint);text-transform:uppercase;pointer-events:none;transition:opacity .8s}
-.toast{position:fixed;left:50%;top:calc(var(--sat) + 150px);transform:translateX(-50%);font:10px var(--mono);letter-spacing:.06em;color:var(--gold);text-shadow:0 0 10px #000;pointer-events:none;opacity:0;transition:opacity .5s;text-align:center;white-space:nowrap}
+.toast{position:fixed;left:50%;top:38%;transform:translateX(-50%);font:10px var(--mono);letter-spacing:.06em;color:var(--gold);text-shadow:0 0 10px #000;pointer-events:none;opacity:0;transition:opacity .5s;text-align:center;white-space:nowrap}
 .toast.show{opacity:1}
 .joy{position:fixed;width:96px;height:96px;margin:-48px 0 0 -48px;border:1px solid rgba(233,180,76,.4);border-radius:50%;pointer-events:none;display:none;z-index:6}
 .joy:after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px;border-radius:50%;border:1px solid var(--gold);background:rgba(233,180,76,.15);transform:translate(var(--jx,0),var(--jy,0))}
@@ -181,8 +182,8 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
   Dopamin  −1   (Belohnung, mehr Verbindungen)
   Adrenalin −1 wenn Ē > 0.8 (geladen) sonst +1 (ausgezehrt)
   Acid     +2   (destabilisiert) · mit Lithium nur +1
-  Ē > 1.0 → −1 · Ē < 0.35 → +1</span>
-  Wenn <b>n = 4+Δ</b> Bits nah beieinander sind, ihre Pulsphasen kohärent schwingen (lokales <code>r &gt; 0.86</code>) und ihre mittlere Energie reicht, verschmelzen sie zu einem <b>Axon</b>: Soma, Dendriten, myelinisierte Segmente mit Ranvier-Schnürringen, goldene Signalpulse, terminale Verzweigung, Synapsen mit Vesikeln.
+  Ē > 1.15 → −1 · Ē < 0.35 → +1</span>
+  Wenn <b>n = 4+Δ</b> Bits nah beieinander sind, ihre Pulsphasen ≥ 3 s kohärent schwingen (lokales <code>r &gt; 0.86</code>) und ihre mittlere Energie reicht (Ē &gt; 0.45; bei n = 1: E &gt; 1.3), verschmelzen sie zu einem <b>Axon</b>: Soma, Dendriten, myelinisierte Segmente mit Ranvier-Schnürringen, goldene Signalpulse, terminale Verzweigung, Synapsen mit Vesikeln.
 
   <h3>Mathematik</h3>
   <b>Kuramoto-Synchronisation</b> (Pulsphase jedes Bits)
@@ -205,8 +206,9 @@ Dopamin: Bursting (c −55, d 4) · Acid: Fast Spiking (a .1, d 2)</span>
   <span class="m">Ė = α·C(x) − β − γ·|v| − δ·Spikes − ε·Puls (+ Additive)
 E ≤ 0 → Bit erlischt (Selektion) · E &gt; E_teil → Zellteilung (Mutation)</span>
   <b>Hebb / STDP</b> an Synapsen zwischen Axonen
-  <span class="m">post feuert ≤ 40 ms nach prä:  Δw = η(1 − w)
-post vor prä:  Δw = −0.03     sonst langsamer Zerfall  −λw</span>
+  <span class="m">post feuert ≤ 180 ms nach prä:  Δw = η(1 − w)     (η = 0.08, Dopamin ×2)
+post ≤ 120 ms vor prä:  Δw = −0.03      sonst Zerfall  ẇ = −λ
+Axon-Refraktärzeit 0.6 s (Lithium 0.9 s)</span>
   <b>Mutation & Selektion</b>
   <span class="m">g' = g + N(0, (σ·μ)²)   für Tempo, Impulstempo, Größe, Farbe, Kopplung
 Verzweigung ± 1 mit p = 0.25·μ</span>
@@ -404,7 +406,7 @@ function updBit(b,dt,p){b.age+=dt;b.spike*=Math.exp(-dt*4.5);
   for(const o of S.bits){if(o===b||o.dead||o.build<1)continue;const d=sub3(o.pos,b.pos),r=len3(d)+1e-6;
     if(r<2.4){const w=Math.exp(-r*r/1.44),dph=o.th-b.th;ks+=w*Math.sin(dph);kn+=w;
       coh=add3(coh,mul3(d,(1+p.J*Math.cos(dph))*w/r));cw+=w;ali=add3(ali,mul3(o.vel,w));
-      if(r<.6)sep=add3(sep,mul3(d,-.09*p.sep/(r*r)));Iin+=o.spike*w*5}}
+      if(r<.75)sep=add3(sep,mul3(d,-.17*p.sep/(r*r+.02)));Iin+=o.spike*w*5}}
   const om=TAU*.55*g.tempo*p.omega*SET.tempo*(.65+.35*Math.min(b.E,1.3));
   const fuseLock=b.fuse?3:0;
   let dth=om+(kn?(p.K*g.sync+fuseLock)*ks/Math.max(kn,.6):0);
@@ -417,10 +419,10 @@ function updBit(b,dt,p){b.age+=dt;b.spike*=Math.exp(-dt*4.5);
   b.ct+=dt;const ct=b.ct;b.c=ct<.16?ct/.16:Math.exp(-(ct-.16)/(p.smooth?.42:.32));
   if(ct<.2){const T=3.4*g.speed*p.speed*(.45+.55*Math.min(b.E,1.2))*(steering?1.3:1);b.vel=add3(b.vel,mul3(b.ax,T*dt))}
   // Wunschrichtung
-  let des=[0,.28,0];
+  let des=[0,.12,0];
   if(cw)des=add3(des,mul3(norm3(coh),p.coh));
   des=add3(des,mul3(ali,.12));des=add3(des,sep);
-  des=add3(des,mul3(foodG(b.pos),.85*p.chem));
+  {let fg=foodG(b.pos);const fl=len3(fg);if(fl>1)fg=mul3(fg,1/fl);des=add3(des,mul3(fg,.85*p.chem))}
   b.wan=norm3(add3(b.wan,mul3(runit(),dt*1.2*Math.sqrt(p.noise))));des=add3(des,mul3(b.wan,.32*Math.sqrt(p.noise)));
   const m=.55,P=b.pos;
   const wall=(v,lo,hi,i)=>{if(v<lo+m)des[i]+=3*(lo+m-v)/m;if(v>hi-m)des[i]-=3*(v-(hi-m))/m};
@@ -486,9 +488,11 @@ function addLabel(){const A=S.adds,a=[];if(A.li)a.push('Lithium');if(A.adr)a.pus
 function createAxon(F){const m=F.m,n=m.length;let hue=0,br=0,E=0,gen=0;m.forEach(o=>{hue+=o.genes.hue;br+=o.genes.branch;E+=o.E;gen=Math.max(gen,o.gen)});hue/=n;br/=n;
   m.forEach(o=>{const i=S.bits.indexOf(o);if(i>=0)S.bits.splice(i,1);for(let k=0;k<30;k++)S.parts.push({p:add3(o.pos,mul3(runit(),.15)),v:[0,0,0],life:0,max:rnd(.9,1.6),col:Math.random()<.5?GOLD:hsv(o.genes.hue,.6,1),s:.05,tgt:F.c})});
   const soma=clampBox(F.c.slice(),.7);let dir,len;
+  for(let it=0;it<60;it++){let push=[0,0,0];for(const o of S.axons){for(let k=0;k<=48;k+=8){const d=sub3(soma,o.path[k]),l=len3(d);if(l<1.25)push=add3(push,mul3(d,(1.25-l)/(l+.05)))}}
+    push=add3(push,mul3([-soma[0]/AR.W,(AR.H/2-soma[1])/AR.H,-soma[2]/AR.D],.04));if(len3(push)<.01)break;clampBox(Object.assign(soma,add3(soma,mul3(push,.12))),.7)}
   const others=S.axons.slice().sort((a,b)=>len3(sub3(a.soma,soma))-len3(sub3(b.soma,soma)));
-  if(others.length){const t=others[0];const d=sub3(t.soma,soma);dir=norm3(add3(norm3(d),mul3(runit(),.35)));len=clamp(len3(d)*.8,1.1,2.2)}
-  else{dir=norm3([gauss(),gauss()*.35,gauss()*.6]);len=rnd(1.4,2)}
+  if(others.length){const t=others[0];const d=sub3(t.soma,soma);dir=norm3(add3(norm3(d),mul3(runit(),.6)));dir[2]*=.5;dir=norm3(dir);len=clamp(len3(d)*.7,1,2)}
+  else{dir=norm3([gauss(),gauss()*.8,gauss()*.25]);len=rnd(1.5,2.1)}
   for(let k=0;k<14;k++){const e=add3(soma,mul3(dir,len));const ok=Math.abs(e[0])<AR.W/2-.25&&e[1]>.25&&e[1]<AR.H-.25&&Math.abs(e[2])<AR.D/2-.25;if(ok)break;len*=.88;if(k===7)dir=mul3(dir,-1);if(len<.9){dir=norm3([-soma[0],AR.H/2-soma[1],-soma[2]]);len=1.2}}
   const ax={id:++S.aid,soma,dir,len:Math.max(.9,len),hue,branch:br,n,gen,v:-65,u:-13,Is:0,pulses:[],flash:0,build:0,age:0,integ:1,ph:rnd(TAU),bend:rnd(.1,.3)*(Math.random()<.5?-1:1),last:-1e9,vh:new Float32Array(320),vi:0,adds:addLabel()};
   buildAxon(ax);S.axons.push(ax);S.axMade++;
@@ -511,22 +515,23 @@ function addSyn(a,b){if(S.syn.some(s=>s.a===a&&s.b===b))return;let bi=0,bd=1e9;a
   S.syn.push({a,b,w:.3+Math.random()*.15,bo:bi,lastPre:-1e9,fire:0,mid:add3(mul3(add3(a.bout[bi],b.soma),.5),mul3(runit(),.35))});log(`Synapse Axon #${a.id} → #${b.id}`)}
 function updAxon(ax,dt,p){ax.build=Math.min(1,ax.build+dt/2.6);ax.age+=dt;ax.flash*=Math.exp(-dt*4);
   const nsub=Math.max(1,Math.round(dt*60*8));
-  for(let k=0;k<nsub;k++){const I=4.3+ax.Is+p.spikeI*.4+gauss()*1.4*p.noise;ax.Is*=.985;
+  const refr=S.t-(ax.lastR||-9)<(p.smooth?.9:.6)/Math.sqrt(p.omega);
+  for(let k=0;k<nsub;k++){const I=refr?0:4.3+ax.Is+p.spikeI*.4+gauss()*1.4*p.noise;ax.Is*=.98;if(refr){ax.v=Math.min(ax.v,-70)}
     ax.v+=.5*(.04*ax.v*ax.v+5*ax.v+140-ax.u+I);ax.u+=.5*.02*(.2*ax.v-ax.u);let rec=ax.v;
     if(ax.v>=30){rec=30;ax.v=-65;ax.u+=8;axSpike(ax,p)}if(ax.v<-90)ax.v=-90;ax.vh[ax.vi]=rec;ax.vi=(ax.vi+1)%ax.vh.length;S.tN+=0}
   const sp=1.7*Math.sqrt(p.speed);
   for(let i=ax.pulses.length-1;i>=0;i--){const q=ax.pulses[i];q.s+=dt*sp/ax.len;
-    if(q.s>.4&&q.s<.85&&Math.random()<dt*14){const pp=pathAt(ax,q.s-.08);S.parts.push({p:add3(pp,mul3(runit(),.05)),v:mul3(runit(),.12),life:0,max:rnd(1,1.8),col:KION,s:.035})}
+    if(q.s>.4&&q.s<.85&&S.parts.length<700&&Math.random()<dt*5){const pp=pathAt(ax,q.s-.08);S.parts.push({p:add3(pp,mul3(runit(),.05)),v:mul3(runit(),.12),life:0,max:rnd(1,1.8),col:KION,s:.035})}
     if(q.s>=1){ax.pulses.splice(i,1);axArrive(ax,p)}}
   if(p.decay){ax.integ-=dt*.011*p.decay*(.5+Math.random())*(S.adds.li?.6:1);if(ax.integ<=0)breakAxon(ax,p)}else ax.integ=Math.min(1,ax.integ+dt*.02)}
-function axSpike(ax,p){ax.flash=1;ax.pulses.push({s:0});const tn=S.t*1000;ax.last=tn;S.layAcc[clamp(Math.floor((1-ax.soma[1]/AR.H)*9),0,8)]+=2;
+function axSpike(ax,p){ax.lastR=S.t;ax.flash=1;if(ax.pulses.length<4)ax.pulses.push({s:0});const tn=S.t*1000;ax.last=tn;S.layAcc[clamp(Math.floor((1-ax.soma[1]/AR.H)*9),0,8)]+=2;
   for(const s of S.syn)if(s.b===ax){const dtp=tn-s.lastPre;if(dtp>=0&&dtp<180){s.w+=.08*p.hebb*(1-s.w);s.fire=1}}
   for(const b of S.bits)if(!b.dead&&len3(sub3(b.pos,ax.soma))<1.3)b.E=Math.min(1.6,b.E+.0025);
   const nA=S.axons.length;if(nA>=4){const f=S.axons.filter(a=>tn-a.last<70).length/nA;S.burst=Math.max(S.burst,f)}}
-function axArrive(ax,p){ax.bout.forEach((q,i)=>{for(let k=0;k<5;k++)S.parts.push({p:add3(q,mul3(runit(),.03)),v:mul3(runit(),rnd(.15,.35)),life:0,max:rnd(.7,1.3),col:[.3,1,.85],s:.03})});
+function axArrive(ax,p){ax.bout.forEach((q,i)=>{if(S.parts.length<900)for(let k=0;k<2;k++)S.parts.push({p:add3(q,mul3(runit(),.03)),v:mul3(runit(),rnd(.15,.35)),life:0,max:rnd(.7,1.3),col:[.3,1,.85],s:.03})});
   for(const s of S.syn)if(s.a===ax)S.sig.push({s,t:0})}
 function updSig(dt,p){for(let i=S.sig.length-1;i>=0;i--){const g=S.sig[i];g.t+=dt/.45;if(g.t>=1){S.sig.splice(i,1);const s=g.s;if(!S.axons.includes(s.b))continue;
-  s.b.Is+=11*s.w*(p.hebb>1?1.2:1);const tn=S.t*1000;if(tn-s.b.last<120)s.w=Math.max(.05,s.w-.03);s.lastPre=tn}}
+  s.b.Is=Math.min(14,s.b.Is+7*s.w*(p.hebb>1?1.2:1));const tn=S.t*1000;if(tn-s.b.last<120)s.w=Math.max(.05,s.w-.03);s.lastPre=tn}}
   for(const s of S.syn){s.w=Math.max(.05,s.w-.0025*dt);s.fire*=Math.exp(-dt*3)}}
 function breakAxon(ax,p){const i=S.axons.indexOf(ax);if(i<0)return;S.axons.splice(i,1);S.syn=S.syn.filter(s=>s.a!==ax&&s.b!==ax);
   ax.path.forEach((q,k)=>{if(k%3===0)S.parts.push({p:q.slice(),v:mul3(runit(),rnd(.1,.5)),life:0,max:rnd(1,2.2),col:k%2?GOLD:hsv(ax.hue+.3,.8,1),s:.05})});
@@ -633,7 +638,7 @@ function drawBit(b,t){const p=PR,g=b.genes;
   const yT=.75*(1+.08*c),hh=1.3*(1+.12*c),yOf=u=>yT-u*hh;
   const NS=34;let px=0,py=0,pz=0,pa=0;
   for(let k=0;k<L;k++){if(fr&&hash(k*7.3+id)<fr*.85)continue;const ph0=k/L*TAU+spin,w=(k%2?.5:-.5)*(1+.12*Math.sin(k*2.3));
-    for(let st=0;st<3;st++){const rf=1-st*.05,po=st*.055,al=(st===0?.5:.3)*bright;
+    for(let st=0;st<3;st++){const rf=1-st*.05,po=st*.055,al=(st===0?.42:.26)*bright;
       for(let i=0;i<=NS;i++){const tt=i/NS*TAU,u=.5-.5*Math.cos(tt),ph=ph0+w*tt+po,r=prof(u)*rf*(1+.035*Math.sin(3*ph+t*2.2));
         Wt(Math.cos(ph)*r,yOf(u),Math.sin(ph)*r);const A=al*(.3+.7*u)*TA;
         if(i)seg(px,py,pz,TX,TY,TZ,col[0],col[1],col[2],pa,A);px=TX;py=TY;pz=TZ;pa=A}}}
@@ -660,23 +665,23 @@ function drawBit(b,t){const p=PR,g=b.genes;
 function drawAxon(ax,t){const B=ax.build,off=[Math.sin(t*.21+ax.ph)*.05,Math.sin(t*.17+ax.ph*2)*.06,Math.sin(t*.13+ax.ph*3)*.04],J=1-ax.integ;
   const O=q=>J>0?[q[0]+off[0]+gauss()*J*.02,q[1]+off[1]+gauss()*J*.02,q[2]+off[2]+gauss()*J*.02]:[q[0]+off[0],q[1]+off[1],q[2]+off[2]];
   const ac=PR.hue>0?hsv(ax.hue+.4+Math.sin(t*.3)*.2,.7,1):hsv(ax.hue+.05,.5,1),MY=[.62,.74,1],fl=ax.flash;
-  for(const[a,b,dep]of ax.den){if(dep/3>B*1.3)continue;segv(O(a),O(b),dep===0?VIO:[.5,.55,1],(.42-dep*.08)*(.6+ax.integ*.4))}
+  for(const[a,b,dep]of ax.den){if(dep/3>B*1.3)continue;segv(O(a),O(b),dep===0?VIO:[.5,.55,1],(.4-dep*.09)*(.6+ax.integ*.4))}
   for(const q of ax.denTips)ptv(O(q),Math.random()<.02?GOLD:[.6,.7,1],.4,.03);
-  const so=O(ax.soma);ptv(so,GOLD,.7+fl*.8,.18+fl*.08);ptv(so,VIO,.2,.6);ptv(so,[1,.95,.85],.6+fl,.06);
+  const so=O(ax.soma);ptv(so,GOLD,.6+fl*.5,.15+fl*.05);ptv(so,VIO,.12,.45);ptv(so,[1,.95,.85],.6+fl*.5,.05);
   for(let k=0;k<3;k++){let pv=null;for(let i=0;i<=20;i++){const an=i/20*TAU,v=k===0?[Math.cos(an),Math.sin(an),0]:k===1?[Math.cos(an),0,Math.sin(an)]:[0,Math.cos(an),Math.sin(an)];
-    const q=add3(so,mul3(v,.11+fl*.02));if(pv)segv(pv,q,[.7,.75,1],.25);pv=q}}
-  const sMax=B;let pv=null;for(let i=0;i<=48;i++){const s=i/48;if(s>sMax)break;const q=O(ax.path[i]);if(pv)segv(pv,q,GOLD,.28);pv=q}
-  const NSEG=7,R=.045,p1=ax.p1,p2=ax.p2;
+    const q=add3(so,mul3(v,.11+fl*.02));if(pv)segv(pv,q,[.7,.75,1],.16);pv=q}}
+  const sMax=B;let pv=null;for(let i=0;i<=48;i++){const s=i/48;if(s>sMax)break;const q=O(ax.path[i]);if(pv)segv(pv,q,GOLD,.32);pv=q}
+  const NSEG=7,R=.058,p1=ax.p1,p2=ax.p2;
   for(let k=0;k<NSEG;k++){const s0=.1+k*.105,s1=s0+.088;if(s1>sMax)break;if(J>.4&&hash(k+ax.id*3)<J-.3)continue;
-    let glow=0;for(const q of ax.pulses)if(q.s>=s0-.02&&q.s<=s1+.02)glow=1;const cc=glow?GOLD:MY,al=(.22+glow*.4)*(.6+ax.integ*.4);
+    let glow=0;for(const q of ax.pulses)if(q.s>=s0-.02&&q.s<=s1+.02)glow=1;const cc=glow?GOLD:MY,al=(.17+glow*.3)*(.6+ax.integ*.4);
     const rings=[s0,(s0+s1)/2,s1].map((s,ri)=>{const c=O(pathAt(ax,s)),rr=R*(ri===1?1.12:.85);return Array.from({length:10},(_,i)=>{const an=i/10*TAU;return add3(c,add3(mul3(p1,Math.cos(an)*rr),mul3(p2,Math.sin(an)*rr)))})});
     for(const rg of rings)for(let i=0;i<10;i++)segv(rg[i],rg[(i+1)%10],cc,al);
     for(let i=0;i<10;i+=2){segv(rings[0][i],rings[1][i],cc,al*.8);segv(rings[1][i],rings[2][i],cc,al*.8)}
-    ptv(O(pathAt(ax,(s0+s1)/2)),cc,.12+glow*.25,.16);
-    ptv(O(pathAt(ax,s1+.0085)),GOLD,.8,.04)}
-  for(const q of ax.pulses){for(let j=0;j<5;j++){const s=q.s-j*.018;if(s<0)break;ptv(O(pathAt(ax,s)),j?GOLD:[1,.95,.8],(1-j/5)*.95,j?.08:.15)}}
-  if(B>.8){const k=(B-.8)/.2;for(const[a,b,dep]of ax.term)segv(O(a),O(b),GOLD,.4*k);
-    ax.bout.forEach((q,i)=>{const c=O(q);ptv(c,[.95,.75,.5],.45*k,.08);ptv(c,VIO,.15*k,.2);ax.ves[i].forEach(v=>{const an=v[2]+t*1.3;ptv(add3(c,mul3(v[0],v[1]*(1+.3*Math.sin(an)))),[.3,1,.85],.7*k,.022)})})}}
+    if(glow)ptv(O(pathAt(ax,(s0+s1)/2)),GOLD,.18,.14);
+    ptv(O(pathAt(ax,s1+.0085)),GOLD,.55,.03)}
+  for(const q of ax.pulses){for(let j=0;j<5;j++){const s=q.s-j*.018;if(s<0)break;ptv(O(pathAt(ax,s)),j?GOLD:[1,.95,.8],(1-j/5)*.7,j?.06:.11)}}
+  if(B>.8){const k=(B-.8)/.2;for(const[a,b,dep]of ax.term)segv(O(a),O(b),GOLD,.3*k);
+    ax.bout.forEach((q,i)=>{const c=O(q);ptv(c,[.95,.75,.5],.3*k,.06);ptv(c,VIO,.07*k,.16);ax.ves[i].forEach(v=>{const an=v[2]+t*1.3;ptv(add3(c,mul3(v[0],v[1]*(1+.3*Math.sin(an)))),[.3,1,.85],.5*k,.018)})})}}
 function drawSyn(t){for(const s of S.syn){const A=s.a.bout[s.bo],Bp=s.b.soma;if(!A)continue;let pv=null;const al=.08+.45*s.w+s.fire*.4;
   for(let i=0;i<=20;i++){const q=i/20,u=1-q,P=[u*u*A[0]+2*u*q*s.mid[0]+q*q*Bp[0],u*u*A[1]+2*u*q*s.mid[1]+q*q*Bp[1],u*u*A[2]+2*u*q*s.mid[2]+q*q*Bp[2]];
     const cc=[lerp(.62,.35,q),lerp(.46,.95,q),lerp(1,.9,q)];if(pv&&i%2===0)segv(pv,P,cc,al);if(pv&&i%2)segv(pv,P,cc,al*.4);pv=P}}
@@ -691,14 +696,14 @@ function render(t){resizeGL();buildScene(t);
   gl.useProgram(PP.p);gl.uniformMatrix4fv(PP.u.m,false,CAM.vp);gl.uniform1f(PP.u.k,CAM.k);gl.uniform2fv(PP.u.fog,fog);gl.bindVertexArray(vaoP);gl.bindBuffer(gl.ARRAY_BUFFER,bufP);gl.bufferSubData(gl.ARRAY_BUFFER,0,PBUF,0,pn*8);gl.drawArrays(gl.POINTS,0,pn);
   gl.disable(gl.BLEND);gl.bindVertexArray(vaoE);
   const pass=(pr,src,dst,set)=>{gl.bindFramebuffer(gl.FRAMEBUFFER,dst?dst.f:null);gl.viewport(0,0,dst?dst.w:W_,dst?dst.h:H_);gl.useProgram(pr.p);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,src.t);gl.uniform1i(pr.u.t,0);set&&set(pr.u);gl.drawArrays(gl.TRIANGLES,0,3)};
-  pass(PB_,RT.s,RT.a,u=>{gl.uniform2f(u.px,.5/W_,.5/H_);gl.uniform1f(u.th,hasCBF?.12:.08)});
+  pass(PB_,RT.s,RT.a,u=>{gl.uniform2f(u.px,.5/W_,.5/H_);gl.uniform1f(u.th,hasCBF?.18:.1)});
   pass(PBL,RT.a,RT.b,u=>gl.uniform2f(u.dir,1/RT.a.w,0));pass(PBL,RT.b,RT.a,u=>gl.uniform2f(u.dir,0,1/RT.a.h));
   pass(PB_,RT.a,RT.c,u=>{gl.uniform2f(u.px,.5/RT.a.w,.5/RT.a.h);gl.uniform1f(u.th,0)});
   pass(PBL,RT.c,RT.d,u=>gl.uniform2f(u.dir,1.5/RT.c.w,0));pass(PBL,RT.d,RT.c,u=>gl.uniform2f(u.dir,0,1.5/RT.c.h));
   pass(PBL,RT.c,RT.d,u=>gl.uniform2f(u.dir,3/RT.c.w,0));pass(PBL,RT.d,RT.c,u=>gl.uniform2f(u.dir,0,3/RT.c.h));
   gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W_,H_);gl.useProgram(PC.p);
   [[RT.s,'s'],[RT.a,'b1'],[RT.c,'b2']].forEach(([r,n],i)=>{gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,r.t);gl.uniform1i(PC.u[n],i)});
-  const acid=S.adds.acid?(PR.hue>1?1:.65):0;gl.uniform1f(PC.u.acid,acid);gl.uniform1f(PC.u.time,t);gl.uniform1f(PC.u.bloom,1.5);gl.uniform1f(PC.u.flash,S.flash);gl.uniform3fv(PC.u.tint,PR.tint);
+  const acid=S.adds.acid?(PR.hue>1?1:.65):0;gl.uniform1f(PC.u.acid,acid);gl.uniform1f(PC.u.time,t);gl.uniform1f(PC.u.bloom,1.25);gl.uniform1f(PC.u.flash,S.flash);gl.uniform3fv(PC.u.tint,PR.tint);
   gl.drawArrays(gl.TRIANGLES,0,3);gl.activeTexture(gl.TEXTURE0)}
 
 /* ================= Klang (WebAudio) ================= */
@@ -739,7 +744,7 @@ function uiUpdate(dt){uiT+=dt;if(uiT<.2)return;uiT=0;const d=S.dl;
   const dtxt=d.d===0?'± 0':d.d>0?`+ ${d.d}`:`+ (−${-d.d})`;
   const br=d.parts.filter(x=>x[0]!=='Ē'||x[1]!==0).map(x=>`${x[0]} ${fmtS(x[1])}`).join(' · ')||'Energiehaushalt ausgeglichen';
   const cn=comboName();
-  ui.formula.innerHTML=`Axon = 4 Bits ${dtxt} = ${d.n}<span class="f2">${br}${cn&&cn.indexOf(' ')<0&&!['Lithium','Adrenalin','Dopamin','Acid'].includes(cn)||cn.includes('-')?' · '+cn:''}</span>`;
+  ui.formula.innerHTML=`Axon = 4 Bits ${dtxt} = ${d.n}<span class="f2">${br}${cn&&Object.values(S.adds).filter(Boolean).length>=2?' · '+cn:''}</span>`;
   const nb=S.bits.filter(b=>!b.dead).length;
   ui.stats.textContent=`Gen ${S.genMax} · Bits ${nb}/${MAXB} · Axone ${S.axons.length} · Syn ${S.syn.length}\nĒ ${S.meanE.toFixed(2)} · R ${S.R.toFixed(2)} · ${mmss(S.t)}`;ui.stats.style.whiteSpace='pre';
   ui.dots.forEach((el,i)=>{el.classList.toggle('on',i<S.stage-1);el.classList.toggle('cur',i===S.stage-1)});
@@ -881,7 +886,8 @@ if(location.protocol!=='file:'){const l=document.createElement('link');l.rel='ma
 // Test-/Steuer-API
 window.PS={S,SET,get P(){return PR},add:addBit,addi:k=>document.querySelector(`.b.add[data-a=${k}]`).click(),
   manual(v){manual=v},frame(dt){step(dt||1/30)},sim(sec,dt=1/30){for(let t=0;t<sec;t+=dt)update(dt)},
-  select(i){S.sel=S.bits[i]||null},steer(v){if(S.sel)S.sel.steer=v},attract(p){S.attr={p,life:6}},cam(y,p,z){CAM.tyaw=y;CAM.tpitch=p;CAM.tzoom=z},openDash(){$('#tab').click()},project};
+  select(i){S.sel=S.bits[i]||null},
+  fuse(n){n=n||S.nreq;const L=live().filter(b=>!b.fuse);if(L.length<n)return false;const b=L[0];const g=[b,...L.slice(1).sort((x,y)=>len3(sub3(x.pos,b.pos))-len3(sub3(y.pos,b.pos))).slice(0,n-1)];let c=[0,0,0];g.forEach(o=>c=add3(c,o.pos));c=mul3(c,1/n);const id=++S.fusId;g.forEach(o=>{o.fuse=id;o.fc=c});S.fus.push({id,m:g,t:0,c,r:1});return true},steer(v){if(S.sel)S.sel.steer=v},attract(p){S.attr={p,life:6}},cam(y,p,z){CAM.tyaw=y;CAM.tpitch=p;CAM.tzoom=z},openDash(){$('#tab').click()},project};
 boot();
 })();
 
