@@ -582,19 +582,19 @@ vec3 mDipol(int id,float s,float t,out float a,out vec3 col,out float sig){
   vec3 p;
   col=mix(cFib,cNode,smoothstep(1.0,2.2,L));
   sig=fract(t*0.3+r6);
-  if(r3<0.64){                                            // Fontäne entlang r=L sin²θ
-    float w=cpl(0.11+0.13*r4,0.16);
+  if(r3<0.80){                                            // Fontäne entlang r=L sin²θ
+    float w=cpl(0.16+0.14*r4,0.22);
     float th0=asin(sqrt(min(0.5/L,0.95)));
     float uh=fract(w*t+r5);
-    float u=uh-s*(0.30+0.25*r7);
+    float u=uh-s*(0.45+0.3*r7);
     float uu=clamp(u,0.0,1.0);
     float th=mix(th0,PI*0.5,pow(uu,0.8));                 // schnell am Pol (|B| groß), langsam am Äquator
     float phi=phi0+0.05*t*(r6-0.5);
     p=dipole(L,th,phi,hemi);
-    a=step(0.0,u)*smoothstep(0.0,0.08,uu)*smoothstep(1.0,0.75,uu)*pow(1.0-s,0.8);
+    a=1.6*step(0.0,u)*smoothstep(0.0,0.05,uu)*smoothstep(1.0,0.8,uu)*pow(1.0-s,0.6);
   } else {                                                // gefangen: Spiegelpunkte, Gyration, Drift
     float wb=cpl(0.55+0.6*r4,0.7), thm=0.30+0.55*r5;
-    float tt=t-s*2.4+r1*40.0;
+    float tt=t-s*0.9+r1*40.0;
     float th=PI*0.5+thm*sin(wb*tt+TAU*r6);
     float phi=phi0+(0.05+0.09*r7)*tt*hemi;                // Gradient-Krümmungs-Drift
     vec3 gc=dipole(L,th,phi,1.0);
@@ -603,9 +603,9 @@ vec3 mDipol(int id,float s,float t,out float a,out vec3 col,out float sig){
     float r=max(L*sin(th)*sin(th),0.2);
     float B=sqrt(1.0+3.0*cos(th)*cos(th))/(r*r*r);       // |B| ∝ √(1+3cos²θ)/r³
     float rho=clamp(0.045/sqrt(B),0.0,0.11);              // Gyrationsradius ∝ 1/|B| (gedämpft)
-    float wg=9.0+6.0*r2;
+    float wg=5.0+3.0*r2;
     p=gc+rho*(n1*cos(wg*tt)+n2*sin(wg*tt));
-    a=pow(1.0-s,1.2)*0.9;
+    a=pow(1.0-s,1.2)*0.7;
     col=mix(col,cRim,0.25);
   }
   return p;
@@ -771,7 +771,7 @@ vec3 neural(int id,float s,float t,out float a,out vec3 col,out float sig){
   float span=1.3+1.7*r5;
   float an=TAU*r4+w*t+s*span;
   float rr=Rs*exp(0.24*(s-0.35)*span);                    // log. Spirale r=R·e^(bψ)
-  vec3 p=vec3(rr*cos(an),rr*sin(an),0.06*sin(13.0*s*span+r6*TAU+t*0.3));
+  vec3 p=vec3(rr*cos(an),rr*sin(an),0.022*sin(9.0*s*span+r6*TAU+t*0.3));
   p=rotZ(rotX(p,r1*1.3),r2*TAU);
   a=pow(sin(PI*min(s*1.1,1.0)),0.7)*uNeur;
   col=mix(cFib*1.15,cNode,smoothstep(0.8,1.9,rr));
@@ -855,7 +855,7 @@ vec4 project(vec3 p,int id,inout float a,bool mover){
   if(mover||id>=NG+NO){                                    // Curl-Noise-Verwirbelung (Externe Einflüsse)
     vec3 q=p*0.9+uFlow;
     vec4 g1=snoiseD(q); vec4 g2=snoiseD(q*1.13+vec3(19.1,-7.3,4.7));
-    p+=cross(g1.xyz,g2.xyz)*0.022*(0.25+uExt)*(1.0+0.6*uEn);
+    p+=cross(g1.xyz,g2.xyz)*0.009*(0.2+uExt)*(1.0+0.4*uEn);
   }
   vec3 W=uRot*(p*uScaleA)+uOff*0.5;
   for(int i=0;i<6;i++){                                   // Berührungs-Schockwelle (Kugelwelle, gedämpft)
@@ -878,7 +878,7 @@ void main(){
   vec3 p=agent(id,s,a,col,dash,sig,kind,mover);
   if(a<=0.0005){ gl_Position=vec4(2.0,2.0,2.0,1.0); vA=0.0; vCol=vec3(0); vS=s; vDash=0.0; vSig=-1.0; return; }
   gl_Position=project(p,id,a,mover);
-  float gain=(kind==3.0)?0.20:(kind==2.0?0.22:(kind==4.0?0.5:(kind<0.0?1.0:0.6)));
+  float gain=(kind==3.0)?0.05:(kind==2.0?0.05:(kind==4.0?0.22:(kind<0.0?0.9:0.5)));
   vA=a*gain*(0.45+0.75*uEn)*(1.0+0.35*uPulse);
   vCol=col; vS=s; vDash=dash; vSig=sig;
 }`;
@@ -907,7 +907,7 @@ void main(){
   // Knoten feuern mit eigener Frequenz: Puls = ((1+sin(ωt+φ))/2)^8
   float fire=pow(0.5+0.5*sin(uT*(1.5+3.0*h1(id,21))*(kind==3.0?1.0:0.6)+TAU*h1(id,22)),8.0);
   float sz; vec3 c;
-  if(kind==3.0){ sz=(1.6+1.6*h1(id,23)+3.0*fire)*uPx; c=mix(col,cNode,0.6)+vec3(fire*0.6); a*=0.55; }
+  if(kind==3.0){ sz=(1.4+1.4*h1(id,23)+3.0*fire)*uPx; c=mix(col,cNode,0.6)+vec3(fire*0.6); a*=0.30; }
   else if(kind==2.0){ sz=(2.4+4.5*fire)*uPx; c=cNode*1.1+vec3(0.35*fire); a*=0.7; }
   else if(kind==1.0){ sz=46.0*uPx; c=cOrb; }               // Hill-Sphäre (Ring) + Satellit
   else if(kind==1.5){ sz=6.5*uPx; c=cOrb*1.3; }
@@ -1384,6 +1384,7 @@ function cycleStep(dt){
 }
 
 function step(dt){
+  if(dt>1/40){ const n=Math.ceil(dt*40); for(let i=0;i<n;i++) step(dt/n); return; }
   sim.t+=dt;
   const a=1-Math.exp(-dt*4.0);
   SL.forEach(s=>{ Pm[s.k]+=(S[s.k]-Pm[s.k])*a; });
@@ -1525,7 +1526,7 @@ addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; const n=+
    Orbital-Normierung: Maxima von |ψ|² (numerisch) und Skalen a0/Welteinheit
    ===================================================================== */
 const ORB_SCL=[2.0,4.2,3.4,6.2,3.4];
-const ORB_GAIN=[1.35,0.75,1.0,1.0,1.0];
+const ORB_GAIN=[0.9,0.5,0.42,0.38,0.42];
 const ORB_PK=(()=>{ const ax=norm([0,0.8,0.6]), u1=norm([0,ax[2],-ax[1]]), u2=[ax[1]*u1[2]-ax[2]*u1[1],ax[2]*u1[0]-ax[0]*u1[2],ax[0]*u1[1]-ax[1]*u1[0]];
   const psi=[ (x,y,z,r)=>Math.exp(-r)**2, (x,y,z,r)=>((2-r)*Math.exp(-r/2))**2, (x,y,z,r)=>(y*Math.exp(-r/2))**2,
     (x,y,z,r)=>(x*y*Math.exp(-r/3))**2, (x,y,z,r)=>{ const a=x*u1[0]+y*u1[1]+z*u1[2], b=x*u2[0]+y*u2[1]+z*u2[2]; return (a*a+b*b)*Math.exp(-r); } ];
