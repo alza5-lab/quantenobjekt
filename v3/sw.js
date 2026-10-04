@@ -1,5 +1,5 @@
-// Quantenobjekt 3 – Service Worker (nur Scope v3/, Version 070029f4)
-const PREFIX='quantenobjekt-v3-', CACHE=PREFIX+'070029f4';
+// Quantenobjekt 3 – Service Worker (nur Scope v3/, Version 79d82835)
+const PREFIX='quantenobjekt-v3-', CACHE=PREFIX+'79d82835';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())); });
 // nur eigene alte v3-Caches löschen – v1/v2-Caches bleiben unberührt

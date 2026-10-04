@@ -572,7 +572,8 @@ vec3 mLoop(int id,float s,float t,out float a,out vec3 col,out float sig){
 /* ---------------- Modus 2: Doppelpol (Dipolfeld, 2p) ---------------- */
 vec3 dipole(float L,float th,float phi,float hemi){
   float r=L*sin(th)*sin(th);
-  return vec3(r*sin(th)*cos(phi), r*cos(th)*hemi, r*sin(th)*sin(phi));
+  // Feldlinie r=L sin²θ; Meridianebene anisotrop skaliert (ρ·0.78, z·1.75) -> hohe Fontäne wie in der Skizze
+  return vec3(0.78*r*sin(th)*cos(phi), 1.75*r*cos(th)*hemi, 0.78*r*sin(th)*sin(phi));
 }
 vec3 mDipol(int id,float s,float t,out float a,out vec3 col,out float sig){
   float r1=h1(id,1),r2=h1(id,2),r3=h1(id,3),r4=h1(id,4),r5=h1(id,5),r6=h1(id,6),r7=h1(id,7);
@@ -876,7 +877,10 @@ void main(){
   float s=float(seg+en)/float(uSeg);
   float a; vec3 col; float dash,sig,kind; bool mover;
   vec3 p=agent(id,s,a,col,dash,sig,kind,mover);
-  if(a<=0.0005){ gl_Position=vec4(2.0,2.0,2.0,1.0); vA=0.0; vCol=vec3(0); vS=s; vDash=0.0; vSig=-1.0; return; }
+  // unsichtbare Vertices bleiben am Ort (sonst Streifen zum Partner-Vertex)
+  bool wholeOff=(kind<0.0)||(id>=NG && id<NG+NO && uOrb<0.01)||(kind==4.0 && uConn<0.01);
+  if(a<=0.0 && wholeOff){ gl_Position=vec4(2.0,2.0,2.0,1.0); vA=0.0; vCol=vec3(0); vS=s; vDash=0.0; vSig=-1.0; return; }
+  a=max(a,0.0);
   gl_Position=project(p,id,a,mover);
   float gain=(kind==3.0)?0.05:(kind==2.0?0.05:(kind==4.0?0.22:(kind<0.0?0.9:0.5)));
   vA=a*gain*(0.45+0.75*uEn)*(1.0+0.35*uPulse);
