@@ -1,5 +1,5 @@
 // EYE CORE – Service Worker (network-first, eigener Scope ./eyecore/)
-const CACHE = 'eyecore-v7';
+const CACHE = 'eyecore-v8';
 const ASSETS = ['./', './index.html', './main.js', './manifest.webmanifest', './apple-touch-icon.png', './icon-192.png', './icon-512.png',
   './lib/three.module.min.js', './lib/addons/postprocessing/EffectComposer.js', './lib/addons/postprocessing/RenderPass.js', './lib/addons/postprocessing/UnrealBloomPass.js',
   './lib/addons/postprocessing/ShaderPass.js', './lib/addons/postprocessing/OutputPass.js', './lib/addons/postprocessing/MaskPass.js', './lib/addons/postprocessing/Pass.js',
