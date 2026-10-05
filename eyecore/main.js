@@ -21,7 +21,7 @@ const canvas = $('#c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 let quality = localStorage.getItem('eyecore.q') || 'hoch';
 let muted = localStorage.getItem('eyecore.mute') === '1';
-const prFor = q => Math.min(window.devicePixelRatio || 1, q === 'hoch' ? (IS_TOUCH ? 1.6 : 2) : 1);
+const prFor = q => Math.min(window.devicePixelRatio || 1, q === 'hoch' ? (IS_TOUCH ? 1.25 : 2) : (IS_TOUCH ? 0.9 : 1));
 renderer.setPixelRatio(prFor(quality));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.85;
@@ -449,7 +449,7 @@ for (let i = 0; i < 12; i++) {
   g.add(c, h); g.visible = false; scene.add(g); ghosts.push({ g, m, life: 0, a: .4 });
 }
 let ghostIdx = 0;
-function spawnGhost(col, a = .45) { const gh = ghosts[ghostIdx++ % ghosts.length]; gh.g.position.copy(hero.position); gh.g.rotation.copy(hero.rotation); gh.g.visible = true; gh.life = 1; gh.a = a; gh.m.color.copy(col); }
+function spawnGhost(col, a = .45) { const gh = ghosts[ghostIdx++ % ghosts.length]; gh.g.position.copy(hero.position); gh.g.rotation.copy(hero.rotation); gh.g.scale.setScalar(1); gh.g.visible = true; gh.life = 1; gh.a = a; gh.m.color.copy(col); }
 const fxRings = [];
 for (let i = 0; i < 5; i++) { const m = new THREE.Mesh(new THREE.TorusGeometry(1.6, .07, 6, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, .6, 2.6), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); m.visible = false; scene.add(m); fxRings.push({ m, life: 0, s: 1 }); }
 let fxIdx = 0;
@@ -458,7 +458,10 @@ const PN = 260; const partPos = new Float32Array(PN * 3).fill(-999), partVel = n
 const partG = new THREE.BufferGeometry(); partG.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
 const parts = new THREE.Points(partG, new THREE.PointsMaterial({ map: glowTex, size: .28, color: new THREE.Color(.8, 1.8, 2.4), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); parts.frustumCulled = false; scene.add(parts);
 let partIdx = 0;
-function burst(p, n = 60, spd = 8) { for (let i = 0; i < n; i++) { const k = partIdx++ % PN; partPos.set([p.x, p.y, p.z], k * 3); const v = new V3(rnd() - .5, rnd() - .3, rnd() - .5).normalize().multiplyScalar(spd * (.4 + rnd())); partVel.set([v.x, v.y, v.z], k * 3); partLife[k] = 1; } }
+function burst(p, n = 60, spd = 8) {
+  const nn = quality === 'hoch' ? n : Math.ceil(n * .35);
+  for (let i = 0; i < nn; i++) { const k = partIdx++ % PN; partPos.set([p.x, p.y, p.z], k * 3); const v = new V3(rnd() - .5, rnd() - .3, rnd() - .5).normalize().multiplyScalar(spd * (.4 + rnd())); partVel.set([v.x, v.y, v.z], k * 3); partLife[k] = 1; }
+}
 const waves = [];
 for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.TorusGeometry(1, .006, 4, 128), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, .5, 1.8), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); m.rotation.x = Math.PI / 2; m.visible = false; scene.add(m); waves.push({ m, t: -1 }); }
 
@@ -511,7 +514,7 @@ const ABIL = {
 };
 const VIEWS = ['TPV', 'FPV', 'GEOMETRIC', 'EYE VIEW'];
 const LAYERS = ['NORMAL', 'DEPTH', 'SYSTEM', 'GLITCH', 'RESONANCE'];
-const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 30, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
+const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 36, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
 let saved = []; try { saved = JSON.parse(localStorage.getItem('eyecore.v1') || '[]'); } catch (e) { }
 frags.forEach(f => { if (saved.includes(f.id)) { f.got = true; f.g.visible = false; } });
 S.collected = frags.filter(f => f.got).length;
@@ -604,16 +607,21 @@ canvas.addEventListener('pointerdown', e => {
   if (!S.started || S.paused) return; e.preventDefault();
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { }
   const touch = e.pointerType !== 'mouse';
-  if (touch && e.clientX < innerWidth * .45) {
+  // Left ~52% = joystick; keep clear of right ability cluster
+  if (touch && e.clientX < innerWidth * .52) {
     ptrs.set(e.pointerId, { type: 'joy', x0: e.clientX, y0: e.clientY, mx: 0, my: 0 }); joy.style.left = e.clientX + 'px'; joy.style.top = e.clientY + 'px'; joy.classList.add('on'); joyKnob.style.transform = ''; el('joyhint').classList.add('hide');
   } else ptrs.set(e.pointerId, { type: 'look', x: e.clientX, y: e.clientY, touch });
 });
 canvas.addEventListener('pointermove', e => {
   const p = ptrs.get(e.pointerId); if (!p) return; e.preventDefault();
   if (p.type === 'joy') {
-    let dx = e.clientX - p.x0, dy = e.clientY - p.y0; const r = Math.hypot(dx, dy), max = 52;
+    let dx = e.clientX - p.x0, dy = e.clientY - p.y0; const r = Math.hypot(dx, dy), max = 58;
     if (r > max) { dx *= max / r; dy *= max / r; }
-    joyKnob.style.transform = `translate(${dx}px,${dy}px)`; p.mx = dx / max; p.my = -dy / max;
+    joyKnob.style.transform = `translate(${dx}px,${dy}px)`;
+    // Small deadzone so taps don't nudge; then full range
+    const rawX = dx / max, rawY = -dy / max, mag = Math.hypot(rawX, rawY);
+    if (mag < .12) { p.mx = 0; p.my = 0; }
+    else { const t = (mag - .12) / .88; p.mx = (rawX / mag) * t; p.my = (rawY / mag) * t; }
   } else {
     const k = p.touch ? .0062 : .0045; S.yaw -= (e.clientX - p.x) * k; S.pitch += (e.clientY - p.y) * k * (S.view === 1 ? -1 : 1);
     S.pitch = S.view === 1 ? clamp(S.pitch, -1.35, 1.35) : clamp(S.pitch, -.35, 1.35);
@@ -623,14 +631,20 @@ canvas.addEventListener('pointermove', e => {
 });
 const endPtr = e => { const p = ptrs.get(e.pointerId); if (!p) return; if (p.type === 'joy') joy.classList.remove('on'); ptrs.delete(e.pointerId); };
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr); canvas.addEventListener('lostpointercapture', endPtr);
-canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 18, 110); else S.zoom = clamp(S.zoom + e.deltaY * .006, 3, 16); }, { passive: false });
+canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 22, 120); else S.zoom = clamp(S.zoom + e.deltaY * .006, 3, 16); }, { passive: false });
 document.addEventListener('touchmove', e => { if (!e.target.closest('.ov')) e.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault()); document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.querySelectorAll('.ab').forEach(b => {
-  b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); b.classList.add('press'); const a = b.dataset.a; if (a === 'jump') P.jumpBuf = .15; else useAbility(a); });
-  const up = () => b.classList.remove('press'); b.addEventListener('pointerup', up); b.addEventListener('pointerleave', up); b.addEventListener('pointercancel', up);
+  b.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation();
+    try { b.setPointerCapture(e.pointerId); } catch (err) { }
+    b.classList.add('press');
+    const a = b.dataset.a; if (a === 'jump') P.jumpBuf = .15; else useAbility(a);
+  });
+  const up = () => b.classList.remove('press');
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
 });
 el('b-view').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); cycleView(); });
 el('b-layer').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); cycleLayer(); });
@@ -663,8 +677,20 @@ el('b-resume').onclick = () => togglePause(false);
 el('b-sound').onclick = () => { muted = !muted; localStorage.setItem('eyecore.mute', muted ? '1' : '0'); if (master) master.gain.value = muted ? 0 : .5; el('b-sound').textContent = 'TON: ' + (muted ? 'AUS' : 'AN'); };
 el('b-sound').textContent = 'TON: ' + (muted ? 'AUS' : 'AN');
 el('b-quality').onclick = () => setQuality(quality === 'hoch' ? 'niedrig' : 'hoch');
-function setQuality(q) { quality = q; localStorage.setItem('eyecore.q', q); el('b-quality').textContent = 'GRAFIK: ' + q.toUpperCase(); resize(); }
+function applyQuality() {
+  const hi = quality === 'hoch';
+  bloom.strength = hi ? (IS_TOUCH ? .52 : .8) : .28;
+  bloom.radius = hi ? (IS_TOUCH ? .4 : .5) : .28;
+  bloom.threshold = hi ? (IS_TOUCH ? .88 : .8) : .94;
+  parts.visible = hi;
+  parts.material.size = hi ? .28 : .18;
+  clouds.forEach((c, i) => { c.visible = hi || (i % 3 === 0); });
+  // Fewer ghost trails on low
+  for (let i = 0; i < ghosts.length; i++) if (!hi && i >= 6) { ghosts[i].life = 0; ghosts[i].g.visible = false; }
+}
+function setQuality(q) { quality = q; localStorage.setItem('eyecore.q', q); el('b-quality').textContent = 'GRAFIK: ' + q.toUpperCase(); applyQuality(); resize(); }
 el('b-quality').textContent = 'GRAFIK: ' + quality.toUpperCase();
+applyQuality();
 function resetGame() {
   localStorage.removeItem('eyecore.v1'); frags.forEach(f => { f.got = false; f.g.visible = true; }); S.collected = 0; S.finale = -1; updateHUDStats();
   P.pos.copy(START); P.vel.set(0, 0, 0); P.lastSafe.copy(START); S.yaw = 0; el('final').classList.remove('on'); togglePause(false); feed('STATE RESET', '0/12', true);
@@ -729,7 +755,8 @@ function resolveAxis(ax, wasGround) {
     const s = vv > 0 ? -1 : vv < 0 ? 1 : (p[key] < c ? -1 : 1);
     p[key] = s < 0 ? b.min[key] - R - 1e-3 : b.max[key] + R + 1e-3;
     P.contactN.set(ax ? 0 : s, 0, ax ? s : 0); P.contactBox = b; P.contactT = S.t;
-    v[key] = 0;
+    // Soft slide vs hard stop: keep a bit of normal vel so wall-run entry feels less sticky
+    if (P.wallRun) v[key] = 0; else v[key] *= 0.18;
   }
 }
 function resolveY(prevY) {
@@ -854,8 +881,11 @@ function updateHero(dt) {
   const op = P.phase ? .45 + Math.sin(S.t * 30) * .1 : 1; heroMats.forEach(m => { m.opacity = op; });
   coatMat.emissive.setRGB(...(P.phase ? [.4, 1.2, 1.4] : P.shift ? [1.2, .5, 1.4] : [1, 1, 1]));
   hero.visible = S.view !== 1 && !(fl && Math.random() < .3);
+  // Geometric top view: enlarge character + marker so player stays readable
+  const geoSc = S.view === 2 ? 1.85 : 1;
+  hero.scale.setScalar(geoSc);
   const [g] = groundAt(P.pos.x, P.pos.z, P.pos.y + .1);
-  blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 2.6 : 1);
+  blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 4.2 : 1);
   const hgt = P.pos.y - g; blob.material.opacity = clamp(1 - hgt / 10, 0, 1); footRing.material.opacity = clamp(.35 - hgt / 12, 0, .35) + (glitching ? .3 : 0);
   heroLight.intensity = 1.6 + (glitching ? 3 : 0);
 }
@@ -864,15 +894,27 @@ function updateHero(dt) {
 const camTarget = new V3(0, 1.5, 70), tmp = new V3(), rayDir = new V3();
 function rayBoxes(o, d, maxT) {
   let best = maxT;
+  const pad = .55;
   for (const b of boxes) {
     let t0 = 0, t1 = best, ok = true;
     for (const k of ['x', 'y', 'z']) {
-      const inv = 1 / (Math.abs(d[k]) < 1e-9 ? 1e-9 : d[k]); let ta = (b.min[k] - .15 - o[k]) * inv, tb = (b.max[k] + .15 - o[k]) * inv; if (ta > tb) { const s = ta; ta = tb; tb = s; }
+      const inv = 1 / (Math.abs(d[k]) < 1e-9 ? 1e-9 : d[k]); let ta = (b.min[k] - pad - o[k]) * inv, tb = (b.max[k] + pad - o[k]) * inv; if (ta > tb) { const s = ta; ta = tb; tb = s; }
       t0 = Math.max(t0, ta); t1 = Math.min(t1, tb); if (t0 > t1) { ok = false; break; }
     }
     if (ok && t0 > 0 && t0 < best) best = t0;
   }
   return best;
+}
+function pushCamOut(pos) {
+  const pad = .5;
+  for (let it = 0; it < 4; it++) {
+    for (const b of boxes) {
+      if (pos.x <= b.min.x - pad || pos.x >= b.max.x + pad || pos.y <= b.min.y - pad || pos.y >= b.max.y + pad || pos.z <= b.min.z - pad || pos.z >= b.max.z + pad) continue;
+      const o = [[b.min.x - pad - pos.x, 'x'], [b.max.x + pad - pos.x, 'x'], [b.min.y - pad - pos.y, 'y'], [b.max.y + pad - pos.y, 'y'], [b.min.z - pad - pos.z, 'z'], [b.max.z + pad - pos.z, 'z']];
+      o.sort((a, c) => Math.abs(a[0]) - Math.abs(c[0]));
+      pos[o[0][1]] += o[0][0];
+    }
+  }
 }
 function nearestFrag() { let best = null, bd = 1e9; for (const f of frags) if (!f.got) { const d = f.g.position.distanceToSquared(P.pos); if (d < bd) { bd = d; best = f; } } return best; }
 function updateCamera(dt) {
@@ -888,14 +930,32 @@ function updateCamera(dt) {
     const dist = S.view === 3 ? S.zoom + 3 : S.zoom; const pitch = S.view === 3 ? Math.max(S.pitch, .25) : S.pitch;
     rayDir.set(Math.sin(S.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(S.yaw) * Math.cos(pitch));
     const hit = P.phase ? dist : rayBoxes(camTarget, rayDir, dist);
-    tmp.copy(camTarget).addScaledVector(rayDir, Math.max(1.2, hit - .25));
-    const gy = H(tmp.x, tmp.z) + .4; if (tmp.y < gy) tmp.y = gy;
+    // Keep third-person cam outside walls/floor with stronger pull-back
+    tmp.copy(camTarget).addScaledVector(rayDir, Math.max(1.8, hit - .85));
+    const [platY] = groundAt(tmp.x, tmp.z, tmp.y + 4);
+    const floorY = Math.max(H(tmp.x, tmp.z), platY) + .95;
+    if (tmp.y < floorY) {
+      // Lift out of floor/platforms; if still too close, pull toward target
+      tmp.y = floorY;
+      const flat = Math.hypot(tmp.x - camTarget.x, tmp.z - camTarget.z);
+      if (flat > .4 && hit < dist * .55) {
+        const t = clamp(hit / Math.max(dist, .01), .25, 1);
+        tmp.x = lerp(camTarget.x, tmp.x, t);
+        tmp.z = lerp(camTarget.z, tmp.z, t);
+        tmp.y = Math.max(tmp.y, floorY);
+      }
+    }
+    pushCamOut(tmp);
+    // Never sit closer than ~1.6m or under the look-at point
+    if (tmp.distanceTo(camTarget) < 1.6) tmp.copy(camTarget).addScaledVector(rayDir, 1.6);
+    if (tmp.y < floorY) tmp.y = floorY;
     camera.position.copy(tmp); camera.lookAt(camTarget.x, camTarget.y + .25, camTarget.z);
   } else if (S.view === 1) {
     const pp = S.pitch; camera.position.set(P.pos.x, P.pos.y + 1.65, P.pos.z);
     camera.lookAt(P.pos.x - Math.sin(S.yaw) * Math.cos(pp), P.pos.y + 1.65 + Math.sin(pp), P.pos.z - Math.cos(S.yaw) * Math.cos(pp)); fov += 6;
   } else {
-    camera.position.set(camTarget.x, camTarget.y + S.geoH, camTarget.z + S.geoH * .38); camera.lookAt(camTarget);
+    // Geometric: slightly higher default + look straight down-ish for clearer marker
+    camera.position.set(camTarget.x, camTarget.y + S.geoH, camTarget.z + S.geoH * .28); camera.lookAt(camTarget);
   }
   camera.fov = damp(camera.fov, fov, 6, dt); camera.updateProjectionMatrix();
 }
@@ -924,7 +984,17 @@ function updateWorld(wdt, dt) {
   skyMat.uniforms.uTime.value = t; skyMat.uniforms.uFinale.value = fin;
   planets.forEach((p, i) => p.rotation.y = t * .01 * (i + 1));
   clouds.forEach((c, i) => { c.position.x += Math.sin(i) * wdt * .6; });
-  ghosts.forEach(g => { if (g.life > 0) { g.life -= dt * 1.6; g.m.opacity = Math.max(0, g.life) * g.a; if (g.life <= 0) g.g.visible = false; } });
+  ghosts.forEach(g => {
+    if (g.life > 0) {
+      g.life -= dt * 1.6;
+      const dist = g.g.position.distanceTo(camera.position);
+      const near = clamp((dist - 1.2) / 5.5, 0, 1); // 0 = very close to cam
+      const sc = 0.28 + 0.72 * near;
+      g.g.scale.setScalar(sc);
+      g.m.opacity = Math.max(0, g.life) * g.a * (0.2 + 0.8 * near);
+      if (g.life <= 0) g.g.visible = false;
+    }
+  });
   fxRings.forEach(r => { if (r.life > 0) { r.life -= dt * 1.8; r.m.scale.setScalar((1 + (1 - r.life) * 2.2) * r.s); r.m.material.opacity = Math.max(0, r.life); if (r.life <= 0) r.m.visible = false; } });
   for (let i = 0; i < PN; i++) if (partLife[i] > 0) { partLife[i] -= dt * .9; partVel[i * 3 + 1] -= 6 * dt; for (let k = 0; k < 3; k++) partPos[i * 3 + k] += partVel[i * 3 + k] * dt; if (partLife[i] <= 0) partPos[i * 3 + 1] = -999; }
   partG.attributes.position.needsUpdate = true;
@@ -994,7 +1064,8 @@ function update(dt) {
   S.glitchFx = Math.max(0, S.glitchFx - dt * 2.2); S.flash = Math.max(0, S.flash - dt * 2);
   grade.uniforms.uTime.value = S.t; grade.uniforms.uGlitch.value = S.glitchFx + ((P.phase || P.shift) ? .12 : 0); grade.uniforms.uDrift.value = clamp(1 - (S.timeScale - .3) / .7, 0, 1);
   grade.uniforms.uFlash.value = S.flash * .35; grade.uniforms.uFinale.value = S.finale >= 0 ? Math.min(1, S.finale / 2) : (S.collected >= 12 ? .4 : 0);
-  bloom.strength = (quality === 'hoch' ? .8 : .7) + (S.finale >= 0 ? Math.min(1, S.finale / 2) * .8 : 0);
+  const bloomBase = quality === 'hoch' ? (IS_TOUCH ? .52 : .8) : .28;
+  bloom.strength = bloomBase + (S.finale >= 0 ? Math.min(1, S.finale / 2) * (quality === 'hoch' ? .8 : .35) : 0);
   scene.fog.color.lerp(fogTargets[S.layer], 1 - Math.exp(-4 * dt));
   scene.fog.density = damp(scene.fog.density, S.layer === 1 ? .014 : S.view === 2 ? .004 : .0055, 4, dt);
   skyGroup.position.copy(camera.position);
@@ -1007,7 +1078,17 @@ function loop(now) {
   if (EC.manual) return;
   if (!S.paused) update(dt);
   render();
-  if (S.started && !autoQ && !S.paused) { fpsAcc += dt; fpsN++; if (fpsAcc > 6) { autoQ = true; const fps = fpsN / fpsAcc; EC.fps = fps; if (fps < 36 && quality === 'hoch' && IS_TOUCH) { setQuality('niedrig'); console.log('Auto-Qualität: niedrig', fps.toFixed(1)); } } }
+  if (S.started && !autoQ && !S.paused) {
+    fpsAcc += dt; fpsN++;
+    if (fpsAcc > 3.2) {
+      autoQ = true; const fps = fpsN / fpsAcc; EC.fps = fps;
+      if (fps < 34 && quality === 'hoch') {
+        setQuality('niedrig');
+        console.log('Auto-Qualität: niedrig', fps.toFixed(1));
+        feed('GRAFIK', 'AUTO NIEDRIG');
+      }
+    }
+  }
 }
 function resize() {
   const w = innerWidth, h = innerHeight, pr = prFor(quality);

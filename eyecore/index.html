@@ -17,11 +17,12 @@
 :root{--v:#b08cff;--v2:#7a5cff;--c:#5ef2ff;--m:#ff5fd8;--bg:rgba(10,6,28,.62);--ln:rgba(150,120,255,.38);
 --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#05030f;color:#e6dcff;
+html,body{margin:0;padding:0;width:100%;height:100%;height:100dvh;max-height:100dvh;overflow:hidden;background:#05030f;color:#e6dcff;
 position:fixed;inset:0;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
-font-family:"Avenir Next Condensed","Roboto Condensed","Arial Narrow","Helvetica Neue",system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
-canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
-#hud{position:fixed;inset:0;pointer-events:none;font-size:10px}
+font-family:"Avenir Next Condensed","Roboto Condensed","Arial Narrow","Helvetica Neue",system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;
+-webkit-text-size-adjust:100%;text-size-adjust:100%}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;height:100dvh;display:block;touch-action:none;z-index:0}
+#hud{position:fixed;inset:0;pointer-events:none;font-size:10px;z-index:2;touch-action:none}
 .panel{background:var(--bg);border:1px solid var(--ln);box-shadow:0 0 14px rgba(120,80,255,.18),inset 0 0 10px rgba(120,80,255,.08);
 -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .ttl{color:var(--v);font-size:9px;letter-spacing:.2em;display:flex;align-items:center;gap:6px}
@@ -81,7 +82,7 @@ border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);background:line
 #hint{position:absolute;bottom:calc(var(--sab) + 8px);left:50%;transform:translateX(-50%);font-size:9px;color:#9d8ccc;white-space:nowrap;opacity:.85}
 /* abilities */
 .ab{pointer-events:auto;position:relative;width:46px;height:46px;border:1px solid var(--ln);background:var(--bg);color:#e8deff;border-radius:50%;
-display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;font-size:6.5px;letter-spacing:.08em;cursor:pointer;padding:0;overflow:hidden;touch-action:none}
+display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;font-size:6.5px;letter-spacing:.08em;cursor:pointer;padding:0;overflow:hidden;touch-action:none;-webkit-touch-callout:none}
 .ab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.4;filter:drop-shadow(0 0 3px currentColor)}
 .ab .k{position:absolute;top:2px;right:6px;font-size:7px;color:#8d7cc0}
 .ab .lb{margin-top:1px;white-space:nowrap}
@@ -95,23 +96,25 @@ display:flex;flex-direction:column;align-items:center;justify-content:center;fon
 body:not(.touch) #abil{bottom:calc(var(--sab) + 26px);left:50%;transform:translateX(-50%)}
 body:not(.touch) #a-jump{display:none}
 body:not(.touch) #joy{display:none}
-/* touch layout */
-body.touch #abil{right:calc(var(--sar) + 14px);bottom:calc(var(--sab) + 18px);width:200px;height:200px;display:block}
-body.touch #abil .ab{position:absolute}
-body.touch #a-jump{width:78px;height:78px;right:0;bottom:0;font-size:8px}
-body.touch #a-jump svg{width:30px;height:30px}
-body.touch #a-gj{width:60px;height:60px;right:88px;bottom:4px;font-size:7px}
-body.touch #a-gj svg{width:26px;height:26px}
-body.touch #a-phase{right:146px;bottom:62px}
-body.touch #a-shift{right:116px;bottom:108px}
-body.touch #a-skip{right:66px;bottom:130px}
-body.touch #a-drift{right:10px;bottom:132px}
+/* touch layout — JUMP + GLITCH clearly separated, safe-area aware */
+body.touch #abil{right:calc(var(--sar) + 10px);bottom:calc(var(--sab) + 12px);width:220px;height:230px;display:block;z-index:6;pointer-events:none}
+body.touch #abil .ab{position:absolute;pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none}
+body.touch #a-jump{width:86px;height:86px;right:0;bottom:0;font-size:8px;z-index:3}
+body.touch #a-jump svg{width:32px;height:32px}
+body.touch #a-gj{width:66px;height:66px;right:102px;bottom:10px;font-size:7px;z-index:2} /* ≥16px gap from JUMP */
+body.touch #a-gj svg{width:28px;height:28px}
+body.touch #a-phase{right:158px;bottom:72px}
+body.touch #a-shift{right:128px;bottom:122px}
+body.touch #a-skip{right:72px;bottom:148px}
+body.touch #a-drift{right:12px;bottom:150px}
 body.touch .ab .k{display:none}
 body.touch #hint{display:none}
-#joy{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:1px solid var(--ln);background:radial-gradient(circle,rgba(120,80,255,.12),rgba(10,6,28,.25));opacity:0;transition:opacity .2s}
+body.touch #tbtn{z-index:5;pointer-events:auto}
+body.touch .pill{min-height:36px;min-width:44px;padding:8px 10px;touch-action:manipulation}
+#joy{position:absolute;left:0;top:0;width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;border:1px solid var(--ln);background:radial-gradient(circle,rgba(120,80,255,.14),rgba(10,6,28,.28));opacity:0;transition:opacity .15s;pointer-events:none;z-index:4}
 #joy.on{opacity:1}
-#joy i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;border:1px solid var(--c);background:rgba(94,242,255,.15);box-shadow:0 0 14px rgba(94,242,255,.45)}
-#joyhint{position:absolute;left:calc(var(--sal) + 34px);bottom:calc(var(--sab) + 40px);width:96px;height:96px;border-radius:50%;border:1px dashed rgba(150,120,255,.3);display:none;align-items:center;justify-content:center;font-size:8px;color:#7d6cb0;text-align:center}
+#joy i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;border:1px solid var(--c);background:rgba(94,242,255,.18);box-shadow:0 0 14px rgba(94,242,255,.45)}
+#joyhint{position:absolute;left:calc(var(--sal) + 28px);bottom:calc(var(--sab) + 36px);width:104px;height:104px;border-radius:50%;border:1px dashed rgba(150,120,255,.35);display:none;align-items:center;justify-content:center;font-size:8px;color:#7d6cb0;text-align:center;pointer-events:none;z-index:3}
 body.touch #joyhint{display:flex}
 #joyhint.hide{display:none!important}
 /* overlays */
@@ -144,7 +147,14 @@ padding:calc(var(--sat) + 14px) calc(var(--sar) + 14px) calc(var(--sab) + 14px) 
  #eye{width:130px;padding:5px 7px}#eye svg{width:22px;height:22px}
  #obj{width:170px;padding:5px 7px}#obj p{font-size:9px;margin:3px 0}
  #zone{top:calc(var(--sat) + 38px)}
- body.touch #abil{transform:scale(.86);transform-origin:right bottom}
+ body.touch #abil{transform:scale(.82);transform-origin:right bottom;width:230px;height:240px}
+ body.touch #a-jump{width:90px;height:90px}
+ body.touch #a-gj{right:108px;bottom:12px;width:68px;height:68px}
+}
+@media (max-width:390px) and (orientation:portrait){
+ body.touch #abil{transform:scale(.92);transform-origin:right bottom}
+ body.touch #a-jump{width:80px;height:80px}
+ body.touch #a-gj{right:94px;width:62px;height:62px}
 }
 </style>
 <script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
@@ -209,7 +219,7 @@ padding:calc(var(--sat) + 14px) calc(var(--sar) + 14px) calc(var(--sab) + 14px) 
     <div class="ctl panel" id="ctl"></div>
     <button class="btn" id="b-start">SPIEL STARTEN</button>
     <div class="foot">BUILD THE EYE. SEE THE CORE. CHANGE THE WORLD.</div>
-    <div class="ver">EYE CORE v0.1 · ERSTER SPIELBARER BUILD</div>
+    <div class="ver">EYE CORE v0.1 · IPHONE POLISH</div>
   </div>
 </div>
 
