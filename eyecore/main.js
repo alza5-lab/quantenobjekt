@@ -514,7 +514,7 @@ const ABIL = {
 };
 const VIEWS = ['TPV', 'FPV', 'GEOMETRIC', 'EYE VIEW'];
 const LAYERS = ['NORMAL', 'DEPTH', 'SYSTEM', 'GLITCH', 'RESONANCE'];
-const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 36, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
+const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 26, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
 let saved = []; try { saved = JSON.parse(localStorage.getItem('eyecore.v1') || '[]'); } catch (e) { }
 frags.forEach(f => { if (saved.includes(f.id)) { f.got = true; f.g.visible = false; } });
 S.collected = frags.filter(f => f.got).length;
@@ -631,7 +631,7 @@ canvas.addEventListener('pointermove', e => {
 });
 const endPtr = e => { const p = ptrs.get(e.pointerId); if (!p) return; if (p.type === 'joy') joy.classList.remove('on'); ptrs.delete(e.pointerId); };
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr); canvas.addEventListener('lostpointercapture', endPtr);
-canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 22, 120); else S.zoom = clamp(S.zoom + e.deltaY * .006, 3, 16); }, { passive: false });
+canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 16, 100); else S.zoom = clamp(S.zoom + e.deltaY * .006, 3, 16); }, { passive: false });
 document.addEventListener('touchmove', e => { if (!e.target.closest('.ov')) e.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault()); document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
@@ -882,10 +882,10 @@ function updateHero(dt) {
   coatMat.emissive.setRGB(...(P.phase ? [.4, 1.2, 1.4] : P.shift ? [1.2, .5, 1.4] : [1, 1, 1]));
   hero.visible = S.view !== 1 && !(fl && Math.random() < .3);
   // Geometric top view: enlarge character + marker so player stays readable
-  const geoSc = S.view === 2 ? 1.85 : 1;
+  const geoSc = S.view === 2 ? 2.35 : 1;
   hero.scale.setScalar(geoSc);
   const [g] = groundAt(P.pos.x, P.pos.z, P.pos.y + .1);
-  blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 4.2 : 1);
+  blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 5.6 : 1); blob.scale.setScalar(S.view === 2 ? 2.4 : 1);
   const hgt = P.pos.y - g; blob.material.opacity = clamp(1 - hgt / 10, 0, 1); footRing.material.opacity = clamp(.35 - hgt / 12, 0, .35) + (glitching ? .3 : 0);
   heroLight.intensity = 1.6 + (glitching ? 3 : 0);
 }
@@ -955,7 +955,7 @@ function updateCamera(dt) {
     camera.lookAt(P.pos.x - Math.sin(S.yaw) * Math.cos(pp), P.pos.y + 1.65 + Math.sin(pp), P.pos.z - Math.cos(S.yaw) * Math.cos(pp)); fov += 6;
   } else {
     // Geometric: slightly higher default + look straight down-ish for clearer marker
-    camera.position.set(camTarget.x, camTarget.y + S.geoH, camTarget.z + S.geoH * .28); camera.lookAt(camTarget);
+    camera.position.set(camTarget.x, camTarget.y + S.geoH, camTarget.z + S.geoH * .55); camera.lookAt(camTarget.x, camTarget.y + .4, camTarget.z);
   }
   camera.fov = damp(camera.fov, fov, 6, dt); camera.updateProjectionMatrix();
 }
