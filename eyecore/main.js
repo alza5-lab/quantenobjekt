@@ -92,51 +92,46 @@ const coatNrm = canvasTex(1024, 512, (ctx, w, h) => {
 }, false);
 coatNrm.anisotropy = MAX_ANISO;
 const woodGridTex = canvasTex(512, 512, (ctx, w) => {
-  ctx.fillStyle = '#e8dcc8'; ctx.fillRect(0, 0, w, w);
-  // subtle wood grain
-  for (let i = 0; i < 40; i++) {
-    ctx.strokeStyle = `rgba(160,130,90,${0.04 + Math.random() * 0.06})`;
-    ctx.lineWidth = 1 + Math.random() * 2;
-    ctx.beginPath(); ctx.moveTo(0, Math.random() * w);
+  ctx.fillStyle = '#f3ebdc'; ctx.fillRect(0, 0, w, w);
+  for (let i = 0; i < 28; i++) {
+    ctx.strokeStyle = `rgba(150,120,80,${0.05 + Math.random() * 0.05})`;
+    ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, Math.random() * w);
     ctx.bezierCurveTo(w * .3, Math.random() * w, w * .7, Math.random() * w, w, Math.random() * w); ctx.stroke();
   }
-  // crisp thin blue contour grid
-  ctx.strokeStyle = 'rgba(35,110,210,.62)'; ctx.lineWidth = .9;
-  for (let i = 0; i <= 24; i++) {
-    const t = i / 24 * w;
+  ctx.strokeStyle = 'rgba(25,100,210,.85)'; ctx.lineWidth = 1.15;
+  for (let i = 0; i <= 20; i++) {
+    const t = i / 20 * w;
     ctx.beginPath(); ctx.moveTo(t, 0); ctx.lineTo(t, w); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0, t); ctx.lineTo(w, t); ctx.stroke();
   }
-  ctx.strokeStyle = 'rgba(30,160,255,.35)'; ctx.lineWidth = 1;
-  for (let i = 0; i < 8; i++) {
+  ctx.strokeStyle = 'rgba(20,150,255,.45)'; ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) {
     ctx.beginPath();
-    for (let x = 0; x <= w; x += 8) {
-      const y = w * .5 + Math.sin(x * .04 + i) * (18 + i * 3) + i * 28 - 100;
+    for (let x = 0; x <= w; x += 6) {
+      const y = w * .45 + Math.sin(x * .05 + i) * (14 + i * 4) + i * 36 - 80;
       x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     }
     ctx.stroke();
   }
 });
-woodGridTex.wrapS = woodGridTex.wrapT = THREE.RepeatWrapping; woodGridTex.repeat.set(2, 2); woodGridTex.anisotropy = MAX_ANISO;
+woodGridTex.wrapS = woodGridTex.wrapT = THREE.RepeatWrapping; woodGridTex.repeat.set(1.6, 1.6); woodGridTex.anisotropy = MAX_ANISO;
 const hatchTex = canvasTex(512, 512, (ctx, w) => {
-  // Ink cross-hatching on light grey-white paper (sketch look)
-  ctx.fillStyle = '#d8d2c8'; ctx.fillRect(0, 0, w, w);
-  ctx.strokeStyle = 'rgba(18,14,22,.78)'; ctx.lineWidth = 1.35;
-  for (let i = -w; i < w * 2; i += 6) {
+  ctx.fillStyle = '#efeae2'; ctx.fillRect(0, 0, w, w);
+  ctx.strokeStyle = 'rgba(12,10,16,.88)'; ctx.lineWidth = 1.5;
+  for (let i = -w; i < w * 2; i += 5) {
     ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w * 1.05, w); ctx.stroke();
   }
-  ctx.strokeStyle = 'rgba(10,8,14,.55)'; ctx.lineWidth = 1;
-  for (let i = -w; i < w * 2; i += 8) {
+  ctx.strokeStyle = 'rgba(8,6,12,.65)'; ctx.lineWidth = 1.1;
+  for (let i = -w; i < w * 2; i += 7) {
     ctx.beginPath(); ctx.moveTo(i, w); ctx.lineTo(i + w * 1.05, 0); ctx.stroke();
   }
-  // denser patches for shade
-  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = .9;
-  for (let i = -w; i < w * 2; i += 4) {
-    if ((i / 4) % 3) continue;
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w * .6, w * .6); ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1;
+  for (let i = -w; i < w * 2; i += 3.5) {
+    if ((i * 2) % 5 > 2) continue;
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w * .55, w * .55); ctx.stroke();
   }
 });
-hatchTex.wrapS = hatchTex.wrapT = THREE.RepeatWrapping; hatchTex.repeat.set(2.5, 3.5); hatchTex.anisotropy = MAX_ANISO;
+hatchTex.wrapS = hatchTex.wrapT = THREE.RepeatWrapping; hatchTex.repeat.set(2.2, 3.2); hatchTex.anisotropy = MAX_ANISO;
 const hoodClothTex = hatchTex;
 const maskFaceTex = canvasTex(256, 256, (ctx, w) => {
   ctx.fillStyle = '#f2eee6'; ctx.beginPath(); ctx.ellipse(w/2, w/2, w*.44, w*.5, 0, 0, 7); ctx.fill();
@@ -649,9 +644,9 @@ const fillLight = new THREE.DirectionalLight(0x5ef2ff, .25); fillLight.position.
 // ---------------------------------------------------------------- Figur — Marionette v2 (sketch refine)
 const coatU = { uSway: { value: new V3() }, uFlap: { value: 0 }, uTime: { value: 0 } };
 const capeMat = new THREE.MeshStandardMaterial({
-  color: 0xc8c2b8, roughness: .82, metalness: .05,
-  map: hatchTex, side: THREE.DoubleSide, transparent: true, opacity: .82,
-  emissive: 0x222018, emissiveIntensity: .12, depthWrite: false, envMapIntensity: .25,
+  color: 0xffffff, roughness: .92, metalness: 0,
+  map: hatchTex, side: THREE.DoubleSide, transparent: true, opacity: .78,
+  emissive: 0x000000, emissiveIntensity: 0, depthWrite: true, envMapIntensity: .15,
 });
 capeMat.onBeforeCompile = sh => {
   Object.assign(sh.uniforms, coatU);
@@ -664,30 +659,30 @@ capeMat.onBeforeCompile = sh => {
 };
 const coatMat = capeMat;
 const woodMat = new THREE.MeshStandardMaterial({
-  color: 0xf2e8d6, roughness: .48, metalness: .08, map: woodGridTex,
-  emissive: 0x143060, emissiveMap: woodGridTex, emissiveIntensity: .22,
-  transparent: true, opacity: 1, envMapIntensity: .35,
+  color: 0xffffff, roughness: .52, metalness: .05, map: woodGridTex,
+  emissive: 0x0a2040, emissiveMap: woodGridTex, emissiveIntensity: .18,
+  transparent: true, opacity: 1, envMapIntensity: .2,
 });
 const jointMat = new THREE.MeshStandardMaterial({
-  color: 0xe0d2b4, roughness: .38, metalness: .18, map: woodGridTex,
-  emissive: 0x1a4060, emissiveIntensity: .15, transparent: true, opacity: 1,
+  color: 0xffffff, roughness: .42, metalness: .12, map: woodGridTex,
+  emissive: 0x0a1830, emissiveMap: woodGridTex, emissiveIntensity: .12, transparent: true, opacity: 1,
 });
 const hoodMat = new THREE.MeshStandardMaterial({
-  color: 0xb8b0a4, roughness: .85, metalness: .04, map: hatchTex, side: THREE.DoubleSide,
-  transparent: true, opacity: .92, emissive: 0x111010, emissiveIntensity: .08,
+  color: 0xffffff, roughness: .9, metalness: 0, map: hatchTex, side: THREE.DoubleSide,
+  transparent: true, opacity: .9, emissive: 0x000000, emissiveIntensity: 0,
 });
 const darkMat = hoodMat; // legacy
 const voidMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
 const handMat = new THREE.MeshStandardMaterial({
-  color: 0xece2d0, map: woodGridTex, roughness: .42, metalness: .1,
-  emissive: 0x2a2060, emissiveIntensity: .12, transparent: true,
+  color: 0xffffff, map: woodGridTex, roughness: .45, metalness: .08,
+  emissive: 0x000000, emissiveIntensity: 0, transparent: true,
 });
-// Low-emissive red eye — avoids bloom smear
-const eyeMat = new THREE.MeshStandardMaterial({ color: 0x7a0814, emissive: 0xc01020, emissiveIntensity: .45, roughness: .5, metalness: 0, transparent: true });
-const eyeRingMat = new THREE.MeshStandardMaterial({ color: 0x5a0610, emissive: 0xa01018, emissiveIntensity: .35, roughness: .55, metalness: 0, transparent: true });
+// Matte mask + dark red eye (MeshBasic keeps bloom from smearing)
+const eyeMat = new THREE.MeshBasicMaterial({ color: 0x8a1018, transparent: true });
+const eyeRingMat = new THREE.MeshBasicMaterial({ color: 0x6e0c14, transparent: true });
 const maskMat = new THREE.MeshStandardMaterial({
-  map: maskFaceTex, color: 0xffffff, roughness: .55, metalness: 0,
-  emissive: 0x000000, emissiveIntensity: 0, transparent: true, opacity: 1,
+  map: maskFaceTex, color: 0xc8c4bc, roughness: .75, metalness: 0,
+  emissive: 0x000000, emissiveIntensity: 0, transparent: true, opacity: 1, envMapIntensity: 0,
 });
 const outlineMat = new THREE.MeshBasicMaterial({ color: 0x0a0810, side: THREE.BackSide, transparent: true, opacity: .85 });
 
@@ -699,37 +694,34 @@ function addOutline(mesh, scale = 1.045) {
 
 /** Cape: narrow, curved around back, 2 sharp points (long LL + right flare). */
 function makeCapeGeo() {
-  const rows = 24, cols = 18;
+  const rows = 26, cols = 20;
   const pos = [], uv = [], idx = [];
   for (let j = 0; j <= rows; j++) {
     const v = j / rows;
     for (let i = 0; i <= cols; i++) {
-      const u = i / cols; // 0 = left, 1 = right
-      // hang mainly on back + left; narrower than before
-      const span = .38 + v * .12; // half-width at top small
-      let x = lerp(-span * 1.05, span * .85, u);
-      // wrap around back (cylinder-ish): z from angle
-      const ang = lerp(.85, -1.05, u) + v * .15; // radians around body
-      let z = -Math.cos(ang) * (.16 + v * .08) - .05;
-      x = Math.sin(ang) * (.22 + v * .06) + (u - .5) * .08;
-      let y = 1.52 - v * 1.05;
-      // long lower-left point → shins
-      if (u < .42) {
-        const t = (.42 - u) / .42;
-        y -= t * t * v * v * 1.15;
-        x -= t * v * .28;
-        z += t * v * .05;
+      const u = i / cols;
+      // wrap ~160° around back: left-heavy (hood/shoulders → back → left hip)
+      const ang = lerp(1.15, -0.95, u); // left(+x) to right(-x) around -Z back
+      const rad = .20 + v * .10 + (u < .45 ? ( .45 - u) * v * .08 : 0);
+      let x = Math.sin(ang) * rad;
+      let z = -Math.cos(ang) * rad - .06 - v * .04;
+      let y = 1.50 - v * .98;
+      // long lower-left point to shins
+      if (u < .45) {
+        const t = (.45 - u) / .45;
+        y -= Math.pow(t * v, 1.6) * 1.25;
+        x += t * v * .15; // further left in character space ( +X is left when facing -Z? facing PI looks -Z, +X is left from behind)
+        z += t * v * .06;
       }
-      // right point flares out behind (not a slab)
-      if (u > .62) {
-        const t = (u - .62) / .38;
-        x += t * v * .55;
-        z -= t * v * .55;
-        y += t * (1 - v) * .12 - t * v * .15;
+      // right flaring point behind
+      if (u > .7) {
+        const t = (u - .7) / .3;
+        x -= t * v * .42;
+        z -= t * v * .5;
+        y -= t * v * .2;
       }
-      // sharpen tips
-      if (j === rows && u < .18) { y -= .28; x -= .12; }
-      if (v > .35 && v < .55 && u > .88) { x += .22; z -= .28; }
+      if (j === rows && u < .2) { y -= .22; }
+      if (v > .4 && v < .58 && u > .9) { x -= .18; z -= .22; }
       pos.push(x, y, z); uv.push(u, 1 - v);
     }
   }
@@ -760,8 +752,8 @@ function makePelvisGeo() {
   return new THREE.LatheGeometry(profile, 24);
 }
 function makeAbdomenGeo() {
-  const profile = [[.06, 0], [.09, .03], [.1, .1], [.09, .16], [.07, .2]].map(([r, y]) => new THREE.Vector2(r, y));
-  return new THREE.LatheGeometry(profile, 20);
+  const profile = [[.05, 0], [.085, .04], [.095, .12], [.08, .2], [.06, .24]].map(([r, y]) => new THREE.Vector2(r, y));
+  return new THREE.LatheGeometry(profile, 24);
 }
 
 const hero = new THREE.Group(); scene.add(hero);
@@ -841,7 +833,7 @@ capeEdge.scale.setScalar(1.02); cape.add(capeEdge);
 body.position.y = -.06;
 
 // Soft fill light (not purple blowout on mask)
-const heroLight = new THREE.PointLight(0xc8b8ff, .55, 6, 2); heroLight.position.set(0, 1.55, .9); hero.add(heroLight);
+const heroLight = new THREE.PointLight(0xffe8d0, .28, 5, 2); heroLight.position.set(0, 1.6, 1.1); hero.add(heroLight);
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); blob.rotation.x = -Math.PI / 2; scene.add(blob);
 const footRing = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .55 })); footRing.rotation.x = -Math.PI / 2; scene.add(footRing);
 const heroMats = [capeMat, woodMat, jointMat, hoodMat, voidMat, handMat, maskMat, eyeMat, eyeRingMat];
@@ -968,7 +960,7 @@ const ABIL = {
 };
 const VIEWS = ['TPV', 'FPV', 'GEOMETRIC', 'EYE VIEW'];
 const LAYERS = ['NORMAL', 'DEPTH', 'SYSTEM', 'GLITCH', 'RESONANCE'];
-const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 9.2, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
+const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 10.5, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
 let saved = []; try { saved = JSON.parse(localStorage.getItem('eyecore.v1') || '[]'); } catch (e) { }
 frags.forEach(f => { if (saved.includes(f.id)) { f.got = true; f.g.visible = false; } });
 S.collected = frags.filter(f => f.got).length;
@@ -1393,7 +1385,7 @@ function updateHero(dt) {
   const fl = glitching && Math.random() < .14;
   body.position.x = fl ? (Math.random() - .5) * .25 : 0;
   capeMat.emissiveIntensity = fl ? .55 : (P.phase ? .35 : .12);
-  woodMat.emissiveIntensity = fl ? .55 : .22;
+  woodMat.emissiveIntensity = fl ? .35 : .18;
   const op = P.phase ? .45 + Math.sin(S.t * 30) * .1 : 1;
   heroMats.forEach(m => { m.opacity = op; });
   capeMat.emissive.setRGB(...(P.phase ? [.25, .6, .7] : P.shift ? [.6, .3, .7] : [.12, .1, .08]));
