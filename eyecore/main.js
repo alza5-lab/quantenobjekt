@@ -514,7 +514,7 @@ const ABIL = {
 };
 const VIEWS = ['TPV', 'FPV', 'GEOMETRIC', 'EYE VIEW'];
 const LAYERS = ['NORMAL', 'DEPTH', 'SYSTEM', 'GLITCH', 'RESONANCE'];
-const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 26, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
+const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
 let saved = []; try { saved = JSON.parse(localStorage.getItem('eyecore.v1') || '[]'); } catch (e) { }
 frags.forEach(f => { if (saved.includes(f.id)) { f.got = true; f.g.visible = false; } });
 S.collected = frags.filter(f => f.got).length;
@@ -882,10 +882,10 @@ function updateHero(dt) {
   coatMat.emissive.setRGB(...(P.phase ? [.4, 1.2, 1.4] : P.shift ? [1.2, .5, 1.4] : [1, 1, 1]));
   hero.visible = S.view !== 1 && !(fl && Math.random() < .3);
   // Geometric top view: enlarge character + marker so player stays readable
-  const geoSc = S.view === 2 ? 2.35 : 1;
+  const geoSc = S.view === 2 ? 3.2 : 1;
   hero.scale.setScalar(geoSc);
   const [g] = groundAt(P.pos.x, P.pos.z, P.pos.y + .1);
-  blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 5.6 : 1); blob.scale.setScalar(S.view === 2 ? 2.4 : 1);
+  blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 8.5 : 1); blob.scale.setScalar(S.view === 2 ? 3.2 : 1);
   const hgt = P.pos.y - g; blob.material.opacity = clamp(1 - hgt / 10, 0, 1); footRing.material.opacity = clamp(.35 - hgt / 12, 0, .35) + (glitching ? .3 : 0);
   heroLight.intensity = 1.6 + (glitching ? 3 : 0);
 }
