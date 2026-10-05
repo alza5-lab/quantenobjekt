@@ -380,12 +380,12 @@ const fragRingMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, .6
 const beamMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(.3, 1.2, 1.6), transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
 const beamGeo = new THREE.CylinderGeometry(.09, .09, 80, 6, 1, true); beamGeo.translate(0, 40, 0);
 const fragRingG = new THREE.TorusGeometry(.95, .03, 6, 40);
-const fragGlowMat = new THREE.SpriteMaterial({ map: glowTex, color: 0x5ef2ff, transparent: true, opacity: .7, blending: THREE.AdditiveBlending, depthWrite: false });
+const fragGlowMat = new THREE.SpriteMaterial({ map: glowTex, color: 0x5ef2ff, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false });
 FRAG_DEF.forEach(([x, y, z, name], i) => {
   const g = new THREE.Group(); g.position.set(x, y, z);
   const core = new THREE.Mesh(fragGeo, fragMat); g.add(core);
   const r1 = new THREE.Mesh(fragRingG, fragRingMat); const r2 = new THREE.Mesh(fragRingG, fragRingMat); r2.scale.setScalar(.75); g.add(r1, r2);
-  const glow = new THREE.Sprite(fragGlowMat); glow.scale.set(4, 4, 1); g.add(glow);
+  const glow = new THREE.Sprite(fragGlowMat); glow.scale.set(3, 3, 1); g.add(glow);
   const beam = new THREE.Mesh(beamGeo, beamMat); beam.position.y = .5; g.add(beam);
   scene.add(g); frags.push({ id: i, name, g, core, r1, r2, beam, base: new V3(x, y, z), got: false });
 });
