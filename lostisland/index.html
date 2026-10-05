@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Lost Island</title>
-<meta name="description" content="Eine kleine Insel im All – tipp die Wesen an.">
+<meta name="description" content="Eine kleine Insel im All – tipp die Wesen an, beobachte den Mond.">
 <meta name="theme-color" content="#0a0e1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -15,501 +15,508 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-  :root{--safe-t:env(safe-area-inset-top,0px);--safe-r:env(safe-area-inset-right,0px);--safe-b:env(safe-area-inset-bottom,0px);--safe-l:env(safe-area-inset-left,0px)}
-  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0a0e1a}
-  body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;
-    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
-    -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
-    font-family:ui-rounded,"SF Pro Rounded","Nunito","Quicksand",system-ui,-apple-system,sans-serif;color:#c8d4e8}
-  #stage{position:absolute;inset:0;overflow:hidden}
-  #bg{position:absolute;inset:0;background:#0a0e1a center/cover no-repeat;background-image:url(stars.jpg);
-    transform:scale(1.05);filter:brightness(.92) contrast(1.05)}
-  #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-  #world{position:absolute;left:50%;top:52%;width:min(92vw,720px);transform:translate(-50%,-50%);
-    aspect-ratio:720/634;will-change:transform}
-  #island{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;
-    -webkit-user-drag:none;filter:drop-shadow(0 18px 28px rgba(0,0,0,.45))}
-  #moon{position:absolute;left:0;top:0;width:min(18vw,110px);height:min(18vw,110px);
-    will-change:transform;pointer-events:none;filter:drop-shadow(0 0 18px rgba(255,240,180,.35))}
-  .char{position:absolute;width:11%;cursor:pointer;transform-origin:50% 90%;will-change:transform;
-    touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-  .char svg{width:100%;height:auto;display:block;overflow:visible;pointer-events:none}
-  .char .face{transform-origin:50% 40%}
-  #c1{left:22%;top:34%;width:13%} /* bench under willow */
-  #c2{left:63%;top:42%;width:12%} /* lighthouse door */
-  #c3{left:42%;top:48%;width:11%} /* open grass */
-  #pet{position:absolute;left:14%;top:56%;width:10%;will-change:transform;pointer-events:none}
-  #pet svg{width:100%;height:auto;display:block;overflow:visible}
-  #sq{position:absolute;left:34%;top:34%;width:7%;will-change:transform;pointer-events:none}
-  #sq svg{width:100%;height:auto;display:block;overflow:visible}
-  #birds{position:absolute;inset:0;pointer-events:none}
-  .vbird{position:absolute;font-size:14px;color:rgba(200,210,230,.55);will-change:transform;
-    font-weight:700;letter-spacing:-2px;text-shadow:0 0 4px rgba(0,0,0,.4)}
-  #title{position:absolute;left:calc(12px + var(--safe-l));bottom:calc(10px + var(--safe-b));
-    font-size:12px;letter-spacing:.12em;color:rgba(180,198,220,.38);font-weight:700;pointer-events:none;z-index:5}
-  #gear{position:absolute;right:calc(10px + var(--safe-r));top:calc(10px + var(--safe-t));
-    z-index:6;width:36px;height:36px;border-radius:50%;border:1px solid rgba(180,200,230,.18);
-    background:rgba(12,18,32,.35);backdrop-filter:blur(8px);color:rgba(200,214,235,.55);
-    font-size:18px;line-height:1;display:grid;place-items:center;cursor:pointer;
-    -webkit-tap-highlight-color:transparent}
-  #gear:active{transform:scale(.94)}
-  #panel{position:absolute;right:calc(10px + var(--safe-r));top:calc(52px + var(--safe-t));
-    z-index:6;min-width:160px;padding:12px 14px;border-radius:14px;
-    background:rgba(10,14,26,.82);border:1px solid rgba(180,200,230,.16);
-    backdrop-filter:blur(12px);box-shadow:0 8px 28px rgba(0,0,0,.35);
-    display:none;font-size:13px;color:rgba(210,220,235,.85)}
-  #panel.open{display:block}
-  #panel .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0}
-  #panel button{appearance:none;border:1px solid rgba(180,200,230,.22);background:rgba(255,255,255,.06);
-    color:rgba(220,230,245,.9);border-radius:999px;padding:6px 12px;font:inherit;font-weight:700;
-    font-size:12px;letter-spacing:.04em;cursor:pointer}
-  #panel button:active{transform:scale(.97)}
-  #panel .hint{margin-top:8px;font-size:11px;line-height:1.35;color:rgba(170,185,210,.45)}
-  .bub{position:absolute;padding:.3em .7em;border-radius:1.1em;background:rgba(255,255,255,.92);color:#3a4560;
-    font-weight:700;font-size:14px;box-shadow:0 3px 12px rgba(0,0,0,.25);white-space:nowrap;pointer-events:none;
-    transform:translate(-50%,-100%);animation:bub 1.4s ease-out forwards;z-index:4}
-  .bub::after{content:"";position:absolute;left:36%;bottom:-5px;width:10px;height:10px;background:rgba(255,255,255,.92);transform:rotate(45deg);border-radius:2px}
-  @keyframes bub{0%{opacity:0;margin-top:8px;scale:.6}15%{opacity:1;margin-top:0;scale:1.05}25%{scale:1}70%{opacity:1}100%{opacity:0;margin-top:-22px}}
-  @media (prefers-reduced-motion:reduce){
-    #moon,#world,.char,#pet,#sq{animation:none!important}
-  }
+:root{--safe-t:env(safe-area-inset-top,0px);--safe-r:env(safe-area-inset-right,0px);--safe-b:env(safe-area-inset-bottom,0px);--safe-l:env(safe-area-inset-left,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0a0e1a}
+body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:none;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;font-family:ui-rounded,"SF Pro Rounded","Nunito",system-ui,-apple-system,sans-serif;color:#c8d4e8}
+#stage{position:absolute;inset:0;overflow:hidden}
+#bg{position:absolute;inset:-4%;background:#0a0e1a center/cover no-repeat;background-image:url(img/stars.jpg);
+  will-change:transform;filter:brightness(.88) contrast(1.08)}
+#fx,#water{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#moon{position:absolute;left:0;top:0;width:min(22vw,130px);height:min(22vw,130px);will-change:transform;pointer-events:none;
+  filter:drop-shadow(0 0 22px rgba(255,236,170,.4))}
+#moon img{width:100%;height:100%;display:block}
+#birds{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.vbird{position:absolute;color:rgba(210,220,235,.5);font-weight:800;font-size:15px;letter-spacing:-1px;
+  text-shadow:0 1px 3px rgba(0,0,0,.5);will-change:transform}
+#world{position:absolute;left:50%;top:54%;width:min(94vw,760px);aspect-ratio:720/633;
+  transform:translate(-50%,-50%);will-change:transform}
+#islandBase,#islandFull{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none;
+  filter:drop-shadow(0 20px 32px rgba(0,0,0,.5))}
+#islandFull{opacity:0;pointer-events:none} /* fallback ref */
+#canopy{position:absolute;left:6.35%;top:15.97%;width:49.16%;height:auto;transform-origin:55% 95%;
+  will-change:transform;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+#canopy img{width:100%;height:auto;display:block;-webkit-user-drag:none}
+.char{position:absolute;width:12.5%;cursor:pointer;transform-origin:50% 92%;will-change:transform;z-index:3;
+  touch-action:manipulation;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}
+.char img{width:100%;height:auto;display:block;pointer-events:none;-webkit-user-drag:none}
+#cBench{left:21%;top:33%;width:13.5%;z-index:4}   /* on red bench under willow */
+#cDoor{left:61%;top:41%;width:12.5%;z-index:4}     /* at lighthouse door */
+#cGrass{left:43%;top:49%;width:12%;z-index:3}       /* open grass mid */
+.creature{position:absolute;will-change:transform;pointer-events:none;z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
+.creature img{width:100%;height:auto;display:block;-webkit-user-drag:none}
+#pet{left:14%;top:56%;width:11%;display:none}
+#squirrel{left:34%;top:34%;width:8%;display:none}
+#pet.on,#squirrel.on{display:block}
+#title{position:absolute;left:calc(12px + var(--safe-l));bottom:calc(10px + var(--safe-b));
+  font-size:11px;letter-spacing:.14em;color:rgba(180,198,220,.34);font-weight:700;pointer-events:none;z-index:8}
+#gear{position:absolute;right:calc(10px + var(--safe-r));top:calc(10px + var(--safe-t));z-index:9;
+  width:38px;height:38px;border-radius:50%;border:1px solid rgba(180,200,230,.16);
+  background:rgba(10,14,26,.4);backdrop-filter:blur(10px);color:rgba(200,214,235,.55);
+  font-size:18px;display:grid;place-items:center;cursor:pointer}
+#gear:active{transform:scale(.94)}
+#panel{position:absolute;right:calc(10px + var(--safe-r));top:calc(54px + var(--safe-t));z-index:9;
+  width:min(220px,70vw);padding:12px 14px;border-radius:14px;background:rgba(8,12,22,.88);
+  border:1px solid rgba(180,200,230,.14);backdrop-filter:blur(14px);box-shadow:0 10px 32px rgba(0,0,0,.4);
+  display:none;font-size:13px;color:rgba(210,220,235,.88)}
+#panel.open{display:block}
+#panel .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0}
+#panel .lbl{opacity:.75;font-size:12px;letter-spacing:.04em}
+#panel button{appearance:none;border:1px solid rgba(180,200,230,.22);background:rgba(255,255,255,.06);
+  color:rgba(220,230,245,.92);border-radius:999px;padding:5px 11px;font:inherit;font-weight:700;font-size:11px;
+  letter-spacing:.05em;cursor:pointer;min-width:52px}
+#panel button.on{background:rgba(140,180,220,.2);border-color:rgba(160,200,240,.4)}
+#panel input[type=range]{width:100px;accent-color:#9ab4d4}
+#panel .hint{margin-top:8px;font-size:10px;line-height:1.4;color:rgba(170,185,210,.4)}
+.bub{position:absolute;padding:.32em .72em;border-radius:1.15em;background:rgba(255,255,255,.93);color:#3a4560;
+  font-weight:700;font-size:13px;box-shadow:0 3px 14px rgba(0,0,0,.28);white-space:nowrap;pointer-events:none;
+  transform:translate(-50%,-100%);animation:bub 1.45s ease-out forwards;z-index:7}
+.bub::after{content:"";position:absolute;left:36%;bottom:-5px;width:10px;height:10px;background:rgba(255,255,255,.93);transform:rotate(45deg);border-radius:2px}
+@keyframes bub{0%{opacity:0;margin-top:10px;scale:.55}14%{opacity:1;margin-top:0;scale:1.06}24%{scale:1}72%{opacity:1}100%{opacity:0;margin-top:-24px}}
+@media (prefers-reduced-motion:reduce){#moon,#world,#canopy,.char,.creature{animation:none!important}}
 </style>
 </head>
 <body>
 <div id="stage">
   <div id="bg" aria-hidden="true"></div>
-  <canvas id="fx" aria-hidden="true"></canvas>
-  <div id="moon" aria-hidden="true">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="mg" cx="40%" cy="38%" r="60%">
-          <stop offset="0%" stop-color="#fff8d8"/>
-          <stop offset="55%" stop-color="#f0e2a8"/>
-          <stop offset="100%" stop-color="#d4c078"/>
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="50" r="44" fill="url(#mg)" stroke="#2a2a20" stroke-width="2.2"/>
-      <circle cx="38" cy="46" r="4.2" fill="#1a1a18"/>
-      <circle cx="58" cy="46" r="4.2" fill="#1a1a18"/>
-      <circle cx="48" cy="58" r="2.1" fill="#1a1a18"/>
-      <path d="M28 36c6-8 14-10 22-6" fill="none" stroke="#c8b870" stroke-width="1.4" opacity=".55"/>
-      <path d="M62 62c5 4 12 3 16-2" fill="none" stroke="#c8b870" stroke-width="1.3" opacity=".45"/>
-    </svg>
-  </div>
+  <div id="moon" aria-hidden="true"><img src="img/moon.png" alt=""></div>
   <div id="birds" aria-hidden="true"></div>
+  <canvas id="water" aria-hidden="true"></canvas>
   <div id="world">
-    <img id="island" src="island.png" alt="Lost Island" draggable="false">
-    <!-- characters -->
-    <div class="char" id="c1" data-name="bench" role="button" aria-label="Wesen auf der Bank">
-      <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
-        <g class="body">
-          <ellipse cx="40" cy="92" rx="16" ry="4" fill="rgba(0,0,0,.18)"/>
-          <!-- red offset outline -->
-          <path d="M22 28c0-14 10-24 18-24s18 10 18 24c2 8 4 22 2 34-1 8-6 14-20 14s-19-6-20-14c-2-12 0-26 2-34z" fill="none" stroke="#c44" stroke-width="3" opacity=".55" transform="translate(1.5,-1)"/>
-          <path d="M22 28c0-14 10-24 18-24s18 10 18 24c2 8 4 22 2 34-1 8-6 14-20 14s-19-6-20-14c-2-12 0-26 2-34z" fill="#f7f4ef" stroke="#1a1a1a" stroke-width="2.4"/>
-          <!-- arms -->
-          <path d="M22 48c-8 6-10 16-6 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M58 48c8 6 10 16 6 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M22 48c-8 6-10 16-6 20" fill="none" stroke="#c44" stroke-width="2" opacity=".4" transform="translate(1,-1)"/>
-          <!-- legs sitting -->
-          <path d="M30 76c-2 8-4 14-2 16" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M50 76c2 8 4 14 2 16" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <g class="face">
-            <circle cx="32" cy="40" r="5.5" fill="#1a1a1a"/>
-            <circle cx="48" cy="40" r="5.5" fill="#1a1a1a"/>
-            <circle cx="33.5" cy="38.5" r="1.4" fill="#fff" opacity=".7"/>
-            <circle cx="49.5" cy="38.5" r="1.4" fill="#fff" opacity=".7"/>
-            <!-- stitched mouth -->
-            <line x1="30" y1="54" x2="50" y2="54" stroke="#1a1a1a" stroke-width="1.8"/>
-            <line x1="33" y1="51" x2="33" y2="57" stroke="#1a1a1a" stroke-width="1.3"/>
-            <line x1="40" y1="51" x2="40" y2="57" stroke="#1a1a1a" stroke-width="1.3"/>
-            <line x1="47" y1="51" x2="47" y2="57" stroke="#1a1a1a" stroke-width="1.3"/>
-          </g>
-          <text x="40" y="68" text-anchor="middle" font-size="11" font-family="serif" fill="#1a1a1a">×</text>
-        </g>
-      </svg>
-    </div>
-    <div class="char" id="c2" data-name="door" role="button" aria-label="Wesen an der Tür">
-      <svg viewBox="0 0 80 110" xmlns="http://www.w3.org/2000/svg">
-        <g class="body">
-          <ellipse cx="40" cy="102" rx="14" ry="3.5" fill="rgba(0,0,0,.18)"/>
-          <path d="M24 26c0-14 9-22 16-22s16 8 16 22c3 10 5 28 3 42-1 10-7 16-19 16s-18-6-19-16c-2-14 0-32 3-42z" fill="none" stroke="#c44" stroke-width="3" opacity=".55" transform="translate(1.5,-1)"/>
-          <path d="M24 26c0-14 9-22 16-22s16 8 16 22c3 10 5 28 3 42-1 10-7 16-19 16s-18-6-19-16c-2-14 0-32 3-42z" fill="#f7f4ef" stroke="#1a1a1a" stroke-width="2.4"/>
-          <path d="M24 50c-7 8-9 18-5 22" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M56 50c7 8 9 18 5 22" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M32 84v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
-          <path d="M48 84v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
-          <g class="face">
-            <!-- jack-o grin -->
-            <path d="M30 36l4 6 4-7 4 7 4-6" fill="none" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M28 52c4 10 20 10 24 0l-4 8c-4 4-12 4-16 0z" fill="#1a1a1a"/>
-            <path d="M32 54l3 5 3-4 3 4 3-5" fill="none" stroke="#f7f4ef" stroke-width="1.2" opacity=".35"/>
-          </g>
-          <text x="40" y="72" text-anchor="middle" font-size="12" font-family="serif" fill="#1a1a1a">×</text>
-        </g>
-      </svg>
-    </div>
-    <div class="char" id="c3" data-name="grass" role="button" aria-label="Wesen im Gras">
-      <svg viewBox="0 0 80 105" xmlns="http://www.w3.org/2000/svg">
-        <g class="body">
-          <ellipse cx="40" cy="98" rx="14" ry="3.5" fill="rgba(0,0,0,.16)"/>
-          <path d="M23 28c0-14 10-24 17-24s17 10 17 24c2 9 4 24 2 36-1 9-6 14-19 14s-18-5-19-14c-2-12 0-27 2-36z" fill="none" stroke="#c44" stroke-width="3" opacity=".5" transform="translate(1.4,-1)"/>
-          <path d="M23 28c0-14 10-24 17-24s17 10 17 24c2 9 4 24 2 36-1 9-6 14-19 14s-18-5-19-14c-2-12 0-27 2-36z" fill="#f7f4ef" stroke="#1a1a1a" stroke-width="2.4"/>
-          <path d="M23 50c-7 6-9 16-5 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M57 50c7 6 9 16 5 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M32 80v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
-          <path d="M48 80v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
-          <g class="face">
-            <circle cx="32" cy="40" r="5.2" fill="#1a1a1a"/>
-            <circle cx="48" cy="40" r="5.2" fill="#1a1a1a"/>
-            <circle cx="33.4" cy="38.6" r="1.3" fill="#fff" opacity=".7"/>
-            <circle cx="49.4" cy="38.6" r="1.3" fill="#fff" opacity=".7"/>
-            <line x1="31" y1="53" x2="49" y2="53" stroke="#1a1a1a" stroke-width="1.7"/>
-            <line x1="34" y1="50.5" x2="34" y2="55.5" stroke="#1a1a1a" stroke-width="1.2"/>
-            <line x1="40" y1="50.5" x2="40" y2="55.5" stroke="#1a1a1a" stroke-width="1.2"/>
-            <line x1="46" y1="50.5" x2="46" y2="55.5" stroke="#1a1a1a" stroke-width="1.2"/>
-          </g>
-          <text x="40" y="68" text-anchor="middle" font-size="11" font-family="serif" fill="#1a1a1a">×</text>
-        </g>
-      </svg>
-    </div>
-    <!-- pet -->
-    <div id="pet" aria-hidden="true">
-      <svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">
-        <g fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <ellipse cx="42" cy="36" rx="22" ry="14" fill="#efe8dc"/>
-          <path d="M20 34c-8-2-14 2-16 8" />
-          <path d="M58 28c8-10 16-12 22-6" />
-          <!-- long ears -->
-          <path d="M30 24c-2-16 2-22 6-22" />
-          <path d="M40 22c0-14 4-20 8-18" />
-          <circle cx="48" cy="32" r="2.2" fill="#1a1a1a" stroke="none"/>
-          <circle cx="36" cy="33" r="1.6" fill="#1a1a1a" stroke="none"/>
-          <path d="M34 48v8M48 48v8M28 48v6M52 47v6"/>
-          <path d="M64 40c10 2 16 10 12 16" />
-        </g>
-        <path d="M30 24c-2-16 2-22 6-22M40 22c0-14 4-20 8-18" fill="none" stroke="#c44" stroke-width="1.6" opacity=".4"/>
-      </svg>
-    </div>
-    <!-- squirrel -->
-    <div id="sq" aria-hidden="true">
-      <svg viewBox="0 0 60 55" xmlns="http://www.w3.org/2000/svg">
-        <g fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M28 40c-8-2-12-10-8-16 4-6 14-8 20-4 4 3 6 10 4 16-2 6-10 8-16 4z" fill="#c4a070"/>
-          <path d="M40 22c2-10 8-16 14-14 2 8-2 16-8 20" fill="#b89060"/>
-          <circle cx="24" cy="28" r="1.8" fill="#1a1a1a" stroke="none"/>
-          <path d="M18 30h-6M22 44v8M32 44v8"/>
-          <path d="M20 18l-2-8M26 16l2-8"/>
-        </g>
-      </svg>
-    </div>
+    <img id="islandBase" src="img/island-base.png" alt="Lost Island" draggable="false">
+    <div id="canopy"><img src="img/tree-canopy.png" alt="" draggable="false"></div>
+    <div class="char" id="cBench" data-id="bench" role="button" aria-label="Wesen auf der Bank"><img src="img/char-bench.png" alt=""></div>
+    <div class="char" id="cDoor" data-id="door" role="button" aria-label="Wesen an der Tür"><img src="img/char-door.png" alt=""></div>
+    <div class="char" id="cGrass" data-id="grass" role="button" aria-label="Wesen im Gras"><img src="img/char-grass.png" alt=""></div>
+    <div class="creature" id="pet"><img src="img/pet.png" alt=""></div>
+    <div class="creature" id="squirrel"><img src="img/squirrel.png" alt=""></div>
   </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
 </div>
 <div id="title">Lost Island</div>
 <button id="gear" aria-label="Einstellungen" title="Einstellungen">⚙</button>
 <div id="panel" role="dialog" aria-label="Einstellungen">
-  <div class="row"><span>Musik</span><button id="btnMute" type="button">AN</button></div>
-  <div class="hint">Ruhige Insel. Tippe die Wesen an.<br>Kein Spiel – nur schauen.</div>
+  <div class="row"><span class="lbl">Musik</span><button type="button" id="btnMute">AN</button></div>
+  <div class="row"><span class="lbl">Lautstärke</span><input type="range" id="vol" min="0" max="100" value="55"></div>
+  <div class="row"><span class="lbl">Pet</span><button type="button" id="btnPet">AUS</button></div>
+  <div class="row"><span class="lbl">Eichhörnchen</span><button type="button" id="btnSq">AUS</button></div>
+  <div class="hint">Ruhige Insel zum Beobachten.<br>Tippe die Wesen an · Mond wandert.<br>Kein Gewinn/Verlust.</div>
 </div>
 <script>
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const world=$('world'), moon=$('moon'), fx=$('fx'), cx=fx.getContext('2d');
-const pet=$('pet'), sq=$('sq'), panel=$('panel'), btnMute=$('btnMute');
-let W=0,H=0,DPR=1,T=0, reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const bg=$('bg'), world=$('world'), moon=$('moon'), canopy=$('canopy');
+const fx=$('fx'), water=$('water'), cx=fx.getContext('2d'), wx=water.getContext('2d');
+const petEl=$('pet'), sqEl=$('squirrel'), panel=$('panel');
+const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+let W=0,H=0,DPR=1,T=0;
 
 function resize(){
   DPR=Math.min(devicePixelRatio||1,2);
-  W=innerWidth;H=innerHeight;
-  fx.width=Math.round(W*DPR);fx.height=Math.round(H*DPR);
-  cx.setTransform(DPR,0,0,DPR,0,0);
+  W=innerWidth; H=innerHeight;
+  for(const c of [fx,water]){c.width=Math.round(W*DPR);c.height=Math.round(H*DPR);c.getContext('2d').setTransform(DPR,0,0,DPR,0,0)}
 }
-resize();addEventListener('resize',resize);
+resize(); addEventListener('resize',resize);
 
-/* ---- moon arc ---- */
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const LS=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const SS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+
+/* ---- moon arc (clear, ~55s cycle) ---- */
 function moonPos(t){
-  // continuous elliptical arc across upper sky, ~70s cycle
-  const cycle=70;
-  const u=((t%cycle)/cycle);
-  // ease along arc: left → peak → right → wrap under
-  const ang=Math.PI*(0.12+u*0.76); // ~0.12π to 0.88π
-  const rx=W*0.42, ry=H*0.22;
-  const cx0=W*0.5, cy0=H*0.28;
-  const x=cx0+Math.cos(ang)*rx;
-  const y=cy0-Math.sin(ang)*ry;
-  const s=0.85+0.2*Math.sin(ang);
-  return {x,y,s,a:0.55+0.45*Math.sin(ang)};
+  const cycle=55;
+  const u=(t%cycle)/cycle;
+  const ang=Math.PI*(0.08 + u*0.84);
+  const rx=W*0.46, ry=Math.max(H*0.18, 90);
+  const cx0=W*0.5, cy0=H*0.26;
+  return {
+    x: cx0 + Math.cos(ang)*rx,
+    y: cy0 - Math.sin(ang)*ry,
+    s: 0.78 + 0.28*Math.sin(ang),
+    a: 0.35 + 0.65*Math.pow(Math.sin(ang), 0.7)
+  };
 }
 
-/* ---- characters react ---- */
+/* ---- characters ---- */
+const CHAR_WORDS={
+  bench:['…','still.','hm.','bank.'],
+  door:['grr.','booh.','…!','tür.'],
+  grass:['oh.','hihi.','ja.','…']
+};
 const chars=[
-  {el:$('c1'), react:0, blink:0, words:['…','hm.','still.','ok.']},
-  {el:$('c2'), react:0, blink:0, words:['grr.','hi.','…!','booh.']},
-  {el:$('c3'), react:0, blink:0, words:['oh.','hihi.','…','ja.']}
+  {el:$('cBench'), id:'bench', react:-9, blinkPh:rnd(0,4)},
+  {el:$('cDoor'), id:'door', react:-9, blinkPh:rnd(0,4)},
+  {el:$('cGrass'), id:'grass', react:-9, blinkPh:rnd(0,4)}
 ];
 let lastBub=0;
-function bubbleNear(el,txt){
-  if(T-lastBub<0.45)return; lastBub=T;
+function bubble(el, txt){
+  if(T-lastBub<0.35) return; lastBub=T;
   const r=el.getBoundingClientRect();
-  const d=document.createElement('div');d.className='bub';d.textContent=txt;
-  d.style.left=(r.left+r.width/2)+'px';d.style.top=(r.top+8)+'px';
-  document.body.appendChild(d);setTimeout(()=>d.remove(),1450);
+  const d=document.createElement('div'); d.className='bub'; d.textContent=txt;
+  d.style.left=(r.left+r.width/2)+'px'; d.style.top=(r.top+6)+'px';
+  document.body.appendChild(d); setTimeout(()=>d.remove(),1500);
 }
-function tapChar(c){
-  c.react=T;
-  ensureAudio();
-  softPing();
-  bubbleNear(c.el, c.words[(Math.random()*c.words.length)|0]);
+function reactChar(c){
+  c.react=T; ensureAudio(); softPing(c.id);
+  const w=CHAR_WORDS[c.id]; bubble(c.el, w[(Math.random()*w.length)|0]);
+  // juicy particles at character
+  const r=c.el.getBoundingClientRect();
+  burst(r.left+r.width/2, r.top+r.height*0.4, 16);
 }
 chars.forEach(c=>{
-  c.el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();tapChar(c)},{passive:false});
+  c.el.addEventListener('pointerdown', e=>{e.preventDefault();e.stopPropagation();reactChar(c)},{passive:false});
 });
 
-/* ---- pet & squirrel wander ---- */
-const petS={x:0.20,y:0.60,tx:0.22,ty:0.58,flip:1,next:2};
-const sqS={x:0.36,y:0.38,tx:0.40,ty:0.36,flip:1,next:3,hop:0};
-
-function newPetTarget(t){
-  petS.tx=0.12+Math.random()*0.28; petS.ty=0.52+Math.random()*0.16; petS.next=t+4+Math.random()*6;
+/* ---- pet / squirrel insertable ---- */
+let showPet = LS('lostisland.pet')==='1';
+let showSq  = LS('lostisland.sq')==='1';
+const petS={x:0.16,y:0.58,tx:0.18,ty:0.56,flip:1,next:1};
+const sqS={x:0.33,y:0.36,tx:0.36,ty:0.34,flip:1,next:2,hop:-9};
+function syncCreatures(){
+  petEl.classList.toggle('on', showPet);
+  sqEl.classList.toggle('on', showSq);
+  $('btnPet').textContent=showPet?'AN':'AUS';
+  $('btnPet').classList.toggle('on', showPet);
+  $('btnSq').textContent=showSq?'AN':'AUS';
+  $('btnSq').classList.toggle('on', showSq);
 }
-function newSqTarget(t){
-  sqS.tx=0.30+Math.random()*0.18; sqS.ty=0.32+Math.random()*0.12; sqS.next=t+3+Math.random()*5; sqS.hop=t;
-}
+syncCreatures();
+function newPetT(t){ petS.tx=rnd(0.10,0.36); petS.ty=rnd(0.52,0.68); petS.next=t+rnd(3.5,7); }
+function newSqT(t){ sqS.tx=rnd(0.28,0.48); sqS.ty=rnd(0.30,0.42); sqS.next=t+rnd(2.5,5.5); sqS.hop=t; }
 
-/* ---- insects / shimmer particles ---- */
+/* ---- ambient particles ---- */
 const insects=[];
-for(let i=0;i<7;i++) insects.push({
-  x:Math.random(), y:Math.random()*0.6+0.15,
-  ph:Math.random()*6, sp:0.015+Math.random()*0.025,
-  r:1.5+Math.random()*2, kind:Math.random()<.5?'bug':'moth'
+for(let i=0;i<10;i++) insects.push({
+  x:rnd(0.15,0.85), y:rnd(0.15,0.55), ph:rnd(0,6.3), sp:rnd(0.02,0.04),
+  kind: Math.random()<.55?'moth':'bee', pathT:rnd(0,10)
 });
-const sparkles=[];
-for(let i=0;i<24;i++) sparkles.push({
-  x:Math.random(), y:Math.random(), ph:Math.random()*6, s:0.4+Math.random()*0.8
-});
+const sparks=[];
+for(let i=0;i<36;i++) sparks.push({x:Math.random(),y:Math.random()*0.55,ph:rnd(0,6),s:rnd(0.4,1.3)});
+const parts=[]; // reaction bursts
+function burst(x,y,n){
+  const cols=['#e8f0ff','#ffe9a8','#c8e0ff','#ffd0e8','#d0f0c8'];
+  for(let i=0;i<n;i++){
+    const a=rnd(0,Math.PI*2), v=rnd(40,160);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-30,life:0,max:rnd(0.5,1.1),r:rnd(2,5.5),c:cols[i%cols.length]});
+  }
+}
 
-/* ---- V-birds ---- */
+/* V-birds */
 const birdBox=$('birds');
 const birds=[];
-for(let i=0;i<3;i++){
-  const d=document.createElement('div');d.className='vbird';d.textContent='ᵛ';
+for(let i=0;i<4;i++){
+  const d=document.createElement('div'); d.className='vbird'; d.textContent='ᵛ';
   birdBox.appendChild(d);
-  birds.push({el:d, x:0.2+i*0.15, y:0.12+i*0.04, ph:i*1.7, sp:0.01+i*0.003});
+  birds.push({el:d, x:rnd(0.05,0.7), y:0.08+i*0.035, ph:i*1.4, sp:0.012+i*0.003});
 }
 
-/* ---- audio: melancholic ambient pad ---- */
-let AC=null, master=null, muted=localStorage.getItem('lostisland.mute')==='1';
-btnMute.textContent=muted?'AUS':'AN';
+/* ---- audio: deeper melancholic pad ---- */
+let AC=null, master=null, muted=LS('lostisland.mute')==='1';
+let vol=parseFloat(LS('lostisland.vol')||'0.55');
+$('vol').value=String(Math.round(vol*100));
+$('btnMute').textContent=muted?'AUS':'AN';
+function applyGain(){ if(master) master.gain.value = muted?0:vol*0.38; }
 function ensureAudio(){
-  if(AC){if(AC.state==='suspended')AC.resume();return}
+  if(AC){ if(AC.state==='suspended') AC.resume(); return; }
   AC=new (window.AudioContext||window.webkitAudioContext)();
-  master=AC.createGain(); master.gain.value=muted?0:0.22; master.connect(AC.destination);
-  // soft pad: 3 detuned oscillators through filter
-  const freqs=[110,164.81,196]; // A2 E3 G3 — minor-ish
+  master=AC.createGain(); applyGain(); master.connect(AC.destination);
+  // deep pad: A minor-ish cluster with slow filter breathe
+  const freqs=[55, 82.41, 110, 164.81, 196, 261.63]; // A1 E2 A2 E3 G3 C4
   freqs.forEach((f,i)=>{
-    const o=AC.createOscillator(); o.type=i===1?'triangle':'sine';
+    const o=AC.createOscillator();
+    o.type = i<2 ? 'sine' : (i<4 ? 'triangle' : 'sine');
     o.frequency.value=f;
-    const g=AC.createGain(); g.gain.value=0.07/(i+1);
-    const ftr=AC.createBiquadFilter(); ftr.type='lowpass'; ftr.frequency.value=600; ftr.Q.value=0.7;
-    // slow tremolo
-    const lfo=AC.createOscillator(); lfo.frequency.value=0.07+i*0.03;
-    const lg=AC.createGain(); lg.gain.value=0.04;
-    lfo.connect(lg); lg.connect(g.gain);
+    o.detune.value = (i%2? -6: 5);
+    const g=AC.createGain(); g.gain.value = (0.09/(1+i*0.55));
+    const ftr=AC.createBiquadFilter(); ftr.type='lowpass'; ftr.Q.value=0.6;
+    ftr.frequency.value=480;
+    // slow filter LFO
+    const lfo=AC.createOscillator(); lfo.frequency.value=0.04+i*0.011;
+    const lg=AC.createGain(); lg.gain.value=220;
+    lfo.connect(lg); lg.connect(ftr.frequency);
+    // amp breathe
+    const lfo2=AC.createOscillator(); lfo2.frequency.value=0.05+i*0.02;
+    const lg2=AC.createGain(); lg2.gain.value=g.gain.value*0.35;
+    lfo2.connect(lg2); lg2.connect(g.gain);
     o.connect(ftr); ftr.connect(g); g.connect(master);
-    o.start(); lfo.start();
+    o.start(); lfo.start(); lfo2.start();
   });
-  // quiet high shimmer
-  const o2=AC.createOscillator(); o2.type='sine'; o2.frequency.value=392;
-  const g2=AC.createGain(); g2.gain.value=0.02;
-  const f2=AC.createBiquadFilter(); f2.type='lowpass'; f2.frequency.value=1200;
-  o2.connect(f2); f2.connect(g2); g2.connect(master); o2.start();
+  // quiet high mournful voice
+  const oH=AC.createOscillator(); oH.type='sine'; oH.frequency.value=329.63;
+  const gH=AC.createGain(); gH.gain.value=0.018;
+  const fH=AC.createBiquadFilter(); fH.type='lowpass'; fH.frequency.value=900;
+  oH.connect(fH); fH.connect(gH); gH.connect(master); oH.start();
 }
-function softPing(){
-  if(!AC||muted)return;
+function softPing(id){
+  if(!AC||muted) return;
   const t0=AC.currentTime;
-  const o=AC.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(520,t0);
-  o.frequency.exponentialRampToValueAtTime(220,t0+0.35);
+  const base = id==='door'? 392 : id==='bench'? 330 : 440;
+  const o=AC.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(base, t0);
+  o.frequency.exponentialRampToValueAtTime(base*0.45, t0+0.5);
   const g=AC.createGain(); g.gain.setValueAtTime(0.0001,t0);
-  g.gain.exponentialRampToValueAtTime(0.06,t0+0.02);
-  g.gain.exponentialRampToValueAtTime(0.0001,t0+0.4);
-  o.connect(g); g.connect(master); o.start(t0); o.stop(t0+0.45);
+  g.gain.exponentialRampToValueAtTime(0.07*vol, t0+0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+0.55);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0+0.6);
 }
 
-$('gear').addEventListener('pointerdown',e=>{
+/* settings UI */
+$('gear').addEventListener('pointerdown', e=>{
   e.preventDefault(); e.stopPropagation();
-  panel.classList.toggle('open');
-  ensureAudio();
+  panel.classList.toggle('open'); ensureAudio();
 },{passive:false});
-btnMute.addEventListener('pointerdown',e=>{
+$('btnMute').addEventListener('pointerdown', e=>{
   e.preventDefault(); e.stopPropagation();
-  muted=!muted; localStorage.setItem('lostisland.mute', muted?'1':'0');
-  btnMute.textContent=muted?'AUS':'AN';
-  if(master) master.gain.value=muted?0:0.22;
-  ensureAudio();
+  muted=!muted; SS('lostisland.mute', muted?'1':'0');
+  $('btnMute').textContent=muted?'AUS':'AN'; applyGain(); ensureAudio();
 },{passive:false});
-document.addEventListener('pointerdown',e=>{
-  if(!panel.contains(e.target)&&e.target!==$('gear')) panel.classList.remove('open');
+$('vol').addEventListener('input', e=>{
+  vol=clamp(parseInt(e.target.value,10)/100,0,1); SS('lostisland.vol', String(vol));
+  if(vol>0 && muted){ muted=false; SS('lostisland.mute','0'); $('btnMute').textContent='AN'; }
+  applyGain(); ensureAudio();
+});
+$('btnPet').addEventListener('pointerdown', e=>{
+  e.preventDefault(); e.stopPropagation();
+  showPet=!showPet; SS('lostisland.pet', showPet?'1':'0'); syncCreatures();
+  if(showPet){ newPetT(T); ensureAudio(); softPing('grass'); }
+},{passive:false});
+$('btnSq').addEventListener('pointerdown', e=>{
+  e.preventDefault(); e.stopPropagation();
+  showSq=!showSq; SS('lostisland.sq', showSq?'1':'0'); syncCreatures();
+  if(showSq){ newSqT(T); ensureAudio(); softPing('bench'); }
+},{passive:false});
+document.addEventListener('pointerdown', e=>{
+  if(!panel.contains(e.target) && e.target!==$('gear')) panel.classList.remove('open');
   ensureAudio();
 });
-
-/* prevent scroll/zoom */
 ['touchstart','touchmove','touchend','gesturestart','gesturechange','dblclick','contextmenu'].forEach(ev=>{
-  document.addEventListener(ev,e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+  document.addEventListener(ev, e=>{ if(e.cancelable) e.preventDefault(); }, {passive:false});
 });
 
-/* ---- water shimmer region relative to world ---- */
-function worldRect(){return world.getBoundingClientRect()}
+/* ---- water ripples over pond region ---- */
+function worldRect(){ return world.getBoundingClientRect(); }
+function pondBox(wr){
+  // pond is lower-left of island art
+  return {
+    x: wr.left + wr.width*0.10,
+    y: wr.top  + wr.height*0.55,
+    w: wr.width*0.24,
+    h: wr.height*0.14
+  };
+}
 
 /* ---- main loop ---- */
 let last=performance.now();
-newPetTarget(0); newSqTarget(0);
+newPetT(0); newSqT(0);
 
 function frame(now){
   let dt=Math.min(0.05,(now-last)/1000); last=now; T+=dt;
   const wr=worldRect();
 
-  // island gentle float
+  // parallax bg drift
   if(!reduced){
-    const bob=Math.sin(T*0.55)*3.5, sway=Math.sin(T*0.35)*0.35;
+    const px=Math.sin(T*0.07)*10, py=Math.cos(T*0.05)*6;
+    bg.style.transform=`translate(${px.toFixed(2)}px,${py.toFixed(2)}px)`;
+  }
+
+  // island float + slight sway
+  if(!reduced){
+    const bob=Math.sin(T*0.5)*4.2, sway=Math.sin(T*0.28)*0.4;
     world.style.transform=`translate(-50%,-50%) translateY(${bob.toFixed(2)}px) rotate(${sway.toFixed(3)}deg)`;
+  }
+
+  // REAL canopy sway (separate layer)
+  if(!reduced){
+    const ang=Math.sin(T*0.9)*3.8 + Math.sin(T*1.7)*1.4;
+    const sc=1 + Math.sin(T*1.1)*0.012;
+    canopy.style.transform=`rotate(${ang.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
   }
 
   // moon
   const m=moonPos(T);
-  const mw=moon.offsetWidth||80;
+  const mw=moon.offsetWidth||100;
   moon.style.transform=`translate(${(m.x-mw/2).toFixed(1)}px,${(m.y-mw/2).toFixed(1)}px) scale(${m.s.toFixed(3)})`;
   moon.style.opacity=m.a.toFixed(3);
 
-  // characters idle + react
+  // characters idle + juicy react
   chars.forEach((c,i)=>{
-    const idle=Math.sin(T*(1.1+i*0.15)+i)*2.2;
-    const blinkPhase=(T*0.7+i*1.3)%4.2;
-    const blinking=blinkPhase>4.0;
-    let scX=1, scY=1, rot=0, ty=idle;
-    if(c.react && T-c.react<0.7){
-      const k=(T-c.react)/0.7;
-      const bounce=Math.sin(k*Math.PI)*14*(1-k);
+    const idle=Math.sin(T*(1.05+i*0.17)+i)*2.4;
+    const blink=((T*0.65+c.blinkPh)%5.0)>4.55;
+    let ty=idle, rot=0, sx=1, sy=1;
+    if(c.react>=0 && T-c.react<0.85){
+      const k=(T-c.react)/0.85;
+      const bounce=Math.sin(k*Math.PI)*18*(1-k*0.3);
       ty-=bounce;
-      rot=Math.sin(k*Math.PI*3)*8*(1-k);
-      scY=1-0.12*Math.sin(k*Math.PI);
-      scX=1+0.1*Math.sin(k*Math.PI);
+      rot=Math.sin(k*Math.PI*4)*12*(1-k);
+      sy=1-0.18*Math.sin(k*Math.PI);
+      sx=1+0.14*Math.sin(k*Math.PI);
     }
-    c.el.style.transform=`translateY(${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${scX.toFixed(3)},${scY.toFixed(3)})`;
-    const face=c.el.querySelector('.face');
-    if(face) face.style.transform=blinking?'scaleY(0.12)':'scaleY(1)';
+    // blink via scaleY on whole char slightly for photo-like sprites
+    if(blink) sy*=0.92;
+    c.el.style.transform=`translateY(${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
   });
 
-  // pet wander
-  if(T>petS.next) newPetTarget(T);
-  petS.x+=(petS.tx-petS.x)*Math.min(1,dt*0.35);
-  petS.y+=(petS.ty-petS.y)*Math.min(1,dt*0.35);
-  if(Math.abs(petS.tx-petS.x)>0.002) petS.flip=petS.tx>petS.x?1:-1;
-  const petBob=Math.sin(T*2.2)*1.5;
-  pet.style.left=(petS.x*100).toFixed(2)+'%';
-  pet.style.top=(petS.y*100).toFixed(2)+'%';
-  pet.style.transform=`scaleX(${petS.flip}) translateY(${petBob.toFixed(1)}px)`;
-
+  // pet roam
+  if(showPet){
+    if(T>petS.next) newPetT(T);
+    petS.x+=(petS.tx-petS.x)*Math.min(1,dt*0.4);
+    petS.y+=(petS.ty-petS.y)*Math.min(1,dt*0.4);
+    if(Math.abs(petS.tx-petS.x)>0.003) petS.flip=petS.tx>petS.x?1:-1;
+    const bob=Math.sin(T*2.4)*2;
+    petEl.style.left=(petS.x*100).toFixed(2)+'%';
+    petEl.style.top=(petS.y*100).toFixed(2)+'%';
+    petEl.style.transform=`scaleX(${petS.flip}) translateY(${bob.toFixed(1)}px)`;
+  }
   // squirrel
-  if(T>sqS.next) newSqTarget(T);
-  sqS.x+=(sqS.tx-sqS.x)*Math.min(1,dt*0.5);
-  sqS.y+=(sqS.ty-sqS.y)*Math.min(1,dt*0.5);
-  if(Math.abs(sqS.tx-sqS.x)>0.002) sqS.flip=sqS.tx>sqS.x?1:-1;
-  let hopY=0;
-  if(sqS.hop && T-sqS.hop<0.45) hopY=-Math.sin(((T-sqS.hop)/0.45)*Math.PI)*10;
-  sq.style.left=(sqS.x*100).toFixed(2)+'%';
-  sq.style.top=(sqS.y*100).toFixed(2)+'%';
-  sq.style.transform=`scaleX(${sqS.flip}) translateY(${hopY.toFixed(1)}px)`;
+  if(showSq){
+    if(T>sqS.next) newSqT(T);
+    sqS.x+=(sqS.tx-sqS.x)*Math.min(1,dt*0.55);
+    sqS.y+=(sqS.ty-sqS.y)*Math.min(1,dt*0.55);
+    if(Math.abs(sqS.tx-sqS.x)>0.003) sqS.flip=sqS.tx>sqS.x?1:-1;
+    let hop=0;
+    if(sqS.hop>=0 && T-sqS.hop<0.5) hop=-Math.sin(((T-sqS.hop)/0.5)*Math.PI)*12;
+    sqEl.style.left=(sqS.x*100).toFixed(2)+'%';
+    sqEl.style.top=(sqS.y*100).toFixed(2)+'%';
+    sqEl.style.transform=`scaleX(${sqS.flip}) translateY(${hop.toFixed(1)}px)`;
+  }
 
   // birds
   birds.forEach(b=>{
-    b.x+=b.sp*dt; if(b.x>1.1) b.x=-0.1;
-    const y=b.y+Math.sin(T*0.8+b.ph)*0.02;
-    b.el.style.transform=`translate(${(b.x*W).toFixed(1)}px,${(y*H).toFixed(1)}px)`;
+    b.x+=b.sp*dt; if(b.x>1.15){ b.x=-0.1; b.y=rnd(0.06,0.22); }
+    const y=b.y+Math.sin(T*0.9+b.ph)*0.018;
+    b.el.style.transform=`translate(${(b.x*W).toFixed(1)}px,${(y*H).toFixed(1)}px) scaleX(${b.sp>0?1:-1})`;
   });
 
-  // canvas FX: water shimmer + insects + plant sway hints + twinkles
-  cx.clearRect(0,0,W,H);
-
-  // water shimmer over pond region (approx left-lower of island)
-  if(wr.width>0){
-    const pondX=wr.left+wr.width*0.12;
-    const pondY=wr.top+wr.height*0.58;
-    const pondW=wr.width*0.22;
-    const pondH=wr.height*0.12;
-    for(let i=0;i<5;i++){
-      const yy=pondY+pondH*(0.2+i*0.15);
-      const phase=T*1.3+i*0.9;
-      cx.strokeStyle=`rgba(200,230,255,${0.12+0.1*Math.sin(phase)})`;
-      cx.lineWidth=1.2;
-      cx.beginPath();
-      for(let x=0;x<=pondW;x+=4){
-        const px=pondX+x;
-        const py=yy+Math.sin(x*0.08+phase)*1.8;
-        if(x===0)cx.moveTo(px,py); else cx.lineTo(px,py);
+  /* water canvas */
+  wx.clearRect(0,0,W,H);
+  if(wr.width>40){
+    const p=pondBox(wr);
+    // soft clip oval
+    wx.save();
+    wx.beginPath();
+    wx.ellipse(p.x+p.w/2, p.y+p.h/2, p.w/2, p.h/2, 0, 0, 7);
+    wx.clip();
+    // base shimmer fill
+    wx.fillStyle='rgba(180,220,255,0.06)';
+    wx.fillRect(p.x,p.y,p.w,p.h);
+    // ripple waves
+    for(let i=0;i<7;i++){
+      const phase=T*1.5+i*0.85;
+      wx.strokeStyle=`rgba(210,235,255,${0.10+0.12*((Math.sin(phase)+1)*0.5)})`;
+      wx.lineWidth=1.3;
+      wx.beginPath();
+      const yy=p.y+p.h*(0.15+i*0.12);
+      for(let x=0;x<=p.w;x+=3){
+        const px=p.x+x;
+        const py=yy+Math.sin(x*0.09+phase)*2.4 + Math.sin(x*0.03+phase*0.6)*1.2;
+        if(x===0) wx.moveTo(px,py); else wx.lineTo(px,py);
       }
-      cx.stroke();
+      wx.stroke();
     }
+    // specular dots
+    for(let i=0;i<5;i++){
+      const sx=p.x+p.w*(0.2+0.12*i)+Math.sin(T*2+i)*6;
+      const sy=p.y+p.h*0.35+Math.cos(T*1.7+i)*4;
+      wx.fillStyle=`rgba(255,255,255,${0.15+0.2*((Math.sin(T*3+i)+1)*0.5)})`;
+      wx.beginPath(); wx.arc(sx,sy,1.6,0,7); wx.fill();
+    }
+    wx.restore();
 
-    // plant / reed sway lines near pond
-    cx.strokeStyle='rgba(90,120,70,0.0)'; // drawn as soft marks
-    for(let i=0;i<4;i++){
-      const bx=pondX+pondW*0.15+i*pondW*0.12;
-      const by=pondY+pondH*0.85;
-      const ang=Math.sin(T*1.4+i)*0.18;
-      cx.strokeStyle=`rgba(120,150,90,${0.15})`;
-      cx.lineWidth=1.5;
-      cx.beginPath();
-      cx.moveTo(bx,by);
-      cx.quadraticCurveTo(bx+Math.sin(ang)*8,by-18, bx+Math.sin(ang)*14, by-32);
-      cx.stroke();
+    // reed / plant bend near pond
+    wx.save();
+    for(let i=0;i<5;i++){
+      const bx=p.x+p.w*0.08+i*p.w*0.1;
+      const by=p.y+p.h*0.92;
+      const ang=Math.sin(T*1.5+i*0.9)*0.22;
+      wx.strokeStyle='rgba(90,120,70,0.35)';
+      wx.lineWidth=1.6;
+      wx.beginPath();
+      wx.moveTo(bx,by);
+      const tipX=bx+Math.sin(ang)*16;
+      const tipY=by-28-i*2;
+      wx.quadraticCurveTo(bx+Math.sin(ang)*6, by-14, tipX, tipY);
+      wx.stroke();
+      // seed head
+      wx.fillStyle='rgba(120,90,50,0.45)';
+      wx.beginPath(); wx.ellipse(tipX, tipY, 2.2, 3.5, ang, 0, 7); wx.fill();
     }
-
-    // tree sway hint — soft leaf particles near canopy
-    const tx0=wr.left+wr.width*0.22, ty0=wr.top+wr.height*0.18;
-    for(let i=0;i<8;i++){
-      const a=T*0.6+i;
-      const lx=tx0+Math.sin(a+i)*wr.width*0.08+i*6;
-      const ly=ty0+Math.cos(a*0.7)*wr.height*0.04+(i%3)*10;
-      cx.fillStyle=`rgba(140,170,110,${0.12+0.08*Math.sin(a)})`;
-      cx.beginPath(); cx.ellipse(lx,ly,3,5,Math.sin(a)*0.4,0,7); cx.fill();
+    // small bush near lighthouse sway hint
+    const bushX=wr.left+wr.width*0.82, bushY=wr.top+wr.height*0.48;
+    for(let i=0;i<6;i++){
+      const a=T*1.2+i;
+      wx.strokeStyle=`rgba(70,110,70,${0.2})`;
+      wx.beginPath();
+      wx.moveTo(bushX+i*4, bushY+10);
+      wx.quadraticCurveTo(bushX+i*4+Math.sin(a)*5, bushY-8, bushX+i*4+Math.sin(a)*8, bushY-20);
+      wx.stroke();
     }
+    wx.restore();
   }
 
-  // insects
+  /* fx canvas: insects + sparks + bursts */
+  cx.clearRect(0,0,W,H);
+  // star twinkles
+  sparks.forEach(s=>{
+    const a=0.12+0.55*((Math.sin(T*s.s+s.ph)+1)*0.5);
+    cx.fillStyle=`rgba(230,236,255,${a*0.5})`;
+    cx.beginPath(); cx.arc(s.x*W, s.y*H, s.s*1.3, 0, 7); cx.fill();
+  });
+  // insects with curved paths
   insects.forEach(bug=>{
-    bug.x+=Math.sin(T*0.7+bug.ph)*bug.sp*dt*8;
-    bug.y+=Math.cos(T*0.9+bug.ph*1.3)*bug.sp*dt*6;
-    if(bug.x<0.05)bug.x=0.05; if(bug.x>0.95)bug.x=0.95;
-    if(bug.y<0.08)bug.y=0.08; if(bug.y>0.75)bug.y=0.75;
-    const x=bug.x*W, y=bug.y*H;
-    const flap=0.5+0.5*Math.sin(T*14+bug.ph);
-    cx.save();
-    cx.translate(x,y);
+    bug.pathT+=dt;
+    const ox=Math.sin(bug.pathT*bug.sp*8+bug.ph)*0.12;
+    const oy=Math.cos(bug.pathT*bug.sp*6+bug.ph*1.3)*0.08;
+    let x=bug.x+ox, y=bug.y+oy;
+    x=clamp(x,0.05,0.95); y=clamp(y,0.08,0.7);
+    // slow drift of home
+    bug.x+=Math.sin(T*0.15+bug.ph)*0.0008;
+    bug.y+=Math.cos(T*0.12+bug.ph)*0.0005;
+    const px=x*W, py=y*H;
+    const flap=0.5+0.5*Math.sin(T*16+bug.ph);
+    cx.save(); cx.translate(px,py);
     if(bug.kind==='moth'){
-      cx.fillStyle=`rgba(230,210,160,${0.35+0.25*flap})`;
-      cx.beginPath(); cx.ellipse(-3*flap,0,3.5,2, -0.4,0,7); cx.fill();
-      cx.beginPath(); cx.ellipse(3*flap,0,3.5,2, 0.4,0,7); cx.fill();
-      cx.fillStyle='rgba(40,40,30,.5)'; cx.beginPath(); cx.arc(0,0,1.2,0,7); cx.fill();
+      cx.fillStyle=`rgba(235,215,160,${0.35+0.3*flap})`;
+      cx.beginPath(); cx.ellipse(-4*flap,0,4.2,2.4,-0.5,0,7); cx.fill();
+      cx.beginPath(); cx.ellipse(4*flap,0,4.2,2.4,0.5,0,7); cx.fill();
+      cx.fillStyle='rgba(40,35,25,.55)'; cx.beginPath(); cx.arc(0,0,1.4,0,7); cx.fill();
     }else{
-      cx.fillStyle=`rgba(180,200,120,${0.4+0.3*flap})`;
-      cx.beginPath(); cx.arc(-2,0,1.8*flap,0,7); cx.arc(2,0,1.8*flap,0,7); cx.fill();
+      cx.fillStyle=`rgba(60,50,30,${0.45+0.25*flap})`;
+      cx.beginPath(); cx.ellipse(0,0,3,2.2,0,0,7); cx.fill();
+      cx.strokeStyle=`rgba(200,190,140,${0.35+0.3*flap})`;
+      cx.beginPath(); cx.moveTo(-1,0); cx.quadraticCurveTo(-7,-6*flap,-5,-2); cx.stroke();
+      cx.beginPath(); cx.moveTo(1,0); cx.quadraticCurveTo(7,-6*flap,5,-2); cx.stroke();
     }
     cx.restore();
   });
+  // leaf fall near canopy
+  if(wr.width>40){
+    for(let i=0;i<5;i++){
+      const a=T*0.4+i*1.3;
+      const lx=wr.left+wr.width*(0.18+0.08*i)+Math.sin(a)*20;
+      const ly=wr.top+wr.height*(0.22+(a%3)*0.05);
+      cx.fillStyle=`rgba(130,160,100,${0.18+0.1*Math.sin(a)})`;
+      cx.beginPath(); cx.ellipse(lx, ly, 3.2, 5, Math.sin(a)*0.8, 0, 7); cx.fill();
+    }
+  }
+  // bursts
+  for(let i=parts.length-1;i>=0;i--){
+    const q=parts[i]; q.life+=dt;
+    if(q.life>q.max){ parts.splice(i,1); continue; }
+    q.vx*=Math.pow(0.12,dt); q.vy=q.vy*Math.pow(0.12,dt)+40*dt;
+    q.x+=q.vx*dt; q.y+=q.vy*dt;
+    const a=1-q.life/q.max; cx.globalAlpha=a; cx.fillStyle=q.c;
+    cx.beginPath(); cx.arc(q.x,q.y,q.r*(0.5+a*0.5),0,7); cx.fill();
+    cx.globalAlpha=1;
+  }
 
-  // soft star twinkles over bg
-  sparkles.forEach(s=>{
-    const a=0.15+0.55*((Math.sin(T*s.s+s.ph)+1)*0.5);
-    cx.fillStyle=`rgba(230,235,255,${a*0.45})`;
-    const x=s.x*W, y=s.y*H*0.55;
-    cx.beginPath(); cx.arc(x,y,s.s*1.2,0,7); cx.fill();
-  });
-
-  // occasional idle bubble
-  if(Math.random()<dt/40){
+  // rare idle murmur
+  if(Math.random()<dt/45){
     const c=chars[(Math.random()*chars.length)|0];
-    bubbleNear(c.el, c.words[(Math.random()*c.words.length)|0]);
+    bubble(c.el, CHAR_WORDS[c.id][(Math.random()*CHAR_WORDS[c.id].length)|0]);
   }
 
   requestAnimationFrame(frame);

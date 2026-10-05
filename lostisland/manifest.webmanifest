@@ -1,7 +1,7 @@
 {
  "name": "Lost Island",
  "short_name": "Lost Island",
- "description": "Eine kleine Insel im All – tipp die Wesen an.",
+ "description": "Eine kleine Insel im All – tipp die Wesen an, beobachte den Mond.",
  "lang": "de",
  "start_url": "./",
  "scope": "./",
