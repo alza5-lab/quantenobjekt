@@ -91,62 +91,6 @@ const coatNrm = canvasTex(1024, 512, (ctx, w, h) => {
   for (let y = h * .55; y < h; y += 18) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
 }, false);
 coatNrm.anisotropy = MAX_ANISO;
-const woodGridTex = canvasTex(512, 512, (ctx, w) => {
-  ctx.fillStyle = '#f3ebdc'; ctx.fillRect(0, 0, w, w);
-  for (let i = 0; i < 28; i++) {
-    ctx.strokeStyle = `rgba(150,120,80,${0.05 + Math.random() * 0.05})`;
-    ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, Math.random() * w);
-    ctx.bezierCurveTo(w * .3, Math.random() * w, w * .7, Math.random() * w, w, Math.random() * w); ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(25,100,210,.85)'; ctx.lineWidth = 1.15;
-  for (let i = 0; i <= 20; i++) {
-    const t = i / 20 * w;
-    ctx.beginPath(); ctx.moveTo(t, 0); ctx.lineTo(t, w); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, t); ctx.lineTo(w, t); ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(20,150,255,.45)'; ctx.lineWidth = 1;
-  for (let i = 0; i < 6; i++) {
-    ctx.beginPath();
-    for (let x = 0; x <= w; x += 6) {
-      const y = w * .45 + Math.sin(x * .05 + i) * (14 + i * 4) + i * 36 - 80;
-      x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-    }
-    ctx.stroke();
-  }
-});
-woodGridTex.wrapS = woodGridTex.wrapT = THREE.RepeatWrapping; woodGridTex.repeat.set(1.6, 1.6); woodGridTex.anisotropy = MAX_ANISO;
-const hatchTex = canvasTex(512, 512, (ctx, w) => {
-  ctx.fillStyle = '#efeae2'; ctx.fillRect(0, 0, w, w);
-  ctx.strokeStyle = 'rgba(12,10,16,.88)'; ctx.lineWidth = 1.5;
-  for (let i = -w; i < w * 2; i += 5) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w * 1.05, w); ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(8,6,12,.65)'; ctx.lineWidth = 1.1;
-  for (let i = -w; i < w * 2; i += 7) {
-    ctx.beginPath(); ctx.moveTo(i, w); ctx.lineTo(i + w * 1.05, 0); ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1;
-  for (let i = -w; i < w * 2; i += 3.5) {
-    if ((i * 2) % 5 > 2) continue;
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w * .55, w * .55); ctx.stroke();
-  }
-});
-hatchTex.wrapS = hatchTex.wrapT = THREE.RepeatWrapping; hatchTex.repeat.set(2.2, 3.2); hatchTex.anisotropy = MAX_ANISO;
-const hoodClothTex = hatchTex;
-const maskFaceTex = canvasTex(256, 256, (ctx, w) => {
-  ctx.fillStyle = '#f2eee6'; ctx.beginPath(); ctx.ellipse(w/2, w/2, w*.44, w*.5, 0, 0, 7); ctx.fill();
-  // soft shade edge
-  ctx.strokeStyle = 'rgba(60,50,40,.25)'; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.ellipse(w/2, w/2, w*.44, w*.5, 0, 0, 7); ctx.stroke();
-  // matte dark-red ring + pupil (upper-left), no glow in texture
-  const ex = w * .37, ey = w * .36, er = w * .155;
-  ctx.strokeStyle = '#8b0a18'; ctx.lineWidth = 11; ctx.shadowBlur = 0;
-  ctx.beginPath(); ctx.arc(ex, ey, er, 0, 7); ctx.stroke();
-  ctx.strokeStyle = '#c41228'; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.arc(ex, ey, er, 0, 7); ctx.stroke();
-  ctx.fillStyle = '#a01020';
-  ctx.beginPath(); ctx.arc(ex, ey, er * .22, 0, 7); ctx.fill();
-});
 const ringTex = canvasTex(512, 512, (ctx) => { sacred(ctx, 256, 256, 220, '#a77bff', 4); sacred(ctx, 256, 256, 90, '#5ef2ff', 2); });
 const blobTex = canvasTex(256, 256, (ctx) => { const g = ctx.createRadialGradient(128, 128, 6, 128, 128, 124); g.addColorStop(0, 'rgba(0,0,0,.78)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256); });
 const glowTex = canvasTex(256, 256, (ctx) => { const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,255,255,.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256); });
@@ -641,269 +585,59 @@ const fillLight = new THREE.DirectionalLight(0x5ef2ff, .25); fillLight.position.
   scene.environment = pm.fromScene(es, .03).texture; pm.dispose();
 }
 
-// ---------------------------------------------------------------- Figur — Marionette v2 (sketch refine)
+// ---------------------------------------------------------------- Figur
 const coatU = { uSway: { value: new V3() }, uFlap: { value: 0 }, uTime: { value: 0 } };
-const capeMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff, roughness: .92, metalness: 0,
-  map: hatchTex, side: THREE.DoubleSide, transparent: true, opacity: .7,
-  emissive: 0x000000, emissiveIntensity: 0, depthWrite: true, envMapIntensity: .15,
+const coatMat = new THREE.MeshStandardMaterial({
+  color: 0x110c20, roughness: .5, metalness: .4, emissive: 0xffffff, emissiveMap: coatTex, emissiveIntensity: 1.35,
+  normalMap: coatNrm, normalScale: new THREE.Vector2(.85, .85), side: THREE.DoubleSide, transparent: true, opacity: 1, envMapIntensity: .7,
 });
-capeMat.onBeforeCompile = sh => {
+coatMat.onBeforeCompile = sh => {
   Object.assign(sh.uniforms, coatU);
   sh.vertexShader = 'uniform vec3 uSway; uniform float uFlap; uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
-    float kk=clamp((1.5-position.y)/1.4,0.,1.); kk*=kk*(.55+.45*kk);
-    transformed.xz+=uSway.xz*kk*.45; transformed.y+=uSway.y*kk*.35;
-    float flap=uFlap*.018;
-    transformed.x+=sin(uTime*5.5+position.y*5.+position.z*3.)*flap*kk;
-    transformed.z+=cos(uTime*4.2+position.x*4.)*flap*kk*.7;`);
-  sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93,0.91,0.87), 0.25);
-    diffuseColor.rgb = max(diffuseColor.rgb, vec3(0.4));`);
+    float kk=clamp((1.55-position.y)/1.4,0.,1.); kk*=kk;
+    float ang=atan(position.x,position.z);
+    transformed.xz+=uSway.xz*kk; transformed.y+=uSway.y*kk;
+    transformed.xz+=normalize(position.xz+1e-4)*(sin(uTime*9.+ang*3.+position.y*5.)*.04*uFlap*kk);`);
 };
-const coatMat = capeMat;
-const woodMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff, roughness: .52, metalness: .05, map: woodGridTex,
-  emissive: 0x0a2040, emissiveMap: woodGridTex, emissiveIntensity: .18,
-  transparent: true, opacity: 1, envMapIntensity: .2,
-});
-const jointMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff, roughness: .42, metalness: .12, map: woodGridTex,
-  emissive: 0x0a1830, emissiveMap: woodGridTex, emissiveIntensity: .12, transparent: true, opacity: 1,
-});
-const hoodMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff, roughness: .9, metalness: 0, map: hatchTex, side: THREE.DoubleSide,
-  transparent: true, opacity: .9, emissive: 0x000000, emissiveIntensity: 0,
-});
-const darkMat = hoodMat; // legacy
-hoodMat.onBeforeCompile = sh => {
-  sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9,0.88,0.84), 0.2);
-    diffuseColor.rgb = max(diffuseColor.rgb, vec3(0.32));`);
-};
-
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x0e0a1a, roughness: .6, metalness: .3, transparent: true });
 const voidMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
-const handMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff, map: woodGridTex, roughness: .45, metalness: .08,
-  emissive: 0x000000, emissiveIntensity: 0, transparent: true,
-});
-// Matte mask + dark red eye (MeshBasic keeps bloom from smearing)
-const eyeMat = new THREE.MeshBasicMaterial({ color: 0x8a1018, transparent: true });
-const eyeRingMat = new THREE.MeshBasicMaterial({ color: 0x6e0c14, transparent: true });
-const maskMat = new THREE.MeshStandardMaterial({
-  map: maskFaceTex, color: 0xc8c4bc, roughness: .75, metalness: 0,
-  emissive: 0x000000, emissiveIntensity: 0, transparent: true, opacity: 1, envMapIntensity: 0,
-});
-const outlineMat = new THREE.MeshBasicMaterial({ color: 0x0a0810, side: THREE.BackSide, transparent: true, opacity: .85 });
-
-function addOutline(mesh, scale = 1.045) {
-  const o = new THREE.Mesh(mesh.geometry, outlineMat);
-  o.scale.setScalar(scale); o.renderOrder = -1;
-  mesh.add(o); return o;
-}
-
-/** Cape: narrow, curved around back, 2 sharp points (long LL + right flare). */
-function makeCapeGeo() {
-  const rows = 26, cols = 20;
-  const pos = [], uv = [], idx = [];
-  for (let j = 0; j <= rows; j++) {
-    const v = j / rows;
-    for (let i = 0; i <= cols; i++) {
-      const u = i / cols;
-      // wrap ~160° around back: left-heavy (hood/shoulders → back → left hip)
-      const ang = lerp(1.15, -0.95, u); // left(+x) to right(-x) around -Z back
-      const rad = .20 + v * .10 + (u < .45 ? ( .45 - u) * v * .08 : 0);
-      let x = Math.sin(ang) * rad;
-      let z = -Math.cos(ang) * rad - .06 - v * .04;
-      let y = 1.50 - v * .98;
-      // long lower-left point to shins
-      if (u < .45) {
-        const t = (.45 - u) / .45;
-        y -= Math.pow(t * v, 1.6) * 1.25;
-        x += t * v * .15; // further left in character space ( +X is left when facing -Z? facing PI looks -Z, +X is left from behind)
-        z += t * v * .06;
-      }
-      // right flaring point behind
-      if (u > .7) {
-        const t = (u - .7) / .3;
-        x -= t * v * .42;
-        z -= t * v * .5;
-        y -= t * v * .2;
-      }
-      if (j === rows && u < .2) { y -= .22; }
-      if (v > .4 && v < .58 && u > .9) { x -= .18; z -= .22; }
-      pos.push(x, y, z); uv.push(u, 1 - v);
-    }
-  }
-  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-    const a = j * (cols + 1) + i, b = a + cols + 1;
-    idx.push(a, b, a + 1, a + 1, b, b + 1);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  g.setIndex(idx); g.computeVertexNormals(); return g;
-}
-
-/** Hood as open cloth cone framing the face (Lathe with front gap). */
-function makeHoodGeo() {
-  const profile = [[.01, .48], [.08, .38], [.16, .22], [.2, .08], [.21, -.02], [.19, -.12], [.15, -.2]].map(([r, y]) => new THREE.Vector2(r, y));
-  // leave ~95° opening at front
-  return new THREE.LatheGeometry(profile, 28, Math.PI * 0.28, Math.PI * 1.55);
-}
-
-function makeChestGeo() {
-  // tapered artist-mannequin chest via lathe
-  const profile = [[.04, .0], [.14, .04], [.17, .12], [.18, .22], [.16, .32], [.12, .4], [.07, .46]].map(([r, y]) => new THREE.Vector2(r, y));
-  return new THREE.LatheGeometry(profile, 28);
-}
-function makePelvisGeo() {
-  const profile = [[.05, 0], [.13, .02], [.14, .08], [.12, .14], [.08, .18]].map(([r, y]) => new THREE.Vector2(r, y));
-  return new THREE.LatheGeometry(profile, 24);
-}
-function makeAbdomenGeo() {
-  const profile = [[.05, 0], [.085, .04], [.095, .12], [.08, .2], [.06, .24]].map(([r, y]) => new THREE.Vector2(r, y));
-  return new THREE.LatheGeometry(profile, 24);
-}
-
+const handMat = new THREE.MeshStandardMaterial({ color: 0x1a1030, emissive: 0x8a5cff, emissiveIntensity: .9, transparent: true });
+const eyeMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(.8, 3, 3.4) });
 const hero = new THREE.Group(); scene.add(hero);
 const body = new THREE.Group(); hero.add(body);
-
-function ball(r = .065) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 14), jointMat); m.castShadow = true; addOutline(m, 1.06); return m; }
-function seg(r, len, segs = 12) {
-  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(.01, len - r * 2), 5, segs), woodMat);
-  m.castShadow = true; addOutline(m, 1.05); return m;
-}
-
-// --- Skeleton / torso (artist mannequin proportions) ---
-const pelvis = new THREE.Group(); pelvis.position.y = .9; body.add(pelvis);
-const pelvisMesh = new THREE.Mesh(makePelvisGeo(), woodMat); pelvisMesh.castShadow = true; addOutline(pelvisMesh, 1.04); pelvis.add(pelvisMesh);
-const waist = new THREE.Group(); waist.position.y = .16; pelvis.add(waist);
-waist.add(ball(.05));
-const abdomen = new THREE.Mesh(makeAbdomenGeo(), woodMat); abdomen.position.y = .02; abdomen.castShadow = true; addOutline(abdomen, 1.04); waist.add(abdomen);
-const torso = new THREE.Group(); torso.position.y = .2; waist.add(torso);
-const chest = new THREE.Mesh(makeChestGeo(), woodMat); chest.castShadow = true; addOutline(chest, 1.035); torso.add(chest);
-const shoulders = new THREE.Group(); shoulders.position.y = .44; torso.add(shoulders);
-const shoulderBar = new THREE.Mesh(new THREE.CapsuleGeometry(.035, .34, 4, 12), woodMat);
-shoulderBar.rotation.z = Math.PI / 2; shoulderBar.castShadow = true; addOutline(shoulderBar, 1.06); shoulders.add(shoulderBar);
-
-// Neck joint
-const neck = new THREE.Group(); neck.position.y = .12; shoulders.add(neck);
-neck.add(ball(.045));
-const neckSeg = seg(.035, .1, 10); neckSeg.position.y = .05; neck.add(neckSeg);
-
-// Head + open hatched hood + matte mask
-const head = new THREE.Group(); head.position.y = .14; neck.add(head);
-const hood = new THREE.Mesh(makeHoodGeo(), hoodMat); hood.position.set(0, .08, -.02); hood.castShadow = true; head.add(hood);
-addOutline(hood, 1.03);
-const peak = new THREE.Mesh(new THREE.ConeGeometry(.11, .28, 18), hoodMat); peak.position.set(0, .48, -.04); peak.rotation.x = -.25; head.add(peak); addOutline(peak, 1.04);
-const face = new THREE.Mesh(new THREE.SphereGeometry(.13, 28, 22), maskMat); face.scale.set(.88, 1.08, .52); face.position.set(0, .1, .13); head.add(face);
-// geometric red ring + pupil (matte-ish, low emissive)
-const eyeRing = new THREE.Mesh(new THREE.TorusGeometry(.042, .008, 12, 32), eyeRingMat); eyeRing.position.set(-.038, .125, .205); head.add(eyeRing);
-const eyeDot = new THREE.Mesh(new THREE.SphereGeometry(.014, 12, 10), eyeMat); eyeDot.position.set(-.038, .125, .218); head.add(eyeDot);
-const hoodRim = eyeRing;
-
-function mkArm(side) {
-  const root = new THREE.Group(); root.position.set(side * .26, 0, 0); shoulders.add(root);
-  root.add(ball(.06));
-  const upper = seg(.042, .3); upper.position.y = -.15; root.add(upper);
-  const elbow = new THREE.Group(); elbow.position.y = -.3; root.add(elbow);
-  elbow.add(ball(.05));
-  const fore = seg(.036, .26); fore.position.y = -.13; elbow.add(fore);
-  const wrist = new THREE.Group(); wrist.position.y = -.26; elbow.add(wrist);
-  const hand = new THREE.Mesh(new THREE.SphereGeometry(.05, 14, 12), handMat); hand.castShadow = true; addOutline(hand, 1.06); wrist.add(hand);
-  root.userData = { elbow, wrist, hand, upper, fore }; return root;
-}
-const armL = mkArm(1), armR = mkArm(-1);
-
-function mkLeg(side) {
-  const root = new THREE.Group(); root.position.set(side * .09, .02, 0); pelvis.add(root);
-  root.add(ball(.06));
-  const thigh = seg(.05, .36); thigh.position.y = -.18; root.add(thigh);
-  const knee = new THREE.Group(); knee.position.y = -.36; root.add(knee);
-  knee.add(ball(.05));
-  const shin = seg(.042, .34); shin.position.y = -.17; knee.add(shin);
-  const ankle = new THREE.Group(); ankle.position.y = -.34; knee.add(ankle);
-  ankle.add(ball(.042));
-  const foot = new THREE.Mesh(new THREE.SphereGeometry(.065, 14, 10), woodMat);
-  foot.scale.set(1.05, .42, 1.65); foot.position.set(0, -.035, .035); foot.castShadow = true; addOutline(foot, 1.05); ankle.add(foot);
-  root.userData = { knee, ankle, foot, thigh, shin }; return root;
-}
-const legL = mkLeg(1), legR = mkLeg(-1);
-
-// Cape last so it layers behind shoulders visually; offset back so TPV isn't blocked
-const cape = new THREE.Mesh(makeCapeGeo(), capeMat);
-cape.position.set(-.02, -.02, -.04); cape.scale.set(.92, .96, .92);
-cape.renderOrder = 1; body.add(cape);
-const coat = cape;
-// thin dark edge ribbon via scaled backface clone
-const capeEdge = new THREE.Mesh(cape.geometry, outlineMat);
-capeEdge.scale.setScalar(1.02); cape.add(capeEdge);
-
-body.position.y = -.06;
-
-// Soft fill light (not purple blowout on mask)
-const heroLight = new THREE.PointLight(0xffe8d0, .28, 5, 2); heroLight.position.set(0, 1.6, 1.1); hero.add(heroLight);
+// Slim/gaunt silhouette (~55% body width, slightly lankier) — same costume look
+const coat = new THREE.Mesh(new THREE.LatheGeometry([[.27, .12], [.26, .22], [.245, .34], [.23, .5], [.21, .68], [.19, .86], [.175, 1.02], [.16, 1.14], [.155, 1.2], [.16, 1.38], [.175, 1.52], [.14, 1.62], [.065, 1.70]].map(([r, y]) => new THREE.Vector2(r, y)), 56), coatMat); coat.castShadow = true;
+body.add(coat);
+const shoulders = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), darkMat); shoulders.castShadow = true; shoulders.scale.set(.19, .12, .15); shoulders.position.y = 1.52; body.add(shoulders);
+const head = new THREE.Group(); head.position.y = 1.72; body.add(head);
+const hood = new THREE.Mesh(new THREE.SphereGeometry(.195, 32, 24), darkMat); hood.scale.set(1, 1.12, 1.08); hood.position.set(0, .08, -.01); head.add(hood);
+const peak = new THREE.Mesh(new THREE.ConeGeometry(.12, .28, 24), darkMat); peak.position.set(0, .22, -.1); peak.rotation.x = -.7; head.add(peak);
+const face = new THREE.Mesh(new THREE.SphereGeometry(.14, 24, 18), voidMat); face.scale.set(.85, 1, .5); face.position.set(0, .05, .15); head.add(face);
+const eyeDot = new THREE.Mesh(new THREE.SphereGeometry(.02, 12, 10), eyeMat); eyeDot.position.set(0, .08, .215); head.add(eyeDot);
+const hoodRim = new THREE.Mesh(new THREE.TorusGeometry(.15, .011, 10, 48), eyeMat); hoodRim.position.set(0, .055, .16); hoodRim.scale.set(.9, 1.15, 1); head.add(hoodRim);
+// Thin limbs (gaunt), slightly longer for lanky proportions
+const capsG = new THREE.CapsuleGeometry(.04, .48, 6, 16), legG = new THREE.CapsuleGeometry(.045, .7, 6, 16);
+const mkLimb = (x, y, geo, mat, len, hand) => {
+  const piv = new THREE.Group(); piv.position.set(x, y, 0); const m = new THREE.Mesh(geo, mat); m.position.y = -len; piv.add(m);
+  if (hand) { const h = new THREE.Mesh(new THREE.SphereGeometry(.04, 16, 12), handMat); h.position.y = -len * 2 - .02; piv.add(h); }
+  else { const boot = new THREE.Mesh(new THREE.BoxGeometry(.1, .07, .2), darkMat); boot.position.set(0, -len * 2 - .03, .04); piv.add(boot); }
+  body.add(piv); return piv;
+};
+const armL = mkLimb(.20, 1.50, capsG, darkMat, .30, true), armR = mkLimb(-.20, 1.50, capsG, darkMat, .30, true);
+const legL = mkLimb(.07, .98, legG, darkMat, .46, false), legR = mkLimb(-.07, .98, legG, darkMat, .46, false);
+const heroLight = new THREE.PointLight(0xb070ff, 1.6, 8, 2); heroLight.position.set(0, 1.4, .8); hero.add(heroLight);
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); blob.rotation.x = -Math.PI / 2; scene.add(blob);
 const footRing = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .55 })); footRing.rotation.x = -Math.PI / 2; scene.add(footRing);
-const heroMats = [capeMat, woodMat, jointMat, hoodMat, voidMat, handMat, maskMat, eyeMat, eyeRingMat];
-
-// Marionette strings
-const STRING_LEN = 32, STRING_SEGS = 28;
-const stringMat = new THREE.LineBasicMaterial({ color: 0xff2248, transparent: true, opacity: .8, depthWrite: false, blending: THREE.AdditiveBlending });
-const stringLines = [];
-const stringAttach = [
-  () => { const v = new V3(0, .52, 0); head.localToWorld(v); return v; },
-  () => { const v = new V3(); armL.userData.hand.getWorldPosition(v); return v; },
-  () => { const v = new V3(); armR.userData.hand.getWorldPosition(v); return v; },
-  () => { const v = new V3(0, .04, 0); shoulders.localToWorld(v); return v; },
-];
-for (let s = 0; s < 4; s++) {
-  const g = new THREE.BufferGeometry();
-  const arr = new Float32Array((STRING_SEGS + 1) * 3);
-  g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-  const line = new THREE.Line(g, stringMat.clone());
-  line.frustumCulled = false; scene.add(line);
-  stringLines.push({ line, arr: g.attributes.position, ph: s * 1.7 });
-}
-function updateStrings(dt, glitching) {
-  const t = S.t;
-  for (let s = 0; s < 4; s++) {
-    const att = stringAttach[s]();
-    const sl = stringLines[s];
-    const flicker = glitching ? (.55 + Math.random() * .45) : .72;
-    sl.line.material.opacity = flicker * (glitching ? 1 : .78);
-    if (glitching) sl.line.material.color.setRGB(2.2, .18 + Math.random() * .25, .45);
-    else sl.line.material.color.setRGB(1.9, .12, .28);
-    for (let i = 0; i <= STRING_SEGS; i++) {
-      const u = i / STRING_SEGS;
-      const y = att.y + u * STRING_LEN;
-      const wave = Math.sin(t * 2.2 + sl.ph + u * 6 + anim.sway.x * 8) * (.035 + u * .1) * (1 + anim.run * .4 + anim.air * .7);
-      const wave2 = Math.cos(t * 1.7 + sl.ph * 1.3 + u * 5) * (.025 + u * .08) * (1 + anim.air);
-      sl.arr.setXYZ(i, att.x + wave + anim.sway.x * u * 12, y, att.z + wave2 + anim.sway.z * u * 12);
-    }
-    sl.arr.needsUpdate = true; sl.line.visible = true;
-  }
-}
-
-// Afterimages
+const heroMats = [coatMat, darkMat, voidMat, handMat];
+// Nachbilder
 const ghosts = [];
-const ghostCapeGeo = cape.geometry;
-const ghostHoodGeo = hood.geometry;
 for (let i = 0; i < 20; i++) {
-  const g = new THREE.Group();
-  const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(.4, 1.4, 2.2), transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false });
-  const c = new THREE.Mesh(ghostCapeGeo, m);
-  const h = new THREE.Mesh(ghostHoodGeo, m); h.position.set(0, 1.5, -.02);
-  const torsoG = new THREE.Mesh(new THREE.CapsuleGeometry(.1, .5, 4, 8), m); torsoG.position.set(0, 1.1, 0);
-  g.add(c, h, torsoG); g.visible = false; scene.add(g); ghosts.push({ g, m, life: 0, a: .4 });
+  const g = new THREE.Group(); const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(.4, 1.4, 2.2), transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false });
+  const c = new THREE.Mesh(coat.geometry, m); const h = new THREE.Mesh(hood.geometry, m); h.scale.copy(hood.scale); h.position.set(0, 1.80, -.01);
+  g.add(c, h); g.visible = false; scene.add(g); ghosts.push({ g, m, life: 0, a: .4 });
 }
 let ghostIdx = 0;
-function spawnGhost(col, a = .45) {
-  const gh = ghosts[ghostIdx++ % ghosts.length];
-  gh.g.position.copy(hero.position); gh.g.rotation.copy(hero.rotation); gh.g.scale.setScalar(1);
-  gh.g.visible = true; gh.life = 1; gh.a = a; gh.m.color.copy(col);
-}
-
+function spawnGhost(col, a = .45) { const gh = ghosts[ghostIdx++ % ghosts.length]; gh.g.position.copy(hero.position); gh.g.rotation.copy(hero.rotation); gh.g.scale.setScalar(1); gh.g.visible = true; gh.life = 1; gh.a = a; gh.m.color.copy(col); }
 const fxRings = [];
 for (let i = 0; i < 8; i++) { const m = new THREE.Mesh(new THREE.TorusGeometry(1.6, .07, 10, 80), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, .6, 2.6), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); m.visible = false; scene.add(m); fxRings.push({ m, life: 0, s: 1 }); }
 let fxIdx = 0;
@@ -969,7 +703,7 @@ const ABIL = {
 };
 const VIEWS = ['TPV', 'FPV', 'GEOMETRIC', 'EYE VIEW'];
 const LAYERS = ['NORMAL', 'DEPTH', 'SYSTEM', 'GLITCH', 'RESONANCE'];
-const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 11.2, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
+const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
 let saved = []; try { saved = JSON.parse(localStorage.getItem('eyecore.v1') || '[]'); } catch (e) { }
 frags.forEach(f => { if (saved.includes(f.id)) { f.got = true; f.g.visible = false; } });
 S.collected = frags.filter(f => f.got).length;
@@ -1086,7 +820,7 @@ canvas.addEventListener('pointermove', e => {
 });
 const endPtr = e => { const p = ptrs.get(e.pointerId); if (!p) return; if (p.type === 'joy') joy.classList.remove('on'); ptrs.delete(e.pointerId); };
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr); canvas.addEventListener('lostpointercapture', endPtr);
-canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 16, 100); else S.zoom = clamp(S.zoom + e.deltaY * .006, 4.5, 18); }, { passive: false });
+canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 16, 100); else S.zoom = clamp(S.zoom + e.deltaY * .006, 3, 16); }, { passive: false });
 document.addEventListener('touchmove', e => { if (!e.target.closest('.ov')) e.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault()); document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
@@ -1332,7 +1066,7 @@ function updatePlayer(dt) {
 }
 
 // ---------------------------------------------------------------- Animation Figur
-const anim = { ph: 0, run: 0, air: 0, lean: 0, roll: 0, sway: new V3(), limp: 0 };
+const anim = { ph: 0, run: 0, air: 0, lean: 0, roll: 0, sway: new V3() };
 const lerpAngle = (a, b, t) => a + wrapA(b - a) * t;
 function updateHero(dt) {
   const v = P.vel; const hs = Math.hypot(v.x, v.z);
@@ -1340,86 +1074,37 @@ function updateHero(dt) {
   hero.rotation.y = lerpAngle(hero.rotation.y, P.wallRun ? Math.atan2(P.wallTan.x, P.wallTan.z) : P.facing, 1 - Math.exp(-14 * dt));
   anim.run = damp(anim.run, P.grounded || P.wallRun ? clamp(hs / RUN, 0, 1.2) : 0, 10, dt);
   anim.air = damp(anim.air, P.grounded || P.wallRun ? 0 : 1, 12, dt);
-  anim.limp = damp(anim.limp, (!P.grounded && !P.wallRun && hs < 1.2) || (P.grounded && hs < .4) ? 1 : 0, 6, dt);
-  anim.ph += dt * (3.6 + hs * 1.2);
-  const sw = Math.sin(anim.ph), sw2 = Math.sin(anim.ph * 2), breath = Math.sin(S.t * 2.1), rs = anim.run;
-  const limp = anim.limp, air = anim.air;
-
-  // Legs — marionette gait + limp dangle
-  legL.rotation.x = sw * 1.05 * rs + air * -.55 + limp * (Math.sin(S.t * 1.7) * .25 - .35);
-  legR.rotation.x = -sw * 1.05 * rs + air * .2 + limp * (Math.sin(S.t * 1.7 + 1) * .25 - .2);
-  legL.rotation.z = .04 + limp * .08; legR.rotation.z = -.04 - limp * .08;
-  legL.userData.knee.rotation.x = Math.max(0, -sw * .9 * rs) + air * .5 + limp * .6;
-  legR.userData.knee.rotation.x = Math.max(0, sw * .9 * rs) + air * .35 + limp * .55;
-  legL.userData.ankle.rotation.x = -legL.userData.knee.rotation.x * .35 + rs * .1;
-  legR.userData.ankle.rotation.x = -legR.userData.knee.rotation.x * .35 + rs * .1;
-
-  // Arms — opposite swing, limp hang, wall-run / glitch lift
-  const gjLift = P.gjT > 0 ? 1.2 : .55;
-  armL.rotation.x = -sw * .85 * rs + air * -1.6 * gjLift + limp * (Math.sin(S.t * 2.3) * .35 - .9);
-  armR.rotation.x = sw * .85 * rs + air * -.9 * gjLift + limp * (Math.sin(S.t * 2.1 + 2) * .35 - .85);
-  armL.rotation.z = .18 + air * .35 + limp * .25 + breath * .02;
-  armR.rotation.z = -.18 - air * .35 - limp * .25 - breath * .02;
-  armL.userData.elbow.rotation.x = Math.max(0, sw * .7 * rs) + limp * .5 + air * .3;
-  armR.userData.elbow.rotation.x = Math.max(0, -sw * .7 * rs) + limp * .5 + air * .25;
-
-  if (P.wallRun) {
-    armL.rotation.x = -2.2; armR.rotation.x = -2.0;
-    armL.userData.elbow.rotation.x = 1.1; armR.userData.elbow.rotation.x = 1.0;
-    legL.rotation.x = .4; legR.rotation.x = -.2;
-  }
-
-  // Torso / waist / head — slight puppet hang
-  waist.rotation.x = limp * .12 + air * .08;
-  waist.rotation.z = limp * Math.sin(S.t * 1.4) * .06;
-  torso.position.y = .08 + Math.abs(Math.sin(anim.ph)) * .04 * rs + breath * .01;
-  body.position.y = -.08 + Math.abs(Math.sin(anim.ph)) * .05 * rs + breath * .01 * (1 - rs) - (P.landT > 0 ? P.landT * .45 : 0) - limp * .04;
-  head.rotation.x = breath * .04 + rs * .08 + limp * .15 + air * .2;
-  head.rotation.z = limp * Math.sin(S.t * 1.9) * .08;
-
-  anim.lean = damp(anim.lean, rs * .2 + (P.gjT > 0 ? .4 : 0) + limp * .1, 8, dt);
+  anim.ph += dt * (4 + hs * 1.15);
+  const sw = Math.sin(anim.ph), breath = Math.sin(S.t * 2.1), rs = anim.run;
+  legL.rotation.x = sw * .95 * rs + anim.air * -.7; legR.rotation.x = -sw * .95 * rs + anim.air * .35;
+  armL.rotation.x = -sw * .8 * rs + anim.air * -2.2 * (P.gjT > 0 ? 1.2 : .6); armR.rotation.x = sw * .8 * rs + anim.air * -1.0;
+  armL.rotation.z = .12 + anim.air * .5 + breath * .02; armR.rotation.z = -.12 - anim.air * .5 - breath * .02;
+  body.position.y = Math.abs(Math.sin(anim.ph)) * .07 * rs + breath * .012 * (1 - rs) - (P.landT > 0 ? P.landT * .5 : 0);
+  shoulders.scale.y = .16 * (1 + breath * .05 * (1 - rs));
+  head.rotation.x = breath * .03 + rs * .1;
+  anim.lean = damp(anim.lean, rs * .22 + (P.gjT > 0 ? .45 : 0), 8, dt);
   let rollT = 0; if (P.wallRun) { const ry = hero.rotation.y; const side = P.wallN.x * Math.cos(ry) - P.wallN.z * Math.sin(ry); rollT = side * .5; }
   anim.roll = damp(anim.roll, rollT, 10, dt);
   body.rotation.set(anim.lean, 0, anim.roll);
-
   const cy = Math.cos(-hero.rotation.y), sy = Math.sin(-hero.rotation.y);
   const lx = v.x * cy - v.z * sy, lz = v.x * sy + v.z * cy;
-  anim.sway.x = damp(anim.sway.x, -lx * .028, 6, dt);
-  anim.sway.z = damp(anim.sway.z, -lz * .035 - rs * .06, 6, dt);
-  anim.sway.y = damp(anim.sway.y, clamp(-v.y * .014, -.12, .28), 6, dt);
-  coatU.uSway.value.copy(anim.sway); coatU.uFlap.value = clamp(rs * .7 + air * .5 + limp * .25, 0, 1.0); coatU.uTime.value = S.t;
+  anim.sway.x = damp(anim.sway.x, -lx * .022, 6, dt); anim.sway.z = damp(anim.sway.z, -lz * .03 - rs * .05, 6, dt); anim.sway.y = damp(anim.sway.y, clamp(-v.y * .012, -.1, .25), 6, dt);
+  coatU.uSway.value.copy(anim.sway); coatU.uFlap.value = clamp(rs + anim.air, 0, 1.4); coatU.uTime.value = S.t;
   P.landT -= dt;
-
   const glitching = P.phase || P.shift || ABIL.skip.act > 0 || ABIL.gj.act > 0 || ABIL.drift.act > 0;
   const fl = glitching && Math.random() < .14;
   body.position.x = fl ? (Math.random() - .5) * .25 : 0;
-  capeMat.emissiveIntensity = fl ? .55 : (P.phase ? .35 : .12);
-  woodMat.emissiveIntensity = fl ? .35 : .18;
-  const op = P.phase ? .45 + Math.sin(S.t * 30) * .1 : 1;
-  heroMats.forEach(m => { m.opacity = op; });
-  capeMat.emissive.setRGB(...(P.phase ? [.25, .6, .7] : P.shift ? [.6, .3, .7] : [.12, .1, .08]));
-
-  // Views: hide bulky mesh in FPV but keep hands + strings
-  const isFPV = S.view === 1;
-  const hideFlash = fl && Math.random() < .3;
-  hero.visible = !hideFlash;
-  cape.visible = !isFPV;
-  pelvis.visible = !isFPV;
-  head.visible = !isFPV;
-  legL.visible = legR.visible = !isFPV;
-  chest.visible = shoulderBar.visible = !isFPV;
-  armL.visible = armR.visible = true;
-  stringLines.forEach(s => { s.line.visible = !hideFlash; });
-
+  coatMat.emissiveIntensity = fl ? 3.5 : (P.phase ? 2.6 : 1.3);
+  const op = P.phase ? .45 + Math.sin(S.t * 30) * .1 : 1; heroMats.forEach(m => { m.opacity = op; });
+  coatMat.emissive.setRGB(...(P.phase ? [.4, 1.2, 1.4] : P.shift ? [1.2, .5, 1.4] : [1, 1, 1]));
+  hero.visible = S.view !== 1 && !(fl && Math.random() < .3);
+  // Geometric top view: enlarge character + marker so player stays readable
   const geoSc = S.view === 2 ? 3.2 : 1;
   hero.scale.setScalar(geoSc);
-
   const [g] = groundAt(P.pos.x, P.pos.z, P.pos.y + .1);
   blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 8.5 : 1); blob.scale.setScalar(S.view === 2 ? 3.2 : 1);
   const hgt = P.pos.y - g; blob.material.opacity = clamp(1 - hgt / 10, 0, 1) * (S.view === 2 ? .9 : 1); footRing.material.opacity = (S.view === 2 ? .85 : clamp(.35 - hgt / 12, 0, .35)) + (glitching ? .3 : 0);
   heroLight.intensity = 1.6 + (glitching ? 3 : 0);
-
-  updateStrings(dt, glitching);
 }
 
 // ---------------------------------------------------------------- Kamera
