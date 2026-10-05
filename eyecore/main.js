@@ -437,7 +437,7 @@ const mkLimb = (x, y, geo, mat, len, hand) => {
 };
 const armL = mkLimb(.33, 1.42, capsG, darkMat, .28, true), armR = mkLimb(-.33, 1.42, capsG, darkMat, .28, true);
 const legL = mkLimb(.11, .92, legG, darkMat, .42, false), legR = mkLimb(-.11, .92, legG, darkMat, .42, false);
-const heroLight = new THREE.PointLight(0xb070ff, 2.5, 8, 2); heroLight.position.set(0, 1.4, .8); hero.add(heroLight);
+const heroLight = new THREE.PointLight(0xb070ff, 1.6, 8, 2); heroLight.position.set(0, 1.4, .8); hero.add(heroLight);
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); blob.rotation.x = -Math.PI / 2; scene.add(blob);
 const footRing = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .55 })); footRing.rotation.x = -Math.PI / 2; scene.add(footRing);
 const heroMats = [coatMat, darkMat, voidMat, handMat];
@@ -857,7 +857,7 @@ function updateHero(dt) {
   const [g] = groundAt(P.pos.x, P.pos.z, P.pos.y + .1);
   blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 2.6 : 1);
   const hgt = P.pos.y - g; blob.material.opacity = clamp(1 - hgt / 10, 0, 1); footRing.material.opacity = clamp(.35 - hgt / 12, 0, .35) + (glitching ? .3 : 0);
-  heroLight.intensity = 2.5 + (glitching ? 4 : 0);
+  heroLight.intensity = 1.6 + (glitching ? 3 : 0);
 }
 
 // ---------------------------------------------------------------- Kamera
