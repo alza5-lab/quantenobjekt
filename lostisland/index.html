@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Lost Island</title>
+<meta name="description" content="Eine kleine Insel im All – tipp die Wesen an.">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lost Island">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{--safe-t:env(safe-area-inset-top,0px);--safe-r:env(safe-area-inset-right,0px);--safe-b:env(safe-area-inset-bottom,0px);--safe-l:env(safe-area-inset-left,0px)}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0a0e1a}
+  body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
+    font-family:ui-rounded,"SF Pro Rounded","Nunito","Quicksand",system-ui,-apple-system,sans-serif;color:#c8d4e8}
+  #stage{position:absolute;inset:0;overflow:hidden}
+  #bg{position:absolute;inset:0;background:#0a0e1a center/cover no-repeat;background-image:url(stars.jpg);
+    transform:scale(1.05);filter:brightness(.92) contrast(1.05)}
+  #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  #world{position:absolute;left:50%;top:52%;width:min(92vw,720px);transform:translate(-50%,-50%);
+    aspect-ratio:720/634;will-change:transform}
+  #island{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;
+    -webkit-user-drag:none;filter:drop-shadow(0 18px 28px rgba(0,0,0,.45))}
+  #moon{position:absolute;left:0;top:0;width:min(18vw,110px);height:min(18vw,110px);
+    will-change:transform;pointer-events:none;filter:drop-shadow(0 0 18px rgba(255,240,180,.35))}
+  .char{position:absolute;width:11%;cursor:pointer;transform-origin:50% 90%;will-change:transform;
+    touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .char svg{width:100%;height:auto;display:block;overflow:visible;pointer-events:none}
+  .char .face{transform-origin:50% 40%}
+  #c1{left:22%;top:34%;width:13%} /* bench under willow */
+  #c2{left:63%;top:42%;width:12%} /* lighthouse door */
+  #c3{left:42%;top:48%;width:11%} /* open grass */
+  #pet{position:absolute;left:14%;top:56%;width:10%;will-change:transform;pointer-events:none}
+  #pet svg{width:100%;height:auto;display:block;overflow:visible}
+  #sq{position:absolute;left:34%;top:34%;width:7%;will-change:transform;pointer-events:none}
+  #sq svg{width:100%;height:auto;display:block;overflow:visible}
+  #birds{position:absolute;inset:0;pointer-events:none}
+  .vbird{position:absolute;font-size:14px;color:rgba(200,210,230,.55);will-change:transform;
+    font-weight:700;letter-spacing:-2px;text-shadow:0 0 4px rgba(0,0,0,.4)}
+  #title{position:absolute;left:calc(12px + var(--safe-l));bottom:calc(10px + var(--safe-b));
+    font-size:12px;letter-spacing:.12em;color:rgba(180,198,220,.38);font-weight:700;pointer-events:none;z-index:5}
+  #gear{position:absolute;right:calc(10px + var(--safe-r));top:calc(10px + var(--safe-t));
+    z-index:6;width:36px;height:36px;border-radius:50%;border:1px solid rgba(180,200,230,.18);
+    background:rgba(12,18,32,.35);backdrop-filter:blur(8px);color:rgba(200,214,235,.55);
+    font-size:18px;line-height:1;display:grid;place-items:center;cursor:pointer;
+    -webkit-tap-highlight-color:transparent}
+  #gear:active{transform:scale(.94)}
+  #panel{position:absolute;right:calc(10px + var(--safe-r));top:calc(52px + var(--safe-t));
+    z-index:6;min-width:160px;padding:12px 14px;border-radius:14px;
+    background:rgba(10,14,26,.82);border:1px solid rgba(180,200,230,.16);
+    backdrop-filter:blur(12px);box-shadow:0 8px 28px rgba(0,0,0,.35);
+    display:none;font-size:13px;color:rgba(210,220,235,.85)}
+  #panel.open{display:block}
+  #panel .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0}
+  #panel button{appearance:none;border:1px solid rgba(180,200,230,.22);background:rgba(255,255,255,.06);
+    color:rgba(220,230,245,.9);border-radius:999px;padding:6px 12px;font:inherit;font-weight:700;
+    font-size:12px;letter-spacing:.04em;cursor:pointer}
+  #panel button:active{transform:scale(.97)}
+  #panel .hint{margin-top:8px;font-size:11px;line-height:1.35;color:rgba(170,185,210,.45)}
+  .bub{position:absolute;padding:.3em .7em;border-radius:1.1em;background:rgba(255,255,255,.92);color:#3a4560;
+    font-weight:700;font-size:14px;box-shadow:0 3px 12px rgba(0,0,0,.25);white-space:nowrap;pointer-events:none;
+    transform:translate(-50%,-100%);animation:bub 1.4s ease-out forwards;z-index:4}
+  .bub::after{content:"";position:absolute;left:36%;bottom:-5px;width:10px;height:10px;background:rgba(255,255,255,.92);transform:rotate(45deg);border-radius:2px}
+  @keyframes bub{0%{opacity:0;margin-top:8px;scale:.6}15%{opacity:1;margin-top:0;scale:1.05}25%{scale:1}70%{opacity:1}100%{opacity:0;margin-top:-22px}}
+  @media (prefers-reduced-motion:reduce){
+    #moon,#world,.char,#pet,#sq{animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg" aria-hidden="true"></div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="moon" aria-hidden="true">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="mg" cx="40%" cy="38%" r="60%">
+          <stop offset="0%" stop-color="#fff8d8"/>
+          <stop offset="55%" stop-color="#f0e2a8"/>
+          <stop offset="100%" stop-color="#d4c078"/>
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="44" fill="url(#mg)" stroke="#2a2a20" stroke-width="2.2"/>
+      <circle cx="38" cy="46" r="4.2" fill="#1a1a18"/>
+      <circle cx="58" cy="46" r="4.2" fill="#1a1a18"/>
+      <circle cx="48" cy="58" r="2.1" fill="#1a1a18"/>
+      <path d="M28 36c6-8 14-10 22-6" fill="none" stroke="#c8b870" stroke-width="1.4" opacity=".55"/>
+      <path d="M62 62c5 4 12 3 16-2" fill="none" stroke="#c8b870" stroke-width="1.3" opacity=".45"/>
+    </svg>
+  </div>
+  <div id="birds" aria-hidden="true"></div>
+  <div id="world">
+    <img id="island" src="island.png" alt="Lost Island" draggable="false">
+    <!-- characters -->
+    <div class="char" id="c1" data-name="bench" role="button" aria-label="Wesen auf der Bank">
+      <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+        <g class="body">
+          <ellipse cx="40" cy="92" rx="16" ry="4" fill="rgba(0,0,0,.18)"/>
+          <!-- red offset outline -->
+          <path d="M22 28c0-14 10-24 18-24s18 10 18 24c2 8 4 22 2 34-1 8-6 14-20 14s-19-6-20-14c-2-12 0-26 2-34z" fill="none" stroke="#c44" stroke-width="3" opacity=".55" transform="translate(1.5,-1)"/>
+          <path d="M22 28c0-14 10-24 18-24s18 10 18 24c2 8 4 22 2 34-1 8-6 14-20 14s-19-6-20-14c-2-12 0-26 2-34z" fill="#f7f4ef" stroke="#1a1a1a" stroke-width="2.4"/>
+          <!-- arms -->
+          <path d="M22 48c-8 6-10 16-6 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M58 48c8 6 10 16 6 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M22 48c-8 6-10 16-6 20" fill="none" stroke="#c44" stroke-width="2" opacity=".4" transform="translate(1,-1)"/>
+          <!-- legs sitting -->
+          <path d="M30 76c-2 8-4 14-2 16" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M50 76c2 8 4 14 2 16" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <g class="face">
+            <circle cx="32" cy="40" r="5.5" fill="#1a1a1a"/>
+            <circle cx="48" cy="40" r="5.5" fill="#1a1a1a"/>
+            <circle cx="33.5" cy="38.5" r="1.4" fill="#fff" opacity=".7"/>
+            <circle cx="49.5" cy="38.5" r="1.4" fill="#fff" opacity=".7"/>
+            <!-- stitched mouth -->
+            <line x1="30" y1="54" x2="50" y2="54" stroke="#1a1a1a" stroke-width="1.8"/>
+            <line x1="33" y1="51" x2="33" y2="57" stroke="#1a1a1a" stroke-width="1.3"/>
+            <line x1="40" y1="51" x2="40" y2="57" stroke="#1a1a1a" stroke-width="1.3"/>
+            <line x1="47" y1="51" x2="47" y2="57" stroke="#1a1a1a" stroke-width="1.3"/>
+          </g>
+          <text x="40" y="68" text-anchor="middle" font-size="11" font-family="serif" fill="#1a1a1a">×</text>
+        </g>
+      </svg>
+    </div>
+    <div class="char" id="c2" data-name="door" role="button" aria-label="Wesen an der Tür">
+      <svg viewBox="0 0 80 110" xmlns="http://www.w3.org/2000/svg">
+        <g class="body">
+          <ellipse cx="40" cy="102" rx="14" ry="3.5" fill="rgba(0,0,0,.18)"/>
+          <path d="M24 26c0-14 9-22 16-22s16 8 16 22c3 10 5 28 3 42-1 10-7 16-19 16s-18-6-19-16c-2-14 0-32 3-42z" fill="none" stroke="#c44" stroke-width="3" opacity=".55" transform="translate(1.5,-1)"/>
+          <path d="M24 26c0-14 9-22 16-22s16 8 16 22c3 10 5 28 3 42-1 10-7 16-19 16s-18-6-19-16c-2-14 0-32 3-42z" fill="#f7f4ef" stroke="#1a1a1a" stroke-width="2.4"/>
+          <path d="M24 50c-7 8-9 18-5 22" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M56 50c7 8 9 18 5 22" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M32 84v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
+          <path d="M48 84v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
+          <g class="face">
+            <!-- jack-o grin -->
+            <path d="M30 36l4 6 4-7 4 7 4-6" fill="none" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M28 52c4 10 20 10 24 0l-4 8c-4 4-12 4-16 0z" fill="#1a1a1a"/>
+            <path d="M32 54l3 5 3-4 3 4 3-5" fill="none" stroke="#f7f4ef" stroke-width="1.2" opacity=".35"/>
+          </g>
+          <text x="40" y="72" text-anchor="middle" font-size="12" font-family="serif" fill="#1a1a1a">×</text>
+        </g>
+      </svg>
+    </div>
+    <div class="char" id="c3" data-name="grass" role="button" aria-label="Wesen im Gras">
+      <svg viewBox="0 0 80 105" xmlns="http://www.w3.org/2000/svg">
+        <g class="body">
+          <ellipse cx="40" cy="98" rx="14" ry="3.5" fill="rgba(0,0,0,.16)"/>
+          <path d="M23 28c0-14 10-24 17-24s17 10 17 24c2 9 4 24 2 36-1 9-6 14-19 14s-18-5-19-14c-2-12 0-27 2-36z" fill="none" stroke="#c44" stroke-width="3" opacity=".5" transform="translate(1.4,-1)"/>
+          <path d="M23 28c0-14 10-24 17-24s17 10 17 24c2 9 4 24 2 36-1 9-6 14-19 14s-18-5-19-14c-2-12 0-27 2-36z" fill="#f7f4ef" stroke="#1a1a1a" stroke-width="2.4"/>
+          <path d="M23 50c-7 6-9 16-5 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M57 50c7 6 9 16 5 20" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M32 80v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
+          <path d="M48 80v16" fill="none" stroke="#1a1a1a" stroke-width="2.3" stroke-linecap="round"/>
+          <g class="face">
+            <circle cx="32" cy="40" r="5.2" fill="#1a1a1a"/>
+            <circle cx="48" cy="40" r="5.2" fill="#1a1a1a"/>
+            <circle cx="33.4" cy="38.6" r="1.3" fill="#fff" opacity=".7"/>
+            <circle cx="49.4" cy="38.6" r="1.3" fill="#fff" opacity=".7"/>
+            <line x1="31" y1="53" x2="49" y2="53" stroke="#1a1a1a" stroke-width="1.7"/>
+            <line x1="34" y1="50.5" x2="34" y2="55.5" stroke="#1a1a1a" stroke-width="1.2"/>
+            <line x1="40" y1="50.5" x2="40" y2="55.5" stroke="#1a1a1a" stroke-width="1.2"/>
+            <line x1="46" y1="50.5" x2="46" y2="55.5" stroke="#1a1a1a" stroke-width="1.2"/>
+          </g>
+          <text x="40" y="68" text-anchor="middle" font-size="11" font-family="serif" fill="#1a1a1a">×</text>
+        </g>
+      </svg>
+    </div>
+    <!-- pet -->
+    <div id="pet" aria-hidden="true">
+      <svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="42" cy="36" rx="22" ry="14" fill="#efe8dc"/>
+          <path d="M20 34c-8-2-14 2-16 8" />
+          <path d="M58 28c8-10 16-12 22-6" />
+          <!-- long ears -->
+          <path d="M30 24c-2-16 2-22 6-22" />
+          <path d="M40 22c0-14 4-20 8-18" />
+          <circle cx="48" cy="32" r="2.2" fill="#1a1a1a" stroke="none"/>
+          <circle cx="36" cy="33" r="1.6" fill="#1a1a1a" stroke="none"/>
+          <path d="M34 48v8M48 48v8M28 48v6M52 47v6"/>
+          <path d="M64 40c10 2 16 10 12 16" />
+        </g>
+        <path d="M30 24c-2-16 2-22 6-22M40 22c0-14 4-20 8-18" fill="none" stroke="#c44" stroke-width="1.6" opacity=".4"/>
+      </svg>
+    </div>
+    <!-- squirrel -->
+    <div id="sq" aria-hidden="true">
+      <svg viewBox="0 0 60 55" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M28 40c-8-2-12-10-8-16 4-6 14-8 20-4 4 3 6 10 4 16-2 6-10 8-16 4z" fill="#c4a070"/>
+          <path d="M40 22c2-10 8-16 14-14 2 8-2 16-8 20" fill="#b89060"/>
+          <circle cx="24" cy="28" r="1.8" fill="#1a1a1a" stroke="none"/>
+          <path d="M18 30h-6M22 44v8M32 44v8"/>
+          <path d="M20 18l-2-8M26 16l2-8"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</div>
+<div id="title">Lost Island</div>
+<button id="gear" aria-label="Einstellungen" title="Einstellungen">⚙</button>
+<div id="panel" role="dialog" aria-label="Einstellungen">
+  <div class="row"><span>Musik</span><button id="btnMute" type="button">AN</button></div>
+  <div class="hint">Ruhige Insel. Tippe die Wesen an.<br>Kein Spiel – nur schauen.</div>
+</div>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const world=$('world'), moon=$('moon'), fx=$('fx'), cx=fx.getContext('2d');
+const pet=$('pet'), sq=$('sq'), panel=$('panel'), btnMute=$('btnMute');
+let W=0,H=0,DPR=1,T=0, reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;
+  fx.width=Math.round(W*DPR);fx.height=Math.round(H*DPR);
+  cx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize();addEventListener('resize',resize);
+
+/* ---- moon arc ---- */
+function moonPos(t){
+  // continuous elliptical arc across upper sky, ~70s cycle
+  const cycle=70;
+  const u=((t%cycle)/cycle);
+  // ease along arc: left → peak → right → wrap under
+  const ang=Math.PI*(0.12+u*0.76); // ~0.12π to 0.88π
+  const rx=W*0.42, ry=H*0.22;
+  const cx0=W*0.5, cy0=H*0.28;
+  const x=cx0+Math.cos(ang)*rx;
+  const y=cy0-Math.sin(ang)*ry;
+  const s=0.85+0.2*Math.sin(ang);
+  return {x,y,s,a:0.55+0.45*Math.sin(ang)};
+}
+
+/* ---- characters react ---- */
+const chars=[
+  {el:$('c1'), react:0, blink:0, words:['…','hm.','still.','ok.']},
+  {el:$('c2'), react:0, blink:0, words:['grr.','hi.','…!','booh.']},
+  {el:$('c3'), react:0, blink:0, words:['oh.','hihi.','…','ja.']}
+];
+let lastBub=0;
+function bubbleNear(el,txt){
+  if(T-lastBub<0.45)return; lastBub=T;
+  const r=el.getBoundingClientRect();
+  const d=document.createElement('div');d.className='bub';d.textContent=txt;
+  d.style.left=(r.left+r.width/2)+'px';d.style.top=(r.top+8)+'px';
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1450);
+}
+function tapChar(c){
+  c.react=T;
+  ensureAudio();
+  softPing();
+  bubbleNear(c.el, c.words[(Math.random()*c.words.length)|0]);
+}
+chars.forEach(c=>{
+  c.el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();tapChar(c)},{passive:false});
+});
+
+/* ---- pet & squirrel wander ---- */
+const petS={x:0.20,y:0.60,tx:0.22,ty:0.58,flip:1,next:2};
+const sqS={x:0.36,y:0.38,tx:0.40,ty:0.36,flip:1,next:3,hop:0};
+
+function newPetTarget(t){
+  petS.tx=0.12+Math.random()*0.28; petS.ty=0.52+Math.random()*0.16; petS.next=t+4+Math.random()*6;
+}
+function newSqTarget(t){
+  sqS.tx=0.30+Math.random()*0.18; sqS.ty=0.32+Math.random()*0.12; sqS.next=t+3+Math.random()*5; sqS.hop=t;
+}
+
+/* ---- insects / shimmer particles ---- */
+const insects=[];
+for(let i=0;i<7;i++) insects.push({
+  x:Math.random(), y:Math.random()*0.6+0.15,
+  ph:Math.random()*6, sp:0.015+Math.random()*0.025,
+  r:1.5+Math.random()*2, kind:Math.random()<.5?'bug':'moth'
+});
+const sparkles=[];
+for(let i=0;i<24;i++) sparkles.push({
+  x:Math.random(), y:Math.random(), ph:Math.random()*6, s:0.4+Math.random()*0.8
+});
+
+/* ---- V-birds ---- */
+const birdBox=$('birds');
+const birds=[];
+for(let i=0;i<3;i++){
+  const d=document.createElement('div');d.className='vbird';d.textContent='ᵛ';
+  birdBox.appendChild(d);
+  birds.push({el:d, x:0.2+i*0.15, y:0.12+i*0.04, ph:i*1.7, sp:0.01+i*0.003});
+}
+
+/* ---- audio: melancholic ambient pad ---- */
+let AC=null, master=null, muted=localStorage.getItem('lostisland.mute')==='1';
+btnMute.textContent=muted?'AUS':'AN';
+function ensureAudio(){
+  if(AC){if(AC.state==='suspended')AC.resume();return}
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain(); master.gain.value=muted?0:0.22; master.connect(AC.destination);
+  // soft pad: 3 detuned oscillators through filter
+  const freqs=[110,164.81,196]; // A2 E3 G3 — minor-ish
+  freqs.forEach((f,i)=>{
+    const o=AC.createOscillator(); o.type=i===1?'triangle':'sine';
+    o.frequency.value=f;
+    const g=AC.createGain(); g.gain.value=0.07/(i+1);
+    const ftr=AC.createBiquadFilter(); ftr.type='lowpass'; ftr.frequency.value=600; ftr.Q.value=0.7;
+    // slow tremolo
+    const lfo=AC.createOscillator(); lfo.frequency.value=0.07+i*0.03;
+    const lg=AC.createGain(); lg.gain.value=0.04;
+    lfo.connect(lg); lg.connect(g.gain);
+    o.connect(ftr); ftr.connect(g); g.connect(master);
+    o.start(); lfo.start();
+  });
+  // quiet high shimmer
+  const o2=AC.createOscillator(); o2.type='sine'; o2.frequency.value=392;
+  const g2=AC.createGain(); g2.gain.value=0.02;
+  const f2=AC.createBiquadFilter(); f2.type='lowpass'; f2.frequency.value=1200;
+  o2.connect(f2); f2.connect(g2); g2.connect(master); o2.start();
+}
+function softPing(){
+  if(!AC||muted)return;
+  const t0=AC.currentTime;
+  const o=AC.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(520,t0);
+  o.frequency.exponentialRampToValueAtTime(220,t0+0.35);
+  const g=AC.createGain(); g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(0.06,t0+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+0.4);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0+0.45);
+}
+
+$('gear').addEventListener('pointerdown',e=>{
+  e.preventDefault(); e.stopPropagation();
+  panel.classList.toggle('open');
+  ensureAudio();
+},{passive:false});
+btnMute.addEventListener('pointerdown',e=>{
+  e.preventDefault(); e.stopPropagation();
+  muted=!muted; localStorage.setItem('lostisland.mute', muted?'1':'0');
+  btnMute.textContent=muted?'AUS':'AN';
+  if(master) master.gain.value=muted?0:0.22;
+  ensureAudio();
+},{passive:false});
+document.addEventListener('pointerdown',e=>{
+  if(!panel.contains(e.target)&&e.target!==$('gear')) panel.classList.remove('open');
+  ensureAudio();
+});
+
+/* prevent scroll/zoom */
+['touchstart','touchmove','touchend','gesturestart','gesturechange','dblclick','contextmenu'].forEach(ev=>{
+  document.addEventListener(ev,e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+});
+
+/* ---- water shimmer region relative to world ---- */
+function worldRect(){return world.getBoundingClientRect()}
+
+/* ---- main loop ---- */
+let last=performance.now();
+newPetTarget(0); newSqTarget(0);
+
+function frame(now){
+  let dt=Math.min(0.05,(now-last)/1000); last=now; T+=dt;
+  const wr=worldRect();
+
+  // island gentle float
+  if(!reduced){
+    const bob=Math.sin(T*0.55)*3.5, sway=Math.sin(T*0.35)*0.35;
+    world.style.transform=`translate(-50%,-50%) translateY(${bob.toFixed(2)}px) rotate(${sway.toFixed(3)}deg)`;
+  }
+
+  // moon
+  const m=moonPos(T);
+  const mw=moon.offsetWidth||80;
+  moon.style.transform=`translate(${(m.x-mw/2).toFixed(1)}px,${(m.y-mw/2).toFixed(1)}px) scale(${m.s.toFixed(3)})`;
+  moon.style.opacity=m.a.toFixed(3);
+
+  // characters idle + react
+  chars.forEach((c,i)=>{
+    const idle=Math.sin(T*(1.1+i*0.15)+i)*2.2;
+    const blinkPhase=(T*0.7+i*1.3)%4.2;
+    const blinking=blinkPhase>4.0;
+    let scX=1, scY=1, rot=0, ty=idle;
+    if(c.react && T-c.react<0.7){
+      const k=(T-c.react)/0.7;
+      const bounce=Math.sin(k*Math.PI)*14*(1-k);
+      ty-=bounce;
+      rot=Math.sin(k*Math.PI*3)*8*(1-k);
+      scY=1-0.12*Math.sin(k*Math.PI);
+      scX=1+0.1*Math.sin(k*Math.PI);
+    }
+    c.el.style.transform=`translateY(${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${scX.toFixed(3)},${scY.toFixed(3)})`;
+    const face=c.el.querySelector('.face');
+    if(face) face.style.transform=blinking?'scaleY(0.12)':'scaleY(1)';
+  });
+
+  // pet wander
+  if(T>petS.next) newPetTarget(T);
+  petS.x+=(petS.tx-petS.x)*Math.min(1,dt*0.35);
+  petS.y+=(petS.ty-petS.y)*Math.min(1,dt*0.35);
+  if(Math.abs(petS.tx-petS.x)>0.002) petS.flip=petS.tx>petS.x?1:-1;
+  const petBob=Math.sin(T*2.2)*1.5;
+  pet.style.left=(petS.x*100).toFixed(2)+'%';
+  pet.style.top=(petS.y*100).toFixed(2)+'%';
+  pet.style.transform=`scaleX(${petS.flip}) translateY(${petBob.toFixed(1)}px)`;
+
+  // squirrel
+  if(T>sqS.next) newSqTarget(T);
+  sqS.x+=(sqS.tx-sqS.x)*Math.min(1,dt*0.5);
+  sqS.y+=(sqS.ty-sqS.y)*Math.min(1,dt*0.5);
+  if(Math.abs(sqS.tx-sqS.x)>0.002) sqS.flip=sqS.tx>sqS.x?1:-1;
+  let hopY=0;
+  if(sqS.hop && T-sqS.hop<0.45) hopY=-Math.sin(((T-sqS.hop)/0.45)*Math.PI)*10;
+  sq.style.left=(sqS.x*100).toFixed(2)+'%';
+  sq.style.top=(sqS.y*100).toFixed(2)+'%';
+  sq.style.transform=`scaleX(${sqS.flip}) translateY(${hopY.toFixed(1)}px)`;
+
+  // birds
+  birds.forEach(b=>{
+    b.x+=b.sp*dt; if(b.x>1.1) b.x=-0.1;
+    const y=b.y+Math.sin(T*0.8+b.ph)*0.02;
+    b.el.style.transform=`translate(${(b.x*W).toFixed(1)}px,${(y*H).toFixed(1)}px)`;
+  });
+
+  // canvas FX: water shimmer + insects + plant sway hints + twinkles
+  cx.clearRect(0,0,W,H);
+
+  // water shimmer over pond region (approx left-lower of island)
+  if(wr.width>0){
+    const pondX=wr.left+wr.width*0.12;
+    const pondY=wr.top+wr.height*0.58;
+    const pondW=wr.width*0.22;
+    const pondH=wr.height*0.12;
+    for(let i=0;i<5;i++){
+      const yy=pondY+pondH*(0.2+i*0.15);
+      const phase=T*1.3+i*0.9;
+      cx.strokeStyle=`rgba(200,230,255,${0.12+0.1*Math.sin(phase)})`;
+      cx.lineWidth=1.2;
+      cx.beginPath();
+      for(let x=0;x<=pondW;x+=4){
+        const px=pondX+x;
+        const py=yy+Math.sin(x*0.08+phase)*1.8;
+        if(x===0)cx.moveTo(px,py); else cx.lineTo(px,py);
+      }
+      cx.stroke();
+    }
+
+    // plant / reed sway lines near pond
+    cx.strokeStyle='rgba(90,120,70,0.0)'; // drawn as soft marks
+    for(let i=0;i<4;i++){
+      const bx=pondX+pondW*0.15+i*pondW*0.12;
+      const by=pondY+pondH*0.85;
+      const ang=Math.sin(T*1.4+i)*0.18;
+      cx.strokeStyle=`rgba(120,150,90,${0.15})`;
+      cx.lineWidth=1.5;
+      cx.beginPath();
+      cx.moveTo(bx,by);
+      cx.quadraticCurveTo(bx+Math.sin(ang)*8,by-18, bx+Math.sin(ang)*14, by-32);
+      cx.stroke();
+    }
+
+    // tree sway hint — soft leaf particles near canopy
+    const tx0=wr.left+wr.width*0.22, ty0=wr.top+wr.height*0.18;
+    for(let i=0;i<8;i++){
+      const a=T*0.6+i;
+      const lx=tx0+Math.sin(a+i)*wr.width*0.08+i*6;
+      const ly=ty0+Math.cos(a*0.7)*wr.height*0.04+(i%3)*10;
+      cx.fillStyle=`rgba(140,170,110,${0.12+0.08*Math.sin(a)})`;
+      cx.beginPath(); cx.ellipse(lx,ly,3,5,Math.sin(a)*0.4,0,7); cx.fill();
+    }
+  }
+
+  // insects
+  insects.forEach(bug=>{
+    bug.x+=Math.sin(T*0.7+bug.ph)*bug.sp*dt*8;
+    bug.y+=Math.cos(T*0.9+bug.ph*1.3)*bug.sp*dt*6;
+    if(bug.x<0.05)bug.x=0.05; if(bug.x>0.95)bug.x=0.95;
+    if(bug.y<0.08)bug.y=0.08; if(bug.y>0.75)bug.y=0.75;
+    const x=bug.x*W, y=bug.y*H;
+    const flap=0.5+0.5*Math.sin(T*14+bug.ph);
+    cx.save();
+    cx.translate(x,y);
+    if(bug.kind==='moth'){
+      cx.fillStyle=`rgba(230,210,160,${0.35+0.25*flap})`;
+      cx.beginPath(); cx.ellipse(-3*flap,0,3.5,2, -0.4,0,7); cx.fill();
+      cx.beginPath(); cx.ellipse(3*flap,0,3.5,2, 0.4,0,7); cx.fill();
+      cx.fillStyle='rgba(40,40,30,.5)'; cx.beginPath(); cx.arc(0,0,1.2,0,7); cx.fill();
+    }else{
+      cx.fillStyle=`rgba(180,200,120,${0.4+0.3*flap})`;
+      cx.beginPath(); cx.arc(-2,0,1.8*flap,0,7); cx.arc(2,0,1.8*flap,0,7); cx.fill();
+    }
+    cx.restore();
+  });
+
+  // soft star twinkles over bg
+  sparkles.forEach(s=>{
+    const a=0.15+0.55*((Math.sin(T*s.s+s.ph)+1)*0.5);
+    cx.fillStyle=`rgba(230,235,255,${a*0.45})`;
+    const x=s.x*W, y=s.y*H*0.55;
+    cx.beginPath(); cx.arc(x,y,s.s*1.2,0,7); cx.fill();
+  });
+
+  // occasional idle bubble
+  if(Math.random()<dt/40){
+    const c=chars[(Math.random()*chars.length)|0];
+    bubbleNear(c.el, c.words[(Math.random()*c.words.length)|0]);
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{}));
+}
+})();
+</script>
+</body>
+</html>
