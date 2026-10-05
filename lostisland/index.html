@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Lost Island</title><!-- li-v4 -->
+<title>Lost Island</title>
 <meta name="description" content="Eine kleine Insel im All – tippe, wohin Lila laufen soll.">
 <meta name="theme-color" content="#0a0e1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -45,7 +45,7 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
 #squirrel{left:34%;top:34%;width:8%;display:none}
 #pet.on,#squirrel.on{display:block}
 
-#hero{position:absolute;left:48%;top:42%;width:24%;aspect-ratio:1/1.35;z-index:6;
+#hero{position:absolute;left:48%;top:42%;width:28%;aspect-ratio:0.9156;z-index:6;
   transform:translate(-50%,-70%);will-change:left,top,transform;pointer-events:none;
   filter:drop-shadow(0 8px 10px rgba(40,20,60,.35))}
 #hero canvas{width:100%;height:100%;display:block}
@@ -487,7 +487,7 @@ if('serviceWorker' in navigator && location.protocol!=='file:'){
 </script>
 
 <script type="module">
-import { createHero } from './hero.js?v=5';
+import { createHero } from './hero.js?v=7';
 
 const world = document.getElementById('world');
 const heroEl = document.getElementById('hero');
