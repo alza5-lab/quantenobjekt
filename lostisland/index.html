@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Lost Island</title>
-<meta name="description" content="Eine kleine Insel im All – beobachte den Mond und das Leben auf der Insel.">
+<meta name="description" content="Eine kleine Insel im All – tippe, wohin Lila laufen soll.">
 <meta name="theme-color" content="#0a0e1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -44,6 +44,14 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
 #pet{left:14%;top:56%;width:11%;display:none}
 #squirrel{left:34%;top:34%;width:8%;display:none}
 #pet.on,#squirrel.on{display:block}
+
+#hero{position:absolute;left:48%;top:42%;width:24%;aspect-ratio:1/1.35;z-index:6;
+  transform:translate(-50%,-70%);will-change:left,top,transform;pointer-events:none;
+  filter:drop-shadow(0 8px 10px rgba(40,20,60,.35))}
+#hero canvas{width:100%;height:100%;display:block}
+#hero.hidden{opacity:0}
+#hitDoor{position:absolute;left:64%;top:42%;width:12%;height:18%;z-index:2;pointer-events:none}
+
 #title{position:absolute;left:calc(12px + var(--safe-l));bottom:calc(10px + var(--safe-b));
   font-size:11px;letter-spacing:.14em;color:rgba(180,198,220,.34);font-weight:700;pointer-events:none;z-index:8}
 #gear{position:absolute;right:calc(10px + var(--safe-r));top:calc(10px + var(--safe-t));z-index:9;
@@ -81,6 +89,8 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
   <div id="world">
     <img id="islandBase" src="img/island-base.png" alt="Lost Island" draggable="false">
     <div id="canopy"><img src="img/tree-canopy.png" alt="" draggable="false"></div>
+    <div id="hitDoor" aria-hidden="true"></div>
+    <div id="hero" aria-label="Lila Charakter"><canvas id="hero3d"></canvas></div>
     <div class="creature" id="pet"><img src="img/pet.png" alt=""></div>
     <div class="creature" id="squirrel"><img src="img/squirrel.png" alt=""></div>
   </div>
@@ -93,7 +103,7 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
   <div class="row"><span class="lbl">Lautstärke</span><input type="range" id="vol" min="0" max="100" value="55"></div>
   <div class="row"><span class="lbl">Pet</span><button type="button" id="btnPet">AUS</button></div>
   <div class="row"><span class="lbl">Eichhörnchen</span><button type="button" id="btnSq">AUS</button></div>
-  <div class="hint">Ruhige Insel zum Beobachten.<br>Mond wandert · Leben auf der Insel.<br>Kein Gewinn/Verlust.</div>
+  <div class="hint">Tippe die Insel – Lila läuft hin.<br>Tür antippen – guckt aus dem Leuchtturm.<br>Kein Gewinn/Verlust.</div>
 </div>
 <script>
 (()=>{
@@ -133,7 +143,6 @@ function moonPos(t){
 }
 
 /* characters removed */
-});
 
 /* ---- pet / squirrel insertable ---- */
 let showPet = LS('lostisland.pet')==='1';
@@ -254,9 +263,15 @@ $('btnSq').addEventListener('pointerdown', e=>{
   if(showSq){ newSqT(T); ensureAudio(); softPing('bench'); }
 },{passive:false});
 document.addEventListener('pointerdown', e=>{
+  if(panel.contains(e.target) || e.target===$('gear') || e.target.closest('#panel')){
+    if(e.target===$('gear')||panel.contains(e.target)) {/* settings handlers separately */}
+    else panel.classList.remove('open');
+    return;
+  }
   if(!panel.contains(e.target) && e.target!==$('gear')) panel.classList.remove('open');
   ensureAudio();
-});
+  if(window.LostIslandTap) window.LostIslandTap(e.clientX, e.clientY);
+},{passive:false});
 ['touchstart','touchmove','touchend','gesturestart','gesturechange','dblclick','contextmenu'].forEach(ev=>{
   document.addEventListener(ev, e=>{ if(e.cancelable) e.preventDefault(); }, {passive:false});
 });
@@ -470,5 +485,149 @@ if('serviceWorker' in navigator && location.protocol!=='file:'){
 }
 })();
 </script>
+
+<script type="module">
+import { createHero } from './hero.js?v=5';
+
+const world = document.getElementById('world');
+const heroEl = document.getElementById('hero');
+const canvas = document.getElementById('hero3d');
+const hero = createHero(canvas);
+
+// Island walkable UV (fractions of #world)
+const GRASS = {u0:0.14, u1:0.86, v0:0.36, v1:0.62};
+const DOOR  = {u0:0.62, u1:0.78, v0:0.40, v1:0.60}; // lighthouse door
+const START = {u:0.46, v:0.52};
+
+const state = {
+  u: START.u, v: START.v,
+  tu: START.u, tv: START.v,
+  walking: false, sit: false, peek: false,
+  mode: 'idle', // idle | walk | peek
+  speed: 0, t: 0
+};
+
+function resizeHero(){
+  const r = heroEl.getBoundingClientRect();
+  const dpr = Math.min(devicePixelRatio||1, 2);
+  hero.resize(Math.max(2, r.width), Math.max(2, r.height), dpr);
+}
+resizeHero();
+addEventListener('resize', resizeHero);
+
+function placeHero(){
+  heroEl.style.left = (state.u * 100).toFixed(2) + '%';
+  heroEl.style.top  = (state.v * 100).toFixed(2) + '%';
+  // slight size by depth (v)
+  const s = 0.92 + (state.v - 0.4) * 0.5;
+  const facing = heroEl.dataset.facing || '1';
+  heroEl.style.transform = `translate(-50%,-72%) scale(${s.toFixed(3)})`;
+}
+
+function uvFromClient(cx, cy){
+  const r = world.getBoundingClientRect();
+  return {
+    u: (cx - r.left) / r.width,
+    v: (cy - r.top) / r.height,
+    inWorld: cx>=r.left && cx<=r.right && cy>=r.top && cy<=r.bottom
+  };
+}
+function inBox(u,v,b){ return u>=b.u0 && u<=b.u1 && v>=b.v0 && v<=b.v1; }
+
+function goWalk(u, v){
+  u = Math.min(GRASS.u1, Math.max(GRASS.u0, u));
+  v = Math.min(GRASS.v1, Math.max(GRASS.v0, v));
+  state.tu = u; state.tv = v;
+  state.mode = 'walk';
+  state.walking = true;
+  state.sit = false;
+  state.peek = false;
+  const dx = u - state.u;
+  if (Math.abs(dx) > 0.002) {
+    hero.setFacing(dx);
+    heroEl.dataset.facing = dx >= 0 ? '1' : '-1';
+  }
+}
+function goPeek(){
+  // walk toward door then peek
+  state.tu = (DOOR.u0 + DOOR.u1) / 2;
+  state.tv = (DOOR.v0 + DOOR.v1) / 2 + 0.02;
+  state.mode = 'toPeek';
+  state.walking = true;
+  state.sit = false;
+  state.peek = false;
+  hero.setFacing(1);
+  heroEl.dataset.facing = '1';
+}
+
+window.LostIslandTap = function(cx, cy){
+  const p = uvFromClient(cx, cy);
+  if (!p.inWorld) return;
+  // door / lighthouse hit?
+  if (inBox(p.u, p.v, DOOR) || (p.u > 0.66 && p.u < 0.82 && p.v > 0.28 && p.v < 0.62)) {
+    goPeek();
+    return;
+  }
+  // anywhere on island box → walk (clamp to grass)
+  if (p.u > 0.08 && p.u < 0.92 && p.v > 0.28 && p.v < 0.72) {
+    goWalk(p.u, p.v);
+  }
+};
+
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  state.t += dt;
+
+  if (state.walking || state.mode === 'toPeek' || state.mode === 'walk') {
+    const dx = state.tu - state.u;
+    const dy = state.tv - state.v;
+    const dist = Math.hypot(dx, dy);
+    const spd = (state.mode === 'toPeek' ? 0.55 : 0.42); // units per sec in UV
+    if (dist < 0.008) {
+      state.u = state.tu; state.v = state.tv;
+      state.walking = false;
+      if (state.mode === 'toPeek') {
+        state.mode = 'peek';
+        state.peek = true;
+        state.sit = false;
+      } else {
+        state.mode = 'idle';
+        state.peek = false;
+        state.sit = Math.random() < 0.45; // sometimes sit after arrive
+      }
+      state.speed = 0;
+    } else {
+      const step = Math.min(dist, spd * dt);
+      state.u += (dx / dist) * step;
+      state.v += (dy / dist) * step;
+      state.walking = true;
+      state.speed = spd;
+      state.peek = false;
+      if (Math.abs(dx) > 0.001) {
+        hero.setFacing(dx);
+        heroEl.dataset.facing = dx >= 0 ? '1' : '-1';
+      }
+    }
+  }
+
+  placeHero();
+  hero.update(dt, {
+    walking: state.walking,
+    speed: state.speed,
+    sit: state.sit,
+    peek: state.peek,
+    t: state.t
+  });
+  requestAnimationFrame(loop);
+}
+placeHero();
+requestAnimationFrame(loop);
+
+// expose for debugging
+window.LostHeroState = state;
+</script>
+
 </body>
 </html>

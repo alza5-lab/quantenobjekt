@@ -1,6 +1,7 @@
-const CACHE='lostisland-v3';
+const CACHE='lostisland-v4';
 const ASSETS=[
-  './','./index.html','./manifest.webmanifest',
+  './','./index.html','./manifest.webmanifest','./hero.js',
+  './lib/three.module.min.js',
   './apple-touch-icon.png','./icon-192.png','./icon-512.png','./icon-maskable-512.png',
   './img/stars.jpg','./img/island-base.png','./img/tree-canopy.png','./img/water-mask.png',
   './img/pet.png','./img/squirrel.png','./img/moon.png','./img/moth.png','./img/bee.png'
