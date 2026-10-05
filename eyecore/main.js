@@ -886,7 +886,7 @@ function updateHero(dt) {
   hero.scale.setScalar(geoSc);
   const [g] = groundAt(P.pos.x, P.pos.z, P.pos.y + .1);
   blob.position.set(P.pos.x, g + .03, P.pos.z); footRing.position.set(P.pos.x, g + .04, P.pos.z); footRing.rotation.z += dt * .6; footRing.scale.setScalar(S.view === 2 ? 8.5 : 1); blob.scale.setScalar(S.view === 2 ? 3.2 : 1);
-  const hgt = P.pos.y - g; blob.material.opacity = clamp(1 - hgt / 10, 0, 1); footRing.material.opacity = clamp(.35 - hgt / 12, 0, .35) + (glitching ? .3 : 0);
+  const hgt = P.pos.y - g; blob.material.opacity = clamp(1 - hgt / 10, 0, 1) * (S.view === 2 ? .9 : 1); footRing.material.opacity = (S.view === 2 ? .85 : clamp(.35 - hgt / 12, 0, .35)) + (glitching ? .3 : 0);
   heroLight.intensity = 1.6 + (glitching ? 3 : 0);
 }
 
