@@ -645,7 +645,7 @@ const fillLight = new THREE.DirectionalLight(0x5ef2ff, .25); fillLight.position.
 const coatU = { uSway: { value: new V3() }, uFlap: { value: 0 }, uTime: { value: 0 } };
 const capeMat = new THREE.MeshStandardMaterial({
   color: 0xffffff, roughness: .92, metalness: 0,
-  map: hatchTex, side: THREE.DoubleSide, transparent: true, opacity: .78,
+  map: hatchTex, side: THREE.DoubleSide, transparent: true, opacity: .7,
   emissive: 0x000000, emissiveIntensity: 0, depthWrite: true, envMapIntensity: .15,
 });
 capeMat.onBeforeCompile = sh => {
@@ -656,6 +656,9 @@ capeMat.onBeforeCompile = sh => {
     float flap=uFlap*.018;
     transformed.x+=sin(uTime*5.5+position.y*5.+position.z*3.)*flap*kk;
     transformed.z+=cos(uTime*4.2+position.x*4.)*flap*kk*.7;`);
+  sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93,0.91,0.87), 0.25);
+    diffuseColor.rgb = max(diffuseColor.rgb, vec3(0.4));`);
 };
 const coatMat = capeMat;
 const woodMat = new THREE.MeshStandardMaterial({
@@ -672,6 +675,12 @@ const hoodMat = new THREE.MeshStandardMaterial({
   transparent: true, opacity: .9, emissive: 0x000000, emissiveIntensity: 0,
 });
 const darkMat = hoodMat; // legacy
+hoodMat.onBeforeCompile = sh => {
+  sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9,0.88,0.84), 0.2);
+    diffuseColor.rgb = max(diffuseColor.rgb, vec3(0.32));`);
+};
+
 const voidMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
 const handMat = new THREE.MeshStandardMaterial({
   color: 0xffffff, map: woodGridTex, roughness: .45, metalness: .08,
@@ -960,7 +969,7 @@ const ABIL = {
 };
 const VIEWS = ['TPV', 'FPV', 'GEOMETRIC', 'EYE VIEW'];
 const LAYERS = ['NORMAL', 'DEPTH', 'SYSTEM', 'GLITCH', 'RESONANCE'];
-const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 10.5, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
+const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 11.2, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
 let saved = []; try { saved = JSON.parse(localStorage.getItem('eyecore.v1') || '[]'); } catch (e) { }
 frags.forEach(f => { if (saved.includes(f.id)) { f.got = true; f.g.visible = false; } });
 S.collected = frags.filter(f => f.got).length;
