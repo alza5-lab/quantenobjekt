@@ -100,10 +100,10 @@ const woodGridTex = canvasTex(512, 512, (ctx, w) => {
     ctx.beginPath(); ctx.moveTo(0, Math.random() * w);
     ctx.bezierCurveTo(w * .3, Math.random() * w, w * .7, Math.random() * w, w, Math.random() * w); ctx.stroke();
   }
-  // blue contour grid
-  ctx.strokeStyle = 'rgba(40,120,220,.55)'; ctx.lineWidth = 1.4;
-  for (let i = 0; i <= 16; i++) {
-    const t = i / 16 * w;
+  // crisp thin blue contour grid
+  ctx.strokeStyle = 'rgba(35,110,210,.62)'; ctx.lineWidth = .9;
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24 * w;
     ctx.beginPath(); ctx.moveTo(t, 0); ctx.lineTo(t, w); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0, t); ctx.lineTo(w, t); ctx.stroke();
   }
@@ -119,30 +119,38 @@ const woodGridTex = canvasTex(512, 512, (ctx, w) => {
 });
 woodGridTex.wrapS = woodGridTex.wrapT = THREE.RepeatWrapping; woodGridTex.repeat.set(2, 2); woodGridTex.anisotropy = MAX_ANISO;
 const hatchTex = canvasTex(512, 512, (ctx, w) => {
-  ctx.fillStyle = '#08060f'; ctx.fillRect(0, 0, w, w);
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 1.6;
-  for (let i = -w; i < w * 2; i += 5) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w, w); ctx.stroke();
+  // Ink cross-hatching on light grey-white paper (sketch look)
+  ctx.fillStyle = '#d8d2c8'; ctx.fillRect(0, 0, w, w);
+  ctx.strokeStyle = 'rgba(18,14,22,.78)'; ctx.lineWidth = 1.35;
+  for (let i = -w; i < w * 2; i += 6) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w * 1.05, w); ctx.stroke();
   }
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 1;
-  for (let i = -w; i < w * 2; i += 7) {
-    ctx.beginPath(); ctx.moveTo(i, w); ctx.lineTo(i + w, 0); ctx.stroke();
+  ctx.strokeStyle = 'rgba(10,8,14,.55)'; ctx.lineWidth = 1;
+  for (let i = -w; i < w * 2; i += 8) {
+    ctx.beginPath(); ctx.moveTo(i, w); ctx.lineTo(i + w * 1.05, 0); ctx.stroke();
   }
-  // faint purple edge glow in hatch field
-  ctx.strokeStyle = 'rgba(120,80,200,.15)'; ctx.lineWidth = 2;
-  for (let i = 0; i < 12; i++) {
-    ctx.beginPath(); ctx.moveTo(0, i * 42); ctx.lineTo(w, i * 42 + 20); ctx.stroke();
+  // denser patches for shade
+  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = .9;
+  for (let i = -w; i < w * 2; i += 4) {
+    if ((i / 4) % 3) continue;
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + w * .6, w * .6); ctx.stroke();
   }
 });
-hatchTex.wrapS = hatchTex.wrapT = THREE.RepeatWrapping; hatchTex.repeat.set(3, 4); hatchTex.anisotropy = MAX_ANISO;
+hatchTex.wrapS = hatchTex.wrapT = THREE.RepeatWrapping; hatchTex.repeat.set(2.5, 3.5); hatchTex.anisotropy = MAX_ANISO;
+const hoodClothTex = hatchTex;
 const maskFaceTex = canvasTex(256, 256, (ctx, w) => {
-  ctx.fillStyle = '#f4f0ea'; ctx.beginPath(); ctx.ellipse(w/2, w/2, w*.42, w*.48, 0, 0, 7); ctx.fill();
-  // red ring eye upper-left of face
-  const ex = w * .38, ey = w * .38, er = w * .16;
-  ctx.strokeStyle = '#e01028'; ctx.lineWidth = 10; ctx.shadowColor = '#ff2040'; ctx.shadowBlur = 12;
+  ctx.fillStyle = '#f2eee6'; ctx.beginPath(); ctx.ellipse(w/2, w/2, w*.44, w*.5, 0, 0, 7); ctx.fill();
+  // soft shade edge
+  ctx.strokeStyle = 'rgba(60,50,40,.25)'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(w/2, w/2, w*.44, w*.5, 0, 0, 7); ctx.stroke();
+  // matte dark-red ring + pupil (upper-left), no glow in texture
+  const ex = w * .37, ey = w * .36, er = w * .155;
+  ctx.strokeStyle = '#8b0a18'; ctx.lineWidth = 11; ctx.shadowBlur = 0;
   ctx.beginPath(); ctx.arc(ex, ey, er, 0, 7); ctx.stroke();
-  ctx.shadowBlur = 0; ctx.fillStyle = '#ff1a30';
-  ctx.beginPath(); ctx.arc(ex, ey, er * .28, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#c41228'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(ex, ey, er, 0, 7); ctx.stroke();
+  ctx.fillStyle = '#a01020';
+  ctx.beginPath(); ctx.arc(ex, ey, er * .22, 0, 7); ctx.fill();
 });
 const ringTex = canvasTex(512, 512, (ctx) => { sacred(ctx, 256, 256, 220, '#a77bff', 4); sacred(ctx, 256, 256, 90, '#5ef2ff', 2); });
 const blobTex = canvasTex(256, 256, (ctx) => { const g = ctx.createRadialGradient(128, 128, 6, 128, 128, 124); g.addColorStop(0, 'rgba(0,0,0,.78)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256); });
@@ -638,51 +646,90 @@ const fillLight = new THREE.DirectionalLight(0x5ef2ff, .25); fillLight.position.
   scene.environment = pm.fromScene(es, .03).texture; pm.dispose();
 }
 
-// ---------------------------------------------------------------- Figur — Marionette / Mannequin (sketch rebuild)
+// ---------------------------------------------------------------- Figur — Marionette v2 (sketch refine)
 const coatU = { uSway: { value: new V3() }, uFlap: { value: 0 }, uTime: { value: 0 } };
 const capeMat = new THREE.MeshStandardMaterial({
-  color: 0x0a0814, roughness: .72, metalness: .15, emissive: 0xffffff, emissiveMap: hatchTex, emissiveIntensity: .55,
-  map: hatchTex, side: THREE.DoubleSide, transparent: true, opacity: .96, envMapIntensity: .35,
+  color: 0xc8c2b8, roughness: .82, metalness: .05,
+  map: hatchTex, side: THREE.DoubleSide, transparent: true, opacity: .82,
+  emissive: 0x222018, emissiveIntensity: .12, depthWrite: false, envMapIntensity: .25,
 });
 capeMat.onBeforeCompile = sh => {
   Object.assign(sh.uniforms, coatU);
   sh.vertexShader = 'uniform vec3 uSway; uniform float uFlap; uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
-    float kk=clamp((1.48-position.y)/1.35,0.,1.); kk*=kk;
-    float ang=atan(position.x+.001,position.z+.001);
-    transformed.xz+=uSway.xz*kk*1.35; transformed.y+=uSway.y*kk;
-    transformed.xz+=normalize(vec2(position.x,.2)+1e-4)*(sin(uTime*8.+ang*2.5+position.y*6.)*.055*uFlap*kk);
-    transformed.y+=sin(uTime*6.+position.x*4.)*.03*uFlap*kk;`);
+    float kk=clamp((1.5-position.y)/1.4,0.,1.); kk*=kk*(.55+.45*kk);
+    transformed.xz+=uSway.xz*kk*.45; transformed.y+=uSway.y*kk*.35;
+    float flap=uFlap*.018;
+    transformed.x+=sin(uTime*5.5+position.y*5.+position.z*3.)*flap*kk;
+    transformed.z+=cos(uTime*4.2+position.x*4.)*flap*kk*.7;`);
 };
-// alias so older glitch tint paths keep working
 const coatMat = capeMat;
 const woodMat = new THREE.MeshStandardMaterial({
-  color: 0xf0e6d4, roughness: .45, metalness: .12, map: woodGridTex, emissive: 0x1a3a80, emissiveMap: woodGridTex, emissiveIntensity: .35,
-  transparent: true, opacity: 1, envMapIntensity: .4,
+  color: 0xf2e8d6, roughness: .48, metalness: .08, map: woodGridTex,
+  emissive: 0x143060, emissiveMap: woodGridTex, emissiveIntensity: .22,
+  transparent: true, opacity: 1, envMapIntensity: .35,
 });
-const jointMat = new THREE.MeshStandardMaterial({ color: 0xd8c8a8, roughness: .35, metalness: .25, emissive: 0x2a5080, emissiveIntensity: .25, transparent: true, opacity: 1 });
-const darkMat = new THREE.MeshStandardMaterial({ color: 0x0e0a1a, roughness: .62, metalness: .28, transparent: true, opacity: 1 });
+const jointMat = new THREE.MeshStandardMaterial({
+  color: 0xe0d2b4, roughness: .38, metalness: .18, map: woodGridTex,
+  emissive: 0x1a4060, emissiveIntensity: .15, transparent: true, opacity: 1,
+});
+const hoodMat = new THREE.MeshStandardMaterial({
+  color: 0xb8b0a4, roughness: .85, metalness: .04, map: hatchTex, side: THREE.DoubleSide,
+  transparent: true, opacity: .92, emissive: 0x111010, emissiveIntensity: .08,
+});
+const darkMat = hoodMat; // legacy
 const voidMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
-const handMat = new THREE.MeshStandardMaterial({ color: 0xe8dcc8, map: woodGridTex, roughness: .4, metalness: .15, emissive: 0x8a5cff, emissiveIntensity: .35, transparent: true });
-const eyeMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, .15, .25) });
-const eyeRingMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, .12, .22) });
-const maskMat = new THREE.MeshStandardMaterial({ map: maskFaceTex, roughness: .35, metalness: .05, transparent: true, opacity: 1 });
+const handMat = new THREE.MeshStandardMaterial({
+  color: 0xece2d0, map: woodGridTex, roughness: .42, metalness: .1,
+  emissive: 0x2a2060, emissiveIntensity: .12, transparent: true,
+});
+// Low-emissive red eye — avoids bloom smear
+const eyeMat = new THREE.MeshStandardMaterial({ color: 0x7a0814, emissive: 0xc01020, emissiveIntensity: .45, roughness: .5, metalness: 0, transparent: true });
+const eyeRingMat = new THREE.MeshStandardMaterial({ color: 0x5a0610, emissive: 0xa01018, emissiveIntensity: .35, roughness: .55, metalness: 0, transparent: true });
+const maskMat = new THREE.MeshStandardMaterial({
+  map: maskFaceTex, color: 0xffffff, roughness: .55, metalness: 0,
+  emissive: 0x000000, emissiveIntensity: 0, transparent: true, opacity: 1,
+});
+const outlineMat = new THREE.MeshBasicMaterial({ color: 0x0a0810, side: THREE.BackSide, transparent: true, opacity: .85 });
 
+function addOutline(mesh, scale = 1.045) {
+  const o = new THREE.Mesh(mesh.geometry, outlineMat);
+  o.scale.setScalar(scale); o.renderOrder = -1;
+  mesh.add(o); return o;
+}
+
+/** Cape: narrow, curved around back, 2 sharp points (long LL + right flare). */
 function makeCapeGeo() {
-  const rows = 20, cols = 16;
+  const rows = 24, cols = 18;
   const pos = [], uv = [], idx = [];
   for (let j = 0; j <= rows; j++) {
     const v = j / rows;
     for (let i = 0; i <= cols; i++) {
-      const u = i / cols;
-      let x = lerp(-.62, .78, u);
-      const left = Math.pow(1 - u, 1.55), right = Math.pow(u, 1.35);
-      let y = 1.48 - v * (1.15 + left * .7);
-      let z = -.12 - v * .22 + right * v * .4;
-      if (u > .62) { const t = (u - .62) / .38; x += t * v * 1.25; z -= t * v * .95; y += t * (1 - v) * .35; }
-      if (u < .38) { const t = (.38 - u) / .38; y -= t * v * v * 1.05; x -= t * v * .45; z += t * v * .1; }
-      // sharp triangular tips: pull corners
-      if (j === rows && u < .2) { y -= .35; x -= .2; }
-      if (j === Math.floor(rows * .45) && u > .85) { x += .35; z -= .4; }
+      const u = i / cols; // 0 = left, 1 = right
+      // hang mainly on back + left; narrower than before
+      const span = .38 + v * .12; // half-width at top small
+      let x = lerp(-span * 1.05, span * .85, u);
+      // wrap around back (cylinder-ish): z from angle
+      const ang = lerp(.85, -1.05, u) + v * .15; // radians around body
+      let z = -Math.cos(ang) * (.16 + v * .08) - .05;
+      x = Math.sin(ang) * (.22 + v * .06) + (u - .5) * .08;
+      let y = 1.52 - v * 1.05;
+      // long lower-left point → shins
+      if (u < .42) {
+        const t = (.42 - u) / .42;
+        y -= t * t * v * v * 1.15;
+        x -= t * v * .28;
+        z += t * v * .05;
+      }
+      // right point flares out behind (not a slab)
+      if (u > .62) {
+        const t = (u - .62) / .38;
+        x += t * v * .55;
+        z -= t * v * .55;
+        y += t * (1 - v) * .12 - t * v * .15;
+      }
+      // sharpen tips
+      if (j === rows && u < .18) { y -= .28; x -= .12; }
+      if (v > .35 && v < .55 && u > .88) { x += .22; z -= .28; }
       pos.push(x, y, z); uv.push(u, 1 - v);
     }
   }
@@ -696,120 +743,148 @@ function makeCapeGeo() {
   g.setIndex(idx); g.computeVertexNormals(); return g;
 }
 
-const hero = new THREE.Group(); scene.add(hero);
-const body = new THREE.Group(); hero.add(body);
-const cape = new THREE.Mesh(makeCapeGeo(), capeMat); cape.castShadow = true; body.add(cape);
-const coat = cape; // afterimage / legacy alias
-
-function ball(r = .07) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 12), jointMat); m.castShadow = true; return m; }
-function seg(r, len, segs = 10) {
-  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(.01, len - r * 2), 4, segs), woodMat);
-  m.castShadow = true; return m;
+/** Hood as open cloth cone framing the face (Lathe with front gap). */
+function makeHoodGeo() {
+  const profile = [[.01, .48], [.08, .38], [.16, .22], [.2, .08], [.21, -.02], [.19, -.12], [.15, -.2]].map(([r, y]) => new THREE.Vector2(r, y));
+  // leave ~95° opening at front
+  return new THREE.LatheGeometry(profile, 28, Math.PI * 0.28, Math.PI * 1.55);
 }
 
-// Pelvis + torso (segmented)
-const pelvis = new THREE.Group(); pelvis.position.y = .92; body.add(pelvis);
-const pelvisMesh = new THREE.Mesh(new THREE.BoxGeometry(.28, .16, .18, 2, 2, 2), woodMat); pelvisMesh.castShadow = true; pelvis.add(pelvisMesh);
-const waist = new THREE.Group(); waist.position.y = .12; pelvis.add(waist);
-waist.add(ball(.055));
-const torso = new THREE.Group(); torso.position.y = .08; waist.add(torso);
-const chest = new THREE.Mesh(new THREE.BoxGeometry(.32, .38, .2, 2, 3, 2), woodMat); chest.position.y = .2; chest.castShadow = true; torso.add(chest);
-const shoulders = new THREE.Group(); shoulders.position.y = .42; torso.add(shoulders);
-const shoulderBar = new THREE.Mesh(new THREE.CapsuleGeometry(.04, .36, 4, 10), woodMat); shoulderBar.rotation.z = Math.PI / 2; shoulderBar.castShadow = true; shoulders.add(shoulderBar);
+function makeChestGeo() {
+  // tapered artist-mannequin chest via lathe
+  const profile = [[.04, .0], [.14, .04], [.17, .12], [.18, .22], [.16, .32], [.12, .4], [.07, .46]].map(([r, y]) => new THREE.Vector2(r, y));
+  return new THREE.LatheGeometry(profile, 28);
+}
+function makePelvisGeo() {
+  const profile = [[.05, 0], [.13, .02], [.14, .08], [.12, .14], [.08, .18]].map(([r, y]) => new THREE.Vector2(r, y));
+  return new THREE.LatheGeometry(profile, 24);
+}
+function makeAbdomenGeo() {
+  const profile = [[.06, 0], [.09, .03], [.1, .1], [.09, .16], [.07, .2]].map(([r, y]) => new THREE.Vector2(r, y));
+  return new THREE.LatheGeometry(profile, 20);
+}
 
-// Head + tall pointed hood + white mask with red ring eye (upper-left)
-const head = new THREE.Group(); head.position.y = .22; shoulders.add(head);
-head.add(ball(.06));
-const hood = new THREE.Mesh(new THREE.SphereGeometry(.2, 28, 22), darkMat); hood.scale.set(1.05, 1.2, 1.1); hood.position.set(0, .1, -.02); head.add(hood);
-const peak = new THREE.Mesh(new THREE.ConeGeometry(.14, .42, 20), darkMat); peak.position.set(0, .42, -.06); peak.rotation.x = -.35; head.add(peak);
-const face = new THREE.Mesh(new THREE.SphereGeometry(.145, 24, 18), maskMat); face.scale.set(.85, 1.05, .55); face.position.set(0, .08, .14); head.add(face);
-const eyeRing = new THREE.Mesh(new THREE.TorusGeometry(.045, .01, 10, 28), eyeRingMat); eyeRing.position.set(-.04, .11, .22); eyeRing.scale.set(1, 1.05, 1); head.add(eyeRing);
-const eyeDot = new THREE.Mesh(new THREE.SphereGeometry(.018, 12, 10), eyeMat); eyeDot.position.set(-.04, .11, .235); head.add(eyeDot);
-const hoodRim = eyeRing; // legacy alias used nowhere critical
+const hero = new THREE.Group(); scene.add(hero);
+const body = new THREE.Group(); hero.add(body);
+
+function ball(r = .065) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 14), jointMat); m.castShadow = true; addOutline(m, 1.06); return m; }
+function seg(r, len, segs = 12) {
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(.01, len - r * 2), 5, segs), woodMat);
+  m.castShadow = true; addOutline(m, 1.05); return m;
+}
+
+// --- Skeleton / torso (artist mannequin proportions) ---
+const pelvis = new THREE.Group(); pelvis.position.y = .9; body.add(pelvis);
+const pelvisMesh = new THREE.Mesh(makePelvisGeo(), woodMat); pelvisMesh.castShadow = true; addOutline(pelvisMesh, 1.04); pelvis.add(pelvisMesh);
+const waist = new THREE.Group(); waist.position.y = .16; pelvis.add(waist);
+waist.add(ball(.05));
+const abdomen = new THREE.Mesh(makeAbdomenGeo(), woodMat); abdomen.position.y = .02; abdomen.castShadow = true; addOutline(abdomen, 1.04); waist.add(abdomen);
+const torso = new THREE.Group(); torso.position.y = .2; waist.add(torso);
+const chest = new THREE.Mesh(makeChestGeo(), woodMat); chest.castShadow = true; addOutline(chest, 1.035); torso.add(chest);
+const shoulders = new THREE.Group(); shoulders.position.y = .44; torso.add(shoulders);
+const shoulderBar = new THREE.Mesh(new THREE.CapsuleGeometry(.035, .34, 4, 12), woodMat);
+shoulderBar.rotation.z = Math.PI / 2; shoulderBar.castShadow = true; addOutline(shoulderBar, 1.06); shoulders.add(shoulderBar);
+
+// Neck joint
+const neck = new THREE.Group(); neck.position.y = .12; shoulders.add(neck);
+neck.add(ball(.045));
+const neckSeg = seg(.035, .1, 10); neckSeg.position.y = .05; neck.add(neckSeg);
+
+// Head + open hatched hood + matte mask
+const head = new THREE.Group(); head.position.y = .14; neck.add(head);
+const hood = new THREE.Mesh(makeHoodGeo(), hoodMat); hood.position.set(0, .08, -.02); hood.castShadow = true; head.add(hood);
+addOutline(hood, 1.03);
+const peak = new THREE.Mesh(new THREE.ConeGeometry(.11, .28, 18), hoodMat); peak.position.set(0, .48, -.04); peak.rotation.x = -.25; head.add(peak); addOutline(peak, 1.04);
+const face = new THREE.Mesh(new THREE.SphereGeometry(.13, 28, 22), maskMat); face.scale.set(.88, 1.08, .52); face.position.set(0, .1, .13); head.add(face);
+// geometric red ring + pupil (matte-ish, low emissive)
+const eyeRing = new THREE.Mesh(new THREE.TorusGeometry(.042, .008, 12, 32), eyeRingMat); eyeRing.position.set(-.038, .125, .205); head.add(eyeRing);
+const eyeDot = new THREE.Mesh(new THREE.SphereGeometry(.014, 12, 10), eyeMat); eyeDot.position.set(-.038, .125, .218); head.add(eyeDot);
+const hoodRim = eyeRing;
 
 function mkArm(side) {
-  const root = new THREE.Group(); root.position.set(side * .28, 0, 0); shoulders.add(root);
-  root.add(ball(.065));
-  const upper = seg(.045, .32); upper.position.y = -.16; root.add(upper);
-  const elbow = new THREE.Group(); elbow.position.y = -.32; root.add(elbow);
-  elbow.add(ball(.055));
-  const fore = seg(.038, .28); fore.position.y = -.14; elbow.add(fore);
-  const wrist = new THREE.Group(); wrist.position.y = -.28; elbow.add(wrist);
-  const hand = new THREE.Mesh(new THREE.SphereGeometry(.055, 14, 12), handMat); hand.castShadow = true; wrist.add(hand);
+  const root = new THREE.Group(); root.position.set(side * .26, 0, 0); shoulders.add(root);
+  root.add(ball(.06));
+  const upper = seg(.042, .3); upper.position.y = -.15; root.add(upper);
+  const elbow = new THREE.Group(); elbow.position.y = -.3; root.add(elbow);
+  elbow.add(ball(.05));
+  const fore = seg(.036, .26); fore.position.y = -.13; elbow.add(fore);
+  const wrist = new THREE.Group(); wrist.position.y = -.26; elbow.add(wrist);
+  const hand = new THREE.Mesh(new THREE.SphereGeometry(.05, 14, 12), handMat); hand.castShadow = true; addOutline(hand, 1.06); wrist.add(hand);
   root.userData = { elbow, wrist, hand, upper, fore }; return root;
 }
 const armL = mkArm(1), armR = mkArm(-1);
 
 function mkLeg(side) {
-  const root = new THREE.Group(); root.position.set(side * .1, -.02, 0); pelvis.add(root);
-  root.add(ball(.065));
-  const thigh = seg(.055, .38); thigh.position.y = -.19; root.add(thigh);
-  const knee = new THREE.Group(); knee.position.y = -.38; root.add(knee);
-  knee.add(ball(.055));
-  const shin = seg(.045, .36); shin.position.y = -.18; knee.add(shin);
-  const ankle = new THREE.Group(); ankle.position.y = -.36; knee.add(ankle);
-  ankle.add(ball(.045));
-  const foot = new THREE.Mesh(new THREE.SphereGeometry(.07, 14, 10), woodMat);
-  foot.scale.set(1.1, .45, 1.7); foot.position.set(0, -.04, .04); foot.castShadow = true; ankle.add(foot);
+  const root = new THREE.Group(); root.position.set(side * .09, .02, 0); pelvis.add(root);
+  root.add(ball(.06));
+  const thigh = seg(.05, .36); thigh.position.y = -.18; root.add(thigh);
+  const knee = new THREE.Group(); knee.position.y = -.36; root.add(knee);
+  knee.add(ball(.05));
+  const shin = seg(.042, .34); shin.position.y = -.17; knee.add(shin);
+  const ankle = new THREE.Group(); ankle.position.y = -.34; knee.add(ankle);
+  ankle.add(ball(.042));
+  const foot = new THREE.Mesh(new THREE.SphereGeometry(.065, 14, 10), woodMat);
+  foot.scale.set(1.05, .42, 1.65); foot.position.set(0, -.035, .035); foot.castShadow = true; addOutline(foot, 1.05); ankle.add(foot);
   root.userData = { knee, ankle, foot, thigh, shin }; return root;
 }
 const legL = mkLeg(1), legR = mkLeg(-1);
 
-// Keep body-local Y similar to old character (~1.7 head height from feet)
-// feet at pelvis.y + leg length ≈ 0.92 - 0.02 - 0.38 - 0.36 - 0.04 ≈ 0.12 — lift body so feet near 0
-body.position.y = -.08;
+// Cape last so it layers behind shoulders visually; offset back so TPV isn't blocked
+const cape = new THREE.Mesh(makeCapeGeo(), capeMat);
+cape.position.set(-.02, -.02, -.04); cape.scale.set(.92, .96, .92);
+cape.renderOrder = 1; body.add(cape);
+const coat = cape;
+// thin dark edge ribbon via scaled backface clone
+const capeEdge = new THREE.Mesh(cape.geometry, outlineMat);
+capeEdge.scale.setScalar(1.02); cape.add(capeEdge);
 
-const heroLight = new THREE.PointLight(0xb070ff, 1.6, 8, 2); heroLight.position.set(0, 1.5, .8); hero.add(heroLight);
+body.position.y = -.06;
+
+// Soft fill light (not purple blowout on mask)
+const heroLight = new THREE.PointLight(0xc8b8ff, .55, 6, 2); heroLight.position.set(0, 1.55, .9); hero.add(heroLight);
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); blob.rotation.x = -Math.PI / 2; scene.add(blob);
 const footRing = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .55 })); footRing.rotation.x = -Math.PI / 2; scene.add(footRing);
-const heroMats = [capeMat, woodMat, jointMat, darkMat, voidMat, handMat, maskMat];
+const heroMats = [capeMat, woodMat, jointMat, hoodMat, voidMat, handMat, maskMat, eyeMat, eyeRingMat];
 
-// Marionette strings (4): head, L hand, R hand, shoulders — rise ~30m and fade
+// Marionette strings
 const STRING_LEN = 32, STRING_SEGS = 28;
 const stringMat = new THREE.LineBasicMaterial({ color: 0xff2248, transparent: true, opacity: .8, depthWrite: false, blending: THREE.AdditiveBlending });
 const stringLines = [];
 const stringAttach = [
-  () => { const v = new V3(0, .55, 0); head.localToWorld(v); return v; },
+  () => { const v = new V3(0, .52, 0); head.localToWorld(v); return v; },
   () => { const v = new V3(); armL.userData.hand.getWorldPosition(v); return v; },
   () => { const v = new V3(); armR.userData.hand.getWorldPosition(v); return v; },
-  () => { const v = new V3(0, .05, 0); shoulders.localToWorld(v); return v; },
+  () => { const v = new V3(0, .04, 0); shoulders.localToWorld(v); return v; },
 ];
 for (let s = 0; s < 4; s++) {
   const g = new THREE.BufferGeometry();
   const arr = new Float32Array((STRING_SEGS + 1) * 3);
   g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
   const line = new THREE.Line(g, stringMat.clone());
-  line.frustumCulled = false; hero.add(line); // added to hero so moves; we'll set world-ish via local after update
-  // Actually better as scene children updated in world space
-  hero.remove(line); scene.add(line);
+  line.frustumCulled = false; scene.add(line);
   stringLines.push({ line, arr: g.attributes.position, ph: s * 1.7 });
 }
-
 function updateStrings(dt, glitching) {
   const t = S.t;
   for (let s = 0; s < 4; s++) {
     const att = stringAttach[s]();
     const sl = stringLines[s];
-    const flicker = glitching ? (.55 + Math.random() * .45) : .75;
-    sl.line.material.opacity = flicker * (glitching ? 1 : .8);
-    if (glitching) sl.line.material.color.setRGB(2.4, .2 + Math.random() * .3, .5 + Math.random() * .4);
-    else sl.line.material.color.setRGB(2.1, .15, .3);
+    const flicker = glitching ? (.55 + Math.random() * .45) : .72;
+    sl.line.material.opacity = flicker * (glitching ? 1 : .78);
+    if (glitching) sl.line.material.color.setRGB(2.2, .18 + Math.random() * .25, .45);
+    else sl.line.material.color.setRGB(1.9, .12, .28);
     for (let i = 0; i <= STRING_SEGS; i++) {
       const u = i / STRING_SEGS;
       const y = att.y + u * STRING_LEN;
-      const wave = Math.sin(t * 2.2 + sl.ph + u * 6 + anim.sway.x * 8) * (.04 + u * .12) * (1 + anim.run * .5 + anim.air * .8);
-      const wave2 = Math.cos(t * 1.7 + sl.ph * 1.3 + u * 5) * (.03 + u * .1) * (1 + anim.air);
-      // drift with velocity limp
-      const driftX = anim.sway.x * u * 14;
-      const driftZ = anim.sway.z * u * 14;
-      sl.arr.setXYZ(i, att.x + wave + driftX, y, att.z + wave2 + driftZ);
+      const wave = Math.sin(t * 2.2 + sl.ph + u * 6 + anim.sway.x * 8) * (.035 + u * .1) * (1 + anim.run * .4 + anim.air * .7);
+      const wave2 = Math.cos(t * 1.7 + sl.ph * 1.3 + u * 5) * (.025 + u * .08) * (1 + anim.air);
+      sl.arr.setXYZ(i, att.x + wave + anim.sway.x * u * 12, y, att.z + wave2 + anim.sway.z * u * 12);
     }
-    sl.arr.needsUpdate = true;
-    sl.line.visible = true;
+    sl.arr.needsUpdate = true; sl.line.visible = true;
   }
 }
 
-// Nachbilder — new silhouette (cape + hood + torso stub)
+// Afterimages
 const ghosts = [];
 const ghostCapeGeo = cape.geometry;
 const ghostHoodGeo = hood.geometry;
@@ -817,8 +892,8 @@ for (let i = 0; i < 20; i++) {
   const g = new THREE.Group();
   const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(.4, 1.4, 2.2), transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false });
   const c = new THREE.Mesh(ghostCapeGeo, m);
-  const h = new THREE.Mesh(ghostHoodGeo, m); h.scale.copy(hood.scale); h.position.set(0, 1.55, -.02);
-  const torsoG = new THREE.Mesh(new THREE.CapsuleGeometry(.12, .55, 4, 8), m); torsoG.position.set(0, 1.15, 0);
+  const h = new THREE.Mesh(ghostHoodGeo, m); h.position.set(0, 1.5, -.02);
+  const torsoG = new THREE.Mesh(new THREE.CapsuleGeometry(.1, .5, 4, 8), m); torsoG.position.set(0, 1.1, 0);
   g.add(c, h, torsoG); g.visible = false; scene.add(g); ghosts.push({ g, m, life: 0, a: .4 });
 }
 let ghostIdx = 0;
@@ -893,7 +968,7 @@ const ABIL = {
 };
 const VIEWS = ['TPV', 'FPV', 'GEOMETRIC', 'EYE VIEW'];
 const LAYERS = ['NORMAL', 'DEPTH', 'SYSTEM', 'GLITCH', 'RESONANCE'];
-const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 6.5, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
+const S = { started: false, paused: false, t: 0, worldT: 0, timeScale: 1, view: 0, layer: 0, yaw: 0, pitch: .32, zoom: 9.2, geoH: 18, glitchFx: 0, flash: 0, finale: -1, collected: 0, zone: '', lookIdle: 0, zoneT: 0 };
 let saved = []; try { saved = JSON.parse(localStorage.getItem('eyecore.v1') || '[]'); } catch (e) { }
 frags.forEach(f => { if (saved.includes(f.id)) { f.got = true; f.g.visible = false; } });
 S.collected = frags.filter(f => f.got).length;
@@ -1010,7 +1085,7 @@ canvas.addEventListener('pointermove', e => {
 });
 const endPtr = e => { const p = ptrs.get(e.pointerId); if (!p) return; if (p.type === 'joy') joy.classList.remove('on'); ptrs.delete(e.pointerId); };
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr); canvas.addEventListener('lostpointercapture', endPtr);
-canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 16, 100); else S.zoom = clamp(S.zoom + e.deltaY * .006, 3, 16); }, { passive: false });
+canvas.addEventListener('wheel', e => { e.preventDefault(); if (S.view === 2) S.geoH = clamp(S.geoH + e.deltaY * .05, 16, 100); else S.zoom = clamp(S.zoom + e.deltaY * .006, 4.5, 18); }, { passive: false });
 document.addEventListener('touchmove', e => { if (!e.target.closest('.ov')) e.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault()); document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
@@ -1311,17 +1386,17 @@ function updateHero(dt) {
   anim.sway.x = damp(anim.sway.x, -lx * .028, 6, dt);
   anim.sway.z = damp(anim.sway.z, -lz * .035 - rs * .06, 6, dt);
   anim.sway.y = damp(anim.sway.y, clamp(-v.y * .014, -.12, .28), 6, dt);
-  coatU.uSway.value.copy(anim.sway); coatU.uFlap.value = clamp(rs + air + limp * .4, 0, 1.6); coatU.uTime.value = S.t;
+  coatU.uSway.value.copy(anim.sway); coatU.uFlap.value = clamp(rs * .7 + air * .5 + limp * .25, 0, 1.0); coatU.uTime.value = S.t;
   P.landT -= dt;
 
   const glitching = P.phase || P.shift || ABIL.skip.act > 0 || ABIL.gj.act > 0 || ABIL.drift.act > 0;
   const fl = glitching && Math.random() < .14;
   body.position.x = fl ? (Math.random() - .5) * .25 : 0;
-  capeMat.emissiveIntensity = fl ? 2.2 : (P.phase ? 1.6 : .55);
-  woodMat.emissiveIntensity = fl ? 1.2 : .35;
+  capeMat.emissiveIntensity = fl ? .55 : (P.phase ? .35 : .12);
+  woodMat.emissiveIntensity = fl ? .55 : .22;
   const op = P.phase ? .45 + Math.sin(S.t * 30) * .1 : 1;
   heroMats.forEach(m => { m.opacity = op; });
-  capeMat.emissive.setRGB(...(P.phase ? [.4, 1.2, 1.4] : P.shift ? [1.2, .5, 1.4] : [1, 1, 1]));
+  capeMat.emissive.setRGB(...(P.phase ? [.25, .6, .7] : P.shift ? [.6, .3, .7] : [.12, .1, .08]));
 
   // Views: hide bulky mesh in FPV but keep hands + strings
   const isFPV = S.view === 1;
