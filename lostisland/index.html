@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Lost Island</title>
-<meta name="description" content="Eine kleine Insel im All – tipp die Wesen an, beobachte den Mond.">
+<meta name="description" content="Eine kleine Insel im All – beobachte den Mond und das Leben auf der Insel.">
 <meta name="theme-color" content="#0a0e1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -38,13 +38,7 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
 #islandFull{opacity:0;pointer-events:none} /* fallback ref */
 #canopy{position:absolute;left:6.35%;top:15.97%;width:49.16%;height:auto;transform-origin:55% 95%;
   will-change:transform;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
-#canopy img{width:100%;height:auto;display:block;-webkit-user-drag:none}
-.char{position:absolute;width:12.5%;cursor:pointer;transform-origin:50% 92%;will-change:transform;z-index:3;
-  touch-action:manipulation;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}
-.char img{width:100%;height:auto;display:block;pointer-events:none;-webkit-user-drag:none}
-#cBench{left:21%;top:33%;width:13.5%;z-index:4}   /* on red bench under willow */
-#cDoor{left:61%;top:41%;width:12.5%;z-index:4}     /* at lighthouse door */
-#cGrass{left:43%;top:49%;width:12%;z-index:3}       /* open grass mid */
+#canopy img{width:100%;height:auto;display:block;-webkit-user-drag:none}   /* on red bench under willow */     /* at lighthouse door */       /* open grass mid */
 .creature{position:absolute;will-change:transform;pointer-events:none;z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
 .creature img{width:100%;height:auto;display:block;-webkit-user-drag:none}
 #pet{left:14%;top:56%;width:11%;display:none}
@@ -75,7 +69,7 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
   transform:translate(-50%,-100%);animation:bub 1.45s ease-out forwards;z-index:7}
 .bub::after{content:"";position:absolute;left:36%;bottom:-5px;width:10px;height:10px;background:rgba(255,255,255,.93);transform:rotate(45deg);border-radius:2px}
 @keyframes bub{0%{opacity:0;margin-top:10px;scale:.55}14%{opacity:1;margin-top:0;scale:1.06}24%{scale:1}72%{opacity:1}100%{opacity:0;margin-top:-24px}}
-@media (prefers-reduced-motion:reduce){#moon,#world,#canopy,.char,.creature{animation:none!important}}
+@media (prefers-reduced-motion:reduce){#moon,#world,#canopy,.creature{animation:none!important}}
 </style>
 </head>
 <body>
@@ -87,9 +81,6 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
   <div id="world">
     <img id="islandBase" src="img/island-base.png" alt="Lost Island" draggable="false">
     <div id="canopy"><img src="img/tree-canopy.png" alt="" draggable="false"></div>
-    <div class="char" id="cBench" data-id="bench" role="button" aria-label="Wesen auf der Bank"><img src="img/char-bench.png" alt=""></div>
-    <div class="char" id="cDoor" data-id="door" role="button" aria-label="Wesen an der Tür"><img src="img/char-door.png" alt=""></div>
-    <div class="char" id="cGrass" data-id="grass" role="button" aria-label="Wesen im Gras"><img src="img/char-grass.png" alt=""></div>
     <div class="creature" id="pet"><img src="img/pet.png" alt=""></div>
     <div class="creature" id="squirrel"><img src="img/squirrel.png" alt=""></div>
   </div>
@@ -102,7 +93,7 @@ body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;touch-action:n
   <div class="row"><span class="lbl">Lautstärke</span><input type="range" id="vol" min="0" max="100" value="55"></div>
   <div class="row"><span class="lbl">Pet</span><button type="button" id="btnPet">AUS</button></div>
   <div class="row"><span class="lbl">Eichhörnchen</span><button type="button" id="btnSq">AUS</button></div>
-  <div class="hint">Ruhige Insel zum Beobachten.<br>Tippe die Wesen an · Mond wandert.<br>Kein Gewinn/Verlust.</div>
+  <div class="hint">Ruhige Insel zum Beobachten.<br>Mond wandert · Leben auf der Insel.<br>Kein Gewinn/Verlust.</div>
 </div>
 <script>
 (()=>{
@@ -141,34 +132,7 @@ function moonPos(t){
   };
 }
 
-/* ---- characters ---- */
-const CHAR_WORDS={
-  bench:['…','still.','hm.','bank.'],
-  door:['grr.','booh.','…!','tür.'],
-  grass:['oh.','hihi.','ja.','…']
-};
-const chars=[
-  {el:$('cBench'), id:'bench', react:-9, blinkPh:rnd(0,4)},
-  {el:$('cDoor'), id:'door', react:-9, blinkPh:rnd(0,4)},
-  {el:$('cGrass'), id:'grass', react:-9, blinkPh:rnd(0,4)}
-];
-let lastBub=0;
-function bubble(el, txt){
-  if(T-lastBub<0.35) return; lastBub=T;
-  const r=el.getBoundingClientRect();
-  const d=document.createElement('div'); d.className='bub'; d.textContent=txt;
-  d.style.left=(r.left+r.width/2)+'px'; d.style.top=(r.top+6)+'px';
-  document.body.appendChild(d); setTimeout(()=>d.remove(),1500);
-}
-function reactChar(c){
-  c.react=T; ensureAudio(); softPing(c.id);
-  const w=CHAR_WORDS[c.id]; bubble(c.el, w[(Math.random()*w.length)|0]);
-  // juicy particles at character
-  const r=c.el.getBoundingClientRect();
-  burst(r.left+r.width/2, r.top+r.height*0.4, 16);
-}
-chars.forEach(c=>{
-  c.el.addEventListener('pointerdown', e=>{e.preventDefault();e.stopPropagation();reactChar(c)},{passive:false});
+/* characters removed */
 });
 
 /* ---- pet / squirrel insertable ---- */
@@ -342,23 +306,6 @@ function frame(now){
   moon.style.transform=`translate(${(m.x-mw/2).toFixed(1)}px,${(m.y-mw/2).toFixed(1)}px) scale(${m.s.toFixed(3)})`;
   moon.style.opacity=m.a.toFixed(3);
 
-  // characters idle + juicy react
-  chars.forEach((c,i)=>{
-    const idle=Math.sin(T*(1.05+i*0.17)+i)*2.4;
-    const blink=((T*0.65+c.blinkPh)%5.0)>4.55;
-    let ty=idle, rot=0, sx=1, sy=1;
-    if(c.react>=0 && T-c.react<0.85){
-      const k=(T-c.react)/0.85;
-      const bounce=Math.sin(k*Math.PI)*18*(1-k*0.3);
-      ty-=bounce;
-      rot=Math.sin(k*Math.PI*4)*12*(1-k);
-      sy=1-0.18*Math.sin(k*Math.PI);
-      sx=1+0.14*Math.sin(k*Math.PI);
-    }
-    // blink via scaleY on whole char slightly for photo-like sprites
-    if(blink) sy*=0.92;
-    c.el.style.transform=`translateY(${ty.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
-  });
 
   // pet roam
   if(showPet){
@@ -513,11 +460,6 @@ function frame(now){
     cx.globalAlpha=1;
   }
 
-  // rare idle murmur
-  if(Math.random()<dt/45){
-    const c=chars[(Math.random()*chars.length)|0];
-    bubble(c.el, CHAR_WORDS[c.id][(Math.random()*CHAR_WORDS[c.id].length)|0]);
-  }
 
   requestAnimationFrame(frame);
 }

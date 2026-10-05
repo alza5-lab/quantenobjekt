@@ -1,9 +1,8 @@
-const CACHE='lostisland-v2';
+const CACHE='lostisland-v3';
 const ASSETS=[
   './','./index.html','./manifest.webmanifest',
   './apple-touch-icon.png','./icon-192.png','./icon-512.png','./icon-maskable-512.png',
   './img/stars.jpg','./img/island-base.png','./img/tree-canopy.png','./img/water-mask.png',
-  './img/char-bench.png','./img/char-grass.png','./img/char-door.png',
   './img/pet.png','./img/squirrel.png','./img/moon.png','./img/moth.png','./img/bee.png'
 ];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});
