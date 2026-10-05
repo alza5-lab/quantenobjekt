@@ -1338,5 +1338,32 @@ const EC = window.__EC = {
   start() { el('b-start').click(); }, collect: i => collect(frags[i]), reset: resetGame,
 };
 updateHUDStats(); resize(); requestAnimationFrame(loop);
+
+// Card capture helper (?card=1)
+if (/[?&]card=1(?:&|$)/.test(location.search)) {
+  document.documentElement.classList.add('card');
+  EC.cardPose = function () {
+    setQuality('ultra');
+    S.started = true; S.paused = false; S.view = 0; S.layer = 0; S.glitchFx = 0.18; S.flash = 0; S.timeScale = 1;
+    const st = document.getElementById('start'); if (st) st.classList.remove('on');
+    // Clear visible ghosts
+    for (const gh of ghosts) { gh.life = 0; gh.g.visible = false; }
+    // Pose near tower + TURM portal
+    P.pos.set(6.0, 2.15, 26.0); P.vel.set(0, 0, 0); P.grounded = false; P.airT = 0.5; P.facing = Math.PI + 0.4;
+    camTarget.set(6.0, 2.0, 26.0);
+    S.yaw = Math.PI + 0.78; S.pitch = 0.14; S.zoom = 5.6;
+    anim.ph = 1.1; anim.lean = 0.22; anim.air = 1;
+    armL.rotation.x = 1.05; armR.rotation.x = -0.35;
+    legL.rotation.x = -0.85; legR.rotation.x = 0.65;
+    hero.rotation.y = P.facing; hero.position.copy(P.pos);
+    // Two soft afterimages only
+    const bak = hero.position.clone();
+    hero.position.set(6.15, 1.55, 26.55); spawnGhost(new THREE.Color(0.45, 1.6, 2.4), 0.28);
+    hero.position.set(6.3, 1.1, 27.05); spawnGhost(new THREE.Color(0.35, 1.3, 2.1), 0.18);
+    hero.position.copy(bak);
+    render();
+  };
+}
+
 window.__EC_READY = true;
 if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => { }));

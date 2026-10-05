@@ -156,10 +156,17 @@ padding:calc(var(--sat) + 14px) calc(var(--sar) + 14px) calc(var(--sab) + 14px) 
  body.touch #a-jump{width:80px;height:80px}
  body.touch #a-gj{right:94px;width:62px;height:62px}
 }
+
+/* card capture mode — hide all HUD/overlays */
+html.card #hud, html.card #start, html.card #menu, html.card #final, html.card #flash { display:none !important; }
+html.card body { background:#000; }
+html.card canvas#c { display:block; width:100vw; height:100vh; }
 </style>
 <script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
 </head>
 <body>
+<script>if(/[?&]card=1(?:&|$)/.test(location.search))document.documentElement.classList.add('card');</script>
+
 <canvas id="c"></canvas>
 <div id="hud">
   <div id="compass"></div><div id="cmark"></div>
