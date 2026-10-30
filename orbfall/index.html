@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ORBFALL">
+<title>ORBFALL // UNIT 33-3 · shivas_ocean</title>
+<meta name="description" content="Third-Person-Shooter im Browser. UNIT 33-3 gegen die Orbs. Deathmatch Count.">
+<meta property="og:title" content="ORBFALL // UNIT 33-3">
+<meta property="og:description" content="Die Orbs kamen aus dem Signal. Zähl sie. Zerstör sie. Halt den Kern.">
+<meta property="og:image" content="https://alza5-lab.github.io/quantenobjekt/orbfall/og.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="load"><div class="lw"><h1>ORBFALL</h1><p id="loadt">UNIT 33-3 BOOTET</p><div class="lbar"><i></i></div></div></div>
+
+<div id="hud" class="hidden">
+  <div id="top">
+    <div class="st"><b>KILLS</b><span id="kills">000</span></div>
+    <div class="st"><b id="timel">TIME</b><span id="time">03:00</span></div>
+    <div class="st"><b>WAVE</b><span id="wave">01</span></div>
+    <div class="st mult"><b>COMBO</b><span id="mult">x1</span><i id="combobar"></i></div>
+  </div>
+  <div id="score">0</div>
+  <div id="boss" class="hidden"><b>CORE ORB</b><div class="bar"><i id="bosshp"></i></div></div>
+  <div id="xh"><i></i><i></i><i></i><i></i><span id="hitm"></span></div>
+  <div id="charge"><i id="chargebar"></i></div>
+  <div id="bl">
+    <div class="lab">UNIT 33-3</div>
+    <div class="bar sh"><i id="shbar"></i></div>
+    <div class="bar hp"><i id="hpbar"></i></div>
+    <div id="hpv">100 HP · 50 SCHILD</div>
+  </div>
+  <div id="br">
+    <div id="ammo">36<small>/36</small></div>
+    <div id="reload">NACHLADEN</div>
+    <div id="skill">SCHOCKWELLE <span id="skillv">BEREIT</span></div>
+    <div id="over" class="hidden">OVERCHARGE</div>
+  </div>
+  <div id="banner"><b id="bt"></b><span id="bs"></span></div>
+  <div id="toast"></div>
+  <div id="popups"></div>
+  <div id="vig"></div>
+  <div id="hint">Klick ins Bild zum Zielen</div>
+</div>
+
+<div id="touch" class="hidden">
+  <div id="tzl"><div id="sbase"><div id="sknob"></div></div></div>
+  <div id="tzr"></div>
+  <button id="bf" class="tb big">FEUER</button>
+  <button id="bj" class="tb">SPRUNG</button>
+  <button id="bc" class="tb">LADUNG</button>
+  <button id="bq" class="tb">SCHOCK</button>
+  <button id="brl" class="tb sm">R</button>
+  <button id="bv" class="tb sm">EGO</button>
+  <button id="bp" class="tb sm">II</button>
+</div>
+
+<div id="menu" class="scr hidden">
+  <div class="panel">
+    <h1>ORBFALL</h1>
+    <div class="online"><i></i>UNIT 33-3 ONLINE</div>
+    <p class="story">Die Orbs kamen aus dem Signal. Niemand hat sie gerufen. UNIT 33-3 ist der letzte Wächter des Kerns.<br><b>Zähl sie. Zerstör sie. Halt den Kern.</b></p>
+    <div class="mode">
+      <div class="ml">DEATHMATCH COUNT</div>
+      <div class="seg" id="modes">
+        <button data-m="time" data-v="60">1 MIN</button>
+        <button data-m="time" data-v="180" class="on">3 MIN</button>
+        <button data-m="time" data-v="300">5 MIN</button>
+        <button data-m="count" data-v="25">25 KILLS</button>
+        <button data-m="count" data-v="50">50 KILLS</button>
+        <button data-m="count" data-v="100">100 KILLS</button>
+      </div>
+      <div class="hs" id="menuhs">HIGHSCORE 0</div>
+    </div>
+    <button id="startbtn" class="cta">START DEATHMATCH</button>
+    <button id="setbtn" class="ghost">EINSTELLUNGEN</button>
+    <div id="settings" class="hidden">
+      <div class="row"><span>QUALITÄT</span><div class="seg" id="qsel"><button data-q="auto">AUTO</button><button data-q="0">ULTRA</button><button data-q="1">HOCH</button><button data-q="2">MITTEL</button><button data-q="3">NIEDRIG</button></div></div>
+      <div class="row"><span>ANSICHT</span><div class="seg" id="vsel"><button data-v="tps">THIRD PERSON</button><button data-v="fps">EGO</button></div></div>
+      <div class="row"><span>EMPFINDLICHKEIT</span><input type="range" id="sens" min="0.3" max="2.5" step="0.05" value="1"></div>
+      <div class="row"><span>TON</span><div class="seg" id="ssel"><button data-s="1">AN</button><button data-s="0">AUS</button></div></div>
+      <div class="row"><span>Y-ACHSE</span><div class="seg" id="isel"><button data-i="0">NORMAL</button><button data-i="1">INVERTIERT</button></div></div>
+    </div>
+    <div class="ctrl" id="ctrlhelp"></div>
+    <div class="credit">shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+</div>
+
+<div id="pause" class="scr hidden">
+  <div class="panel small">
+    <h2>PAUSE</h2>
+    <button id="resbtn" class="cta">WEITER</button>
+    <button id="pviewbtn" class="ghost">ANSICHT WECHSELN</button>
+    <button id="pmenubtn" class="ghost">MENÜ</button>
+    <div class="credit">shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+</div>
+
+<div id="end" class="scr hidden">
+  <div class="panel small">
+    <h2 id="endt">COUNT COMPLETE</h2>
+    <div class="grid">
+      <div><b>KILLS</b><span id="e_k">0</span></div>
+      <div><b>SCORE</b><span id="e_s">0</span></div>
+      <div><b>ACCURACY</b><span id="e_a">0%</span></div>
+      <div><b>BESTE COMBO</b><span id="e_c">x1</span></div>
+      <div><b>WAVE</b><span id="e_w">1</span></div>
+      <div><b>ZEIT</b><span id="e_t">0:00</span></div>
+    </div>
+    <div class="hs" id="e_hs">HIGHSCORE 0</div>
+    <button id="retrybtn" class="cta">NOCHMAL</button>
+    <button id="emenubtn" class="ghost">MENÜ</button>
+    <div class="credit">shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+</div>
+
+<script type="module" src="main.js"></script>
+<script>
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {}));
+</script>
+</body>
+</html>
