@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#020409">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eye of Resonance">
+<title>Eye of Resonance · Das erste System · shivas_ocean</title>
+<meta name="description" content="Ψ = (S³ · F²) / A → Σ(T · R) + ε. Das originale erste System von shivas_ocean als lebende 3D-Formel.">
+<meta property="og:title" content="EYE OF RESONANCE · Das erste System">
+<meta property="og:description" content="Ψ = (S³ · F²) / A → Σ(T · R) + ε. Eine lebende, berührbare 3D-Formel.">
+<meta property="og:image" content="https://alza5-lab.github.io/quantenobjekt/eyeofresonance/og.jpg">
+<meta property="og:url" content="https://alza5-lab.github.io/quantenobjekt/eyeofresonance/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div id="tl">
+    <div class="ttl">EYE OF <b>RESONANCE</b></div>
+    <div class="sub">DAS ORIGINALE ERSTE SYSTEM</div>
+  </div>
+
+  <div id="formula" class="math" aria-label="Psi gleich S hoch drei mal F hoch zwei durch A, Pfeil, Summe T mal R plus Epsilon">
+    <span class="t" data-term="psi">Ψ</span><span class="op">=</span><span class="frac"><span class="num"><span class="t" data-term="S"><i>S</i><sup>3</sup></span><span class="cd">·</span><span class="t" data-term="F"><i>F</i><sup>2</sup></span></span><span class="den"><span class="t" data-term="A"><i>A</i></span></span></span><span class="t ar" data-term="arrow">→</span><span class="t" data-term="sigma">Σ</span><span class="pa">(</span><span class="t" data-term="TR"><i>T</i><span class="cd">·</span><i>R</i></span><span class="pa">)</span><span class="op">+</span><span class="t" data-term="eps"><i>ε</i></span>
+  </div>
+
+  <div id="live" class="panel">
+    <div class="mh">LIVE // RECHNUNG</div>
+    <div class="m"><span>S³</span><i id="vS3">1.000</i></div>
+    <div class="m"><span>F²</span><i id="vF2">2.250</i></div>
+    <div class="m"><span>A</span><i id="vA">1.000</i></div>
+    <div class="m b"><span>S³ · F² / A</span><i id="vN" class="c-cy">2.250</i></div>
+    <div class="m"><span>PULSE / S</span><i id="vP">1.80</i></div>
+    <div class="m b"><span>Σ(T · R)</span><i id="vSig" class="c-au">9.000</i></div>
+    <div class="m"><span>ε · ξ(t)</span><i id="vE">0.000</i></div>
+    <div class="psi"><span>Ψ</span><b id="vPsi">20.25</b></div>
+    <div class="m dim"><span>GRAFIK</span><i id="mQ">ULTRA</i></div>
+  </div>
+
+  <div id="info" class="panel hide">
+    <button id="infoX" aria-label="Schließen">×</button>
+    <div id="iK" class="ik"></div>
+    <div id="iT" class="ih"></div>
+    <div id="iF" class="if"></div>
+    <div id="iM" class="im"></div>
+  </div>
+
+  <div id="tip" class="hide"></div>
+
+  <div id="drawer" class="panel">
+    <div class="dh">REGLER // DIE FORMEL LEBT</div>
+    <label data-k="S"><span><i>S</i> VOLUMEN</span><input id="s_S" type="range" min="0.5" max="1.5" step="0.01"><b id="v_S"></b></label>
+    <label data-k="F"><span><i>F</i> FREQUENZ</span><input id="s_F" type="range" min="0.5" max="3" step="0.01"><b id="v_F"></b></label>
+    <label data-k="A"><span><i>A</i> ABSCHIRMUNG</span><input id="s_A" type="range" min="0.5" max="3" step="0.01"><b id="v_A"></b></label>
+    <label data-k="T"><span><i>T</i> TANGENTE</span><input id="s_T" type="range" min="0" max="2" step="0.01"><b id="v_T"></b></label>
+    <label data-k="R"><span><i>R</i> RESONANZ</span><input id="s_R" type="range" min="0.5" max="1.5" step="0.01"><b id="v_R"></b></label>
+    <label data-k="eps"><span><i>ε</i> UNSCHÄRFE</span><input id="s_eps" type="range" min="0" max="1" step="0.01"><b id="v_eps"></b></label>
+    <div class="qrow"><span>PRESETS</span><div id="presets" class="seg wrap"></div></div>
+    <label class="vol"><span>LAUTSTÄRKE</span><input id="s_vol" type="range" min="0" max="1" step="0.01"><b id="v_vol"></b></label>
+    <div class="qrow"><span>GRAFIK</span><div id="qual" class="seg"><button data-q="0">ULTRA</button><button data-q="1">HOCH</button><button data-q="2">MITTEL</button><button data-q="3">NIEDRIG</button></div></div>
+  </div>
+
+  <div id="bar">
+    <div id="modes" class="seg"><button data-mode="orbit" class="on">ORBIT</button><button data-mode="tour">FORMEL-TOUR</button></div>
+    <div id="acts">
+      <button id="bPulse">PULS</button>
+      <button id="bSnd" aria-label="Ton an oder aus">TON AN</button>
+      <button id="bRec"><s></s>REC</button>
+      <button id="bReset">RESET VIEW</button>
+      <button id="bDrawer" aria-label="Regler ein oder aus">REGLER</button>
+    </div>
+    <div id="hint">TIPPEN: TERM ZEIGEN · ZIEHEN: DREHEN · ZWEI FINGER / RAD: ZOOM</div>
+    <div id="status">Ψ // RESONANZ STABIL</div>
+    <div id="credit">Eye of Resonance · shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+  <div id="rectime" class="hide">● REC 00:00</div>
+  <div id="toast" class="hide"></div>
+</div>
+
+<div id="start">
+  <div class="kv"></div>
+  <div class="sc">
+    <div class="sl">DAS ORIGINALE ERSTE SYSTEM // shivas_ocean</div>
+    <h1>EYE OF <b>RESONANCE</b></h1>
+    <div class="math big">Ψ<span class="op">=</span><span class="frac"><span class="num"><span><i>S</i><sup>3</sup></span><span class="cd">·</span><span><i>F</i><sup>2</sup></span></span><span class="den"><i>A</i></span></span><span class="ar">→</span>Σ<span class="pa">(</span><i>T</i><span class="cd">·</span><i>R</i><span class="pa">)</span><span class="op">+</span><i>ε</i></div>
+    <p class="p2">Volumen und Frequenz bündeln sich im Kern Ψ, die Basis normiert das Feld. Der Vektor trägt die Energie in neun Resonanzringe, die das Summengitter hält. Um alles schwebt die Unschärfe. Jeder Regler verändert die Rechnung und das Bild.</p>
+    <button id="go" disabled>SYSTEM LÄDT …</button>
+    <p class="snd">MIT TON · KOPFHÖRER EMPFOHLEN · IPHONE: STUMMSCHALTER AUS</p>
+    <div class="sh">3D · 360° drehbar · jeder Term antippbar · Live-Rechnung · REC</div>
+    <div class="scr2">Eye of Resonance · shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+</div>
+<noscript>Bitte JavaScript aktivieren.</noscript>
+<script type="module" src="main.js"></script>
+</body>
+</html>
