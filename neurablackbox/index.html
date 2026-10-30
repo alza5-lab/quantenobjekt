@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NeuraBlackbox">
+<title>NeuraBlackbox · shivas_ocean</title>
+<meta name="description" content="Jeder Gedanke beginnt als Signal. Tauch ein in die Blackbox, Schicht für Schicht, bis zum Kern.">
+<meta property="og:title" content="NeuraBlackbox · shivas_ocean">
+<meta property="og:description" content="Jeder Gedanke beginnt als Signal. Tauch ein in die Blackbox, Schicht für Schicht, bis zum Kern.">
+<meta property="og:image" content="https://alza5-lab.github.io/quantenobjekt/neurablackbox/og.jpg">
+<meta property="og:url" content="https://alza5-lab.github.io/quantenobjekt/neurablackbox/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<div id="hud">
+  <div id="tl" class="panel">
+    <div class="ico360"><svg viewBox="0 0 60 30" width="46" height="23"><text x="30" y="13" text-anchor="middle">360°</text><ellipse cx="30" cy="21" rx="24" ry="5"/><path d="M50 19 l4 2 -4 2"/></svg></div>
+    <div class="ttl">NEURA<b>BLACKBOX</b></div>
+    <div class="sub">MICROCHIP // ENERGIE-DYNAMIK</div>
+    <div id="lens" class="seg"><button data-lens="bio">BIO</button><button data-lens="machine" class="on">MACHINE</button><button data-lens="human">HUMAN</button></div>
+    <div id="axes" class="axes"></div>
+  </div>
+
+  <div id="metrics" class="panel">
+    <div class="mh">SIMULATION</div>
+    <div class="m"><span>ENERGIE</span><i id="mE">0%</i><em class="bar"><u id="bE"></u></em></div>
+    <div class="m"><span>AKTIVE ORBS</span><i id="mO">0</i></div>
+    <div class="m"><span>SIGNALE/S</span><i id="mS" class="c-cy">0</i></div>
+    <div class="m"><span>VERBINDUNGEN</span><i id="mC" class="c-vi">0</i></div>
+    <div class="m"><span>MUSTER</span><i id="mP" class="c-au">0</i></div>
+    <div class="m"><span>PULSRATE</span><i id="mR" class="c-gr">0 Hz</i></div>
+    <div class="m"><span>LAYER</span><i id="mL">01</i></div>
+    <div class="m dim"><span>MODUS</span><i id="mM">ORBIT</i></div>
+    <div class="m dim"><span>GRAFIK</span><i id="mQ">ULTRA</i></div>
+  </div>
+
+  <div id="stack"></div>
+
+  <div id="info" class="panel hide">
+    <button id="infoX" aria-label="Schließen">×</button>
+    <div id="iT" class="ih"></div>
+    <div id="iG" class="ig"></div>
+    <div id="iL" class="il"></div>
+    <div id="iH" class="ihov"></div>
+    <div id="iM" class="im"></div>
+  </div>
+
+  <div id="linktip" class="hide"></div>
+
+  <div id="walkui" class="hide">
+    <div id="joy"><div id="knob"></div></div>
+    <div id="vbtn"><button id="bUp">HOCH</button><button id="bJump">SPRUNG</button><button id="bDown">RUNTER</button></div>
+    <div id="walkhint">WASD / Joystick · Ziehen = Umsehen · ↑↓ = Layer</div>
+  </div>
+
+  <div id="drawer" class="panel hide">
+    <label><span>ENERGY FLUX</span><input id="sFlux" type="range" min="0" max="1" step="0.01" value="1"><i id="vFlux">1.00</i></label>
+    <label><span>ORBIT DENSITY</span><input id="sDens" type="range" min="0.2" max="1.6" step="0.01" value="1"><i id="vDens">1.00</i></label>
+    <label><span>CORE SCALE</span><input id="sCore" type="range" min="0.5" max="1.6" step="0.01" value="1"><i id="vCore">1.00</i></label>
+    <div class="qrow"><span>GRAFIK</span><div id="qual" class="seg"><button data-q="0" class="on">ULTRA</button><button data-q="1">HOCH</button><button data-q="2">NIEDRIG</button></div></div>
+  </div>
+
+  <div id="bar">
+    <div id="modes" class="seg"><button data-mode="orbit" class="on">ORBIT</button><button data-mode="walk">BEGEHEN</button><button data-mode="cine">KAMERAFAHRT</button></div>
+    <div id="acts">
+      <button id="bExp">EXPAND LAYERS</button>
+      <button id="bEnter">ENTER</button>
+      <button id="bRec"><s></s>REC</button>
+      <button id="bReset">RESET VIEW</button>
+      <button id="bDrawer" aria-label="Regler">≡</button>
+    </div>
+    <div id="status">SYS // NEURABLACKBOX v0.1 · SIGNAL STABLE · LAYERS 4/4</div>
+    <div id="credit">NeuraBlackbox · shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+  <div id="rectime" class="hide">● REC 00:00</div>
+  <div id="toast" class="hide"></div>
+</div>
+
+<div id="start">
+  <div class="kv"></div>
+  <div class="sc">
+    <div class="sl">MICROCHIP / NEURABLACKBOX</div>
+    <h1>NEURA<b>BLACKBOX</b></h1>
+    <p id="intro">Jeder Gedanke beginnt als Signal. Tauch ein in die Blackbox, Schicht für Schicht, bis zum Kern.</p>
+    <button id="go" disabled>LADE SYSTEM …</button>
+    <div class="sh">3D-Simulation · 360° drehbar · begehbar · Kamerafahrt &amp; REC</div>
+    <div class="scr">NeuraBlackbox · shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+</div>
+<noscript>Bitte JavaScript aktivieren.</noscript>
+<script type="module" src="main.js"></script>
+</body>
+</html>

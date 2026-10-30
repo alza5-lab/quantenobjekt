@@ -1,0 +1,64 @@
+{
+  "title": "NeuraBlackbox",
+  "intro": "Jeder Gedanke beginnt als Signal. Tauch ein in die Blackbox, Schicht für Schicht, bis zum Kern.",
+  "axes": {
+    "bio": ["Biologie", "Evolution", "Neurologie"],
+    "human": ["Anthropologie", "Ethik", "Kommunikation"]
+  },
+  "layers": [
+    {
+      "id": "L01", "name": "SIGNAL", "color": "#3ad6ff",
+      "tagline": "Reize treffen ein",
+      "bio": "Sinneszelle, Aktionspotenzial, Ionenkanal",
+      "machine": "Input, Sensor, Bit",
+      "human": "Wahrnehmung: Was erreicht mich?",
+      "nodes": ["Reiz", "Schwelle", "Impuls", "Rauschen", "Aufmerksamkeit"],
+      "hover": "Nicht jeder Reiz wird zum Signal. Erst die Schwelle entscheidet."
+    },
+    {
+      "id": "L02", "name": "NETWORK", "color": "#7a5cff",
+      "tagline": "Verbindungen entstehen",
+      "bio": "Axon, Dendrit, Synapse, Myelin",
+      "machine": "Leiterbahn, Bus, Graph",
+      "human": "Kommunikation: Sprache, Beziehung, Gruppe",
+      "nodes": ["Synapse", "Axon", "Knoten", "Resonanz", "Empathie"],
+      "hover": "Was zusammen feuert, verbindet sich. Bei Neuronen wie bei Menschen."
+    },
+    {
+      "id": "L03", "name": "MEMORY", "color": "#ffc24a",
+      "tagline": "Muster werden gespeichert",
+      "bio": "Plastizität, Hippocampus, DNA als Langzeitspeicher der Evolution",
+      "machine": "Speicher, Gewicht, Cache",
+      "human": "Kultur und Ethik: was eine Gemeinschaft sich merkt",
+      "nodes": ["Muster", "Erinnerung", "Gen", "Ritual", "Wert"],
+      "hover": "Evolution ist Gedächtnis über Generationen. Kultur ist Gedächtnis über Gespräche."
+    },
+    {
+      "id": "L04", "name": "CORE", "color": "#ffffff",
+      "tagline": "Bewusstsein, Energie, Ursprung",
+      "bio": "Integration, Bewusstsein, Leben selbst",
+      "machine": "Prozessorkern, Taktgeber",
+      "human": "Ich und Wir: Sinn, Verantwortung",
+      "nodes": ["Kern", "Feld", "Einheit", "Sinn"],
+      "hover": "You are inside the core. Hier hören Ebenen auf, getrennt zu sein."
+    }
+  ],
+  "orbits": [
+    {"color": "#3ad6ff", "meaning": "Information"},
+    {"color": "#7a5cff", "meaning": "Verbindung"},
+    {"color": "#ffc24a", "meaning": "Erinnerung"},
+    {"color": "#3dff9a", "meaning": "Wachstum / Leben"}
+  ],
+  "links": [
+    ["Impuls", "Synapse", "Ein Signal braucht einen Weg"],
+    ["Resonanz", "Muster", "Wiederholung wird zu Struktur"],
+    ["Empathie", "Wert", "Aus Mitgefühl wird Ethik"],
+    ["Gen", "Kern", "Leben erinnert sich an sich selbst"]
+  ],
+  "ui": {
+    "controls": ["ENERGY FLUX", "ORBIT DENSITY", "CORE SCALE", "EXPAND LAYERS", "ENTER", "REC", "RESET VIEW"],
+    "status": "SYS // NEURABLACKBOX v0.1 · SIGNAL STABLE · LAYERS 4/4",
+    "lensToggle": ["BIO", "MACHINE", "HUMAN"]
+  },
+  "credit": "Konzept: Luca · shivas_ocean"
+}
