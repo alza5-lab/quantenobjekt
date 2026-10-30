@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05020c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sporenwald">
+<title>Sporenwald · Spores Forest · shivas_ocean</title>
+<meta name="description" content="Hör dem Netz zu. Ein begehbarer Nachtwald aus leuchtenden Pilzen und Myzel. Verbinde die zwölf Pilze und weck den Mutterpilz.">
+<meta property="og:title" content="SPORENWALD · Spores Forest">
+<meta property="og:description" content="Hör dem Netz zu. Ein begehbarer Nachtwald aus leuchtenden Pilzen und Myzel. Verbinde die zwölf Pilze und weck den Mutterpilz.">
+<meta property="og:image" content="https://alza5-lab.github.io/quantenobjekt/sporesforest/og.jpg">
+<meta property="og:url" content="https://alza5-lab.github.io/quantenobjekt/sporesforest/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div id="tl" class="panel">
+    <div class="ico360"><svg viewBox="0 0 60 30" width="46" height="23"><text x="30" y="13" text-anchor="middle">360°</text><ellipse cx="30" cy="21" rx="24" ry="5"/><path d="M50 19 l4 2 -4 2"/></svg></div>
+    <div class="ttl">SPOREN<b>WALD</b></div>
+    <div class="sub">SPORES FOREST // WOOD WIDE WEB</div>
+    <div id="lens" class="seg"><button data-lens="bio" class="on">BIO</button><button data-lens="machine">MACHINE</button><button data-lens="mind">MIND</button></div>
+    <div class="netl"><div id="net">NETZ <b>00/12</b> VERBUNDEN</div><div id="dens">SPORENDICHTE: 60 %</div></div>
+    <div id="dots"></div>
+  </div>
+
+  <div id="metrics" class="panel">
+    <div class="mh">MYZEL // LIVE</div>
+    <div class="m"><span>SIGNALE/S</span><i id="mS" class="c-tq">0</i></div>
+    <div class="m"><span>AKTIVE PULSE</span><i id="mH" class="c-au">0</i></div>
+    <div class="m"><span>KNOTEN</span><i id="mK">0</i></div>
+    <div class="m"><span>MYZEL</span><i id="mY">0 m</i></div>
+    <div class="m"><span>FRAGMENTE</span><i id="mF" class="c-mg">00/12</i></div>
+    <div class="m dim"><span>MODUS</span><i id="mM">ORBIT</i></div>
+    <div class="m dim"><span>GRAFIK</span><i id="mQ">ULTRA</i></div>
+  </div>
+
+  <div id="info" class="panel hide">
+    <button id="infoX" aria-label="Schließen">×</button>
+    <div id="iK" class="ik"></div>
+    <div id="iT" class="ih"></div>
+    <div id="iF" class="if"></div>
+    <div class="ilw"><span id="iL" class="il">BIO</span><div id="iX" class="ix"></div></div>
+  </div>
+
+  <div id="whisper" class="hide"><div id="wK"></div><div id="wT"></div></div>
+  <div id="banner" class="hide"><div id="b1"></div><div id="b2"></div></div>
+  <div id="hold" class="hide"><svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="26"/></svg></div>
+  <div id="tip" class="hide"></div>
+
+  <div id="walkui" class="hide"><div id="joy"><div id="knob"></div></div></div>
+
+  <div id="drawer" class="panel hide">
+    <label><span>SPORENDICHTE</span><input id="s_spores" type="range" min="0" max="1" step="0.01" value="0.6"><i id="v_spores"></i></label>
+    <label><span>GLÜHEN</span><input id="s_glow" type="range" min="0.2" max="2" step="0.01" value="1"><i id="v_glow"></i></label>
+    <label><span>WACHSTUM</span><input id="s_growth" type="range" min="0.2" max="1.6" step="0.01" value="1"><i id="v_growth"></i></label>
+    <label><span>NETZSIGNAL</span><input id="s_signal" type="range" min="0" max="1" step="0.01" value="0.5"><i id="v_signal"></i></label>
+    <div class="qrow"><span>GRAFIK</span><div id="qual" class="seg"><button data-q="0">ULTRA</button><button data-q="1">HOCH</button><button data-q="2">MITTEL</button><button data-q="3">NIEDRIG</button></div></div>
+    <div class="qrow"><span>MYZEL</span><button id="bNetReset" class="lbtn">NETZ ZURÜCKSETZEN</button></div>
+  </div>
+
+  <div id="bar">
+    <div id="modes" class="seg"><button data-mode="orbit" class="on">ORBIT</button><button data-mode="walk">BEGEHEN</button><button data-mode="fly">KAMERAFAHRT</button></div>
+    <div id="acts">
+      <button id="bPulse">PULS</button>
+      <button id="bRec"><s></s>REC</button>
+      <button id="bReset">RESET VIEW</button>
+      <button id="bDrawer" aria-label="Regler">≡</button>
+    </div>
+    <div id="hint">TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · WASD / DRAG: BEWEGEN</div>
+    <div id="status">MYZEL // SPORENWALD v0.1</div>
+    <div id="credit">Spores Forest · shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+  <div id="rectime" class="hide">● REC 00:00</div>
+  <div id="toast" class="hide"></div>
+</div>
+
+<div id="start">
+  <div class="kv"></div>
+  <div class="sc">
+    <div class="sl">SPORES FOREST // WOOD WIDE WEB</div>
+    <h1>SPOREN<b>WALD</b></h1>
+    <p id="intro">Hör dem Netz zu.</p>
+    <p class="p2">Ein Nachtwald aus leuchtenden Pilzen. Unter dem Boden wandern Signale durchs Myzel. Weck die zwölf Pilze, hör ihnen zu und verbinde sie, bis der Mutterpilz erwacht.</p>
+    <button id="go" disabled>WALD WÄCHST …</button>
+    <div class="sh">3D · 360° drehbar · begehbar · Kamerafahrt &amp; REC</div>
+    <div class="scr">Konzept: Luca · shivas_ocean</div>
+    <div class="scr2">Spores Forest · shivas_ocean · Luca Matteo Balzano 1991</div>
+  </div>
+</div>
+<noscript>Bitte JavaScript aktivieren.</noscript>
+<script type="module" src="main.js"></script>
+</body>
+</html>
