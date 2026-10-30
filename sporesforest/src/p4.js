@@ -56,6 +56,7 @@ function updateBurst(dt) {
 // ---------------------------------------------------------------- reactions
 function heroWake(i, en) {
   const h = heroes[i]; const was = h.wake; h.wake = Math.max(h.wake, en);
+  if (en > .25 && T - (h.lastSnd || -9) > 1.2) { h.lastSnd = T; SND.wake(i, en); }
   if (en > .25 && T - (h.lastBurst || -9) > .5) { h.lastBurst = T; burst(h.x, h.y + h.sporeY, h.z, h.col, 26 * en + 8, .7 + en * .6); }
 }
 function motherPing(en) { mother.ping = Math.max(mother.ping, en); if (en > .3 && T - (mother.lastBurst || -9) > .6) { mother.lastBurst = T; burst(0, mother.y + 13, 0, C.tq, 30 * en, 1.6); } }
@@ -63,29 +64,29 @@ function bondedSet() { const s = new Set([0]); heroes.forEach(h => { if (h.conne
 function connectHero(i) {
   const h = heroes[i]; if (h.connected) return false;
   const targets = bondedSet(); h.connected = true; G.connected++;
-  bondPath(h.node, targets); hudNet(); toast(`NETZ ${String(G.connected).padStart(2, '0')}/12 VERBUNDEN`);
+  bondPath(h.node, targets); SND.connect(G.connected); hudNet(); toast(`NETZ ${String(G.connected).padStart(2, '0')}/12 VERBUNDEN`);
   if (G.connected === 12) setTimeout(finale, 2200);
   return true;
 }
 function tapHero(i) {
-  const h = heroes[i]; fire(h.node, 1); h.wake = 1.2; h.lastBurst = T; burst(h.x, h.y + h.sporeY, h.z, h.col, 90, 1.6);
+  const h = heroes[i]; h.lastSnd = T; SND.tap(i); fire(h.node, 1); h.wake = 1.2; h.lastBurst = T; burst(h.x, h.y + h.sporeY, h.z, h.col, 90, 1.6);
   connectHero(i); select(i);
 }
 function listenHero(i) {
   const h = heroes[i]; h.listened = true; G.listened.add(i); connectHero(i); fire(h.node, .7); select(i); whisper(h.sem.f, `${SPECIES[h.sem.sp].n} · ${String(i + 1).padStart(2, '0')}`); hudNet();
 }
 function tapMother(listen) {
-  fire(0, 1); burst(0, mother.y + 13, 0, C.tq, 60, 1.8); select(-2);
+  SND.mother(listen); fire(0, 1); burst(0, mother.y + 13, 0, C.tq, 60, 1.8); select(-2);
   if (!G.final) whisper('Noch schläft der Kern. Verbinde die Zwölf.', 'MUTTERPILZ');
   else if (listen) whisper('Der Wald erinnert sich an dich.', 'MUTTERPILZ');
 }
 function tapGround(x, z) {
-  const n = nearestNode(x, z, 8); burst(x, H(x, z) + .3, z, LENS[S.lens].a, 30, .8);
+  SND.ground(x, z); const n = nearestNode(x, z, 8); burst(x, H(x, z) + .3, z, LENS[S.lens].a, 30, .8);
   if (n >= 0) fire(n, .9);
 }
 function finale() {
   if (G.final) return; G.final = true; G.finalT = T; heroes.forEach(h => { if (!h.connected) { h.connected = true; } });
-  G.connected = 12; hudNet(); fire(0, 1.3);
+  G.connected = 12; hudNet(); SND.finale(); fire(0, 1.3);
   banner('MUTTERPILZ ERWACHT', 'DER WALD ERINNERT SICH AN DICH.');
   for (let k = 0; k < 6; k++) setTimeout(() => burst(rr(-3, 3), mother.y + rr(8, 16), rr(-3, 3), pick([C.tq, C.gold, C.mag]), 80, 2.6), k * 260);
 }
@@ -93,7 +94,7 @@ function connectAll() { heroes.forEach((h, i) => { connectHero(i); }); }
 function resetNet() {
   heroes.forEach(h => { h.connected = false; h.listened = false; h.wake = 0; }); G.connected = 0; G.listened.clear(); G.final = false; mother.awake = 0;
   rib.bond.fill(0); bondAttr.needsUpdate = true; edges.forEach(e => e.bond = 0); bondAnims.length = 0; pulses.length = 0; ribMat.uniforms.uSync.value = 0;
-  hudNet(); select(-1); toast('NETZ ZURÜCKGESETZT');
+  hudNet(); select(-1); SND.reset(); toast('NETZ ZURÜCKGESETZT');
 }
 
 // ---------------------------------------------------------------- camera modes
@@ -239,9 +240,9 @@ function heroInView() {
   return best;
 }
 function pulseNow() {
-  if (G.mode === 'walk') { const n = nearestNode(W.x, W.z, 12); fire(n >= 0 ? n : 0, 1); burst(W.x, H(W.x, W.z) + .4, W.z, LENS[S.lens].a, 40, 1.2); }
-  else if (G.sel >= 0) fire(heroes[G.sel].node, 1);
-  else fire(0, 1.1);
+  if (G.mode === 'walk') { SND.ground(W.x, W.z); const n = nearestNode(W.x, W.z, 12); fire(n >= 0 ? n : 0, 1); burst(W.x, H(W.x, W.z) + .4, W.z, LENS[S.lens].a, 40, 1.2); }
+  else if (G.sel >= 0) { SND.ground(heroes[G.sel].x, heroes[G.sel].z); fire(heroes[G.sel].node, 1); }
+  else { SND.ground(0, 6); fire(0, 1.1); }
 }
 // joystick
 {

@@ -1,5 +1,5 @@
 // SPORENWALD / Spores Forest: Service Worker (network-first, eigener Scope ./sporesforest/)
-const CACHE = 'sporesforest-v1';
+const CACHE = 'sporesforest-v2';
 const ASSETS = ['./', './index.html', './main.js', './style.css', './manifest.webmanifest', './keyvisual.jpg', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './lib/geistmono.ttf',
   './lib/three.module.min.js', './lib/addons/postprocessing/EffectComposer.js', './lib/addons/postprocessing/RenderPass.js', './lib/addons/postprocessing/UnrealBloomPass.js',
   './lib/addons/postprocessing/ShaderPass.js', './lib/addons/postprocessing/OutputPass.js', './lib/addons/postprocessing/MaskPass.js', './lib/addons/postprocessing/Pass.js',

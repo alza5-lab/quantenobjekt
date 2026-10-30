@@ -16,14 +16,14 @@ function hudMode() {
   document.querySelectorAll('#modes button').forEach(b => b.classList.toggle('on', b.dataset.mode === G.mode));
   $('mM').textContent = { orbit: 'ORBIT', walk: 'BEGEHEN', fly: 'KAMERAFAHRT' }[G.mode];
   $('walkui').classList.toggle('hide', G.mode !== 'walk' || !IS_TOUCH);
-  $('hint').innerHTML = G.mode === 'walk' ? (IS_TOUCH ? 'TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · JOYSTICK / DRAG: BEWEGEN' : 'TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · WASD / DRAG: BEWEGEN · SHIFT: SCHNELLER') : 'TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · WASD / DRAG: BEWEGEN';
+  $('hint').innerHTML = IS_TOUCH ? (G.mode === 'walk' ? 'TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · JOYSTICK: GEHEN · DRAG: UMSEHEN' : 'TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · DRAG: DREHEN · PINCH: ZOOM') : (G.mode === 'walk' ? 'TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · WASD / DRAG: BEWEGEN · SHIFT: SCHNELLER' : 'TAP: SPOREN FREISETZEN · HALTEN: ZUHÖREN · WASD / DRAG: BEWEGEN');
 }
 function setLens(l) {
   S.lens = l; saveS(); const L = LENS[l];
   ribMat.uniforms.uA.value.copy(L.a); ribMat.uniforms.uB.value.copy(L.b); scene.userData.hyphae.color.copy(L.a);
   document.documentElement.style.setProperty('--acc', L.css);
   document.querySelectorAll('#lens button').forEach(b => b.classList.toggle('on', b.dataset.lens === l));
-  select(G.sel, true);
+  select(G.sel, true); SND.lens();
 }
 function select(i, keep) {
   G.sel = i; const el = $('info');
@@ -46,7 +46,7 @@ function select(i, keep) {
 let whisperTimer = 0;
 function whisper(text, who) {
   const el = $('whisper'); el.classList.remove('hide'); $('wK').textContent = who + ' FLÜSTERT'; const t = $('wT'); t.textContent = '';
-  clearInterval(whisperTimer); let k = 0; const full = `„${text}“`;
+  clearInterval(whisperTimer); let k = 0; const full = `„${text}“`; SND.whisper(text);
   whisperTimer = setInterval(() => { k++; t.textContent = full.slice(0, k); if (k >= full.length) { clearInterval(whisperTimer); whisperTimer = setTimeout(() => el.classList.add('hide'), 5200); } }, 34);
 }
 function banner(a, b) {
@@ -85,31 +85,36 @@ bindSlider('spores', 'spores', x => Math.round(x * 100) + ' %', () => { hudDens(
 bindSlider('glow', 'glow', x => x.toFixed(2), () => { bloom.strength = TIERS[tier].bl * (.65 + .35 * S.glow); });
 let growT = 0;
 bindSlider('growth', 'growth', x => x.toFixed(2), () => { growT = .15; });
+bindSlider('vol', 'vol', x => Math.round(x * 100) + ' %', () => SND.setVol(S.vol));
+function hudSnd() { const b = $('bSnd'); b.textContent = S.snd ? 'TON AN' : 'TON AUS'; b.classList.toggle('on', S.snd); b.setAttribute('aria-pressed', S.snd); $('bVoice').textContent = S.voice ? 'STIMME AN' : 'STIMME AUS'; $('bVoice').classList.toggle('on', S.voice); }
+$('bSnd').onclick = () => { SND.setOn(!S.snd); hudSnd(); toast(S.snd ? 'TON AN' : 'TON AUS'); };
+$('bVoice').onclick = () => { S.voice = !S.voice; saveS(); if (!S.voice && window.speechSynthesis) speechSynthesis.cancel(); hudSnd(); };
+hudSnd();
 bindSlider('signal', 'signal', x => Math.round(x * 100) + ' %', () => { ribMat.uniforms.uSpeed.value = S.signal; });
 
 // ---------------------------------------------------------------- REC
 let rec = null, recChunks = [], recStart = 0, recUrl = null;
-function pickMime() { if (!window.MediaRecorder) return null; const mp4 = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4'], webm = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']; const safari = /^((?!chrome|chromium|android|crios).)*safari/i.test(navigator.userAgent); const c = safari ? [...mp4, ...webm] : [...webm, ...mp4]; for (const m of c) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (_) { } } return ''; }
+function pickMime() { if (!window.MediaRecorder) return null; const mp4 = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4'], webm = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']; const safari = /^((?!chrome|chromium|android|crios).)*safari/i.test(navigator.userAgent); const c = safari ? [...mp4, ...webm] : [...webm, ...mp4]; for (const m of c) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (_) { } } return ''; }
 $('bRec').addEventListener('click', () => {
   if (rec) { try { rec.requestData(); } catch (_) { } rec.stop(); return; }
   const mime = pickMime(); if (mime === null || !canvas.captureStream) { toast('REC WIRD VON DIESEM BROWSER NICHT UNTERSTÜTZT'); return; }
   try {
-    const stream = canvas.captureStream(30); rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 10e6 } : { videoBitsPerSecond: 10e6 }); recChunks = [];
+    if (!SND.ctx) SND.unlock(); window.__recOn = true; const stream = new MediaStream([...canvas.captureStream(30).getVideoTracks(), ...SND.recTracks()]); window.__recAudio = stream.getAudioTracks().length; rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 10e6 } : { videoBitsPerSecond: 10e6 }); recChunks = [];
     const r = rec;
     r.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
     r.onstop = () => {
       const type = r.mimeType || mime || 'video/webm', ext = type.includes('mp4') ? 'mp4' : 'webm', blob = new Blob(recChunks, { type: type.split(';')[0] });
-      rec = null; $('bRec').classList.remove('on');
+      rec = null; window.__recOn = false; $('bRec').classList.remove('on');
       if (!blob.size) { $('rectime').classList.add('hide'); toast('REC: KEINE VIDEODATEN, BITTE LÄNGER AUFNEHMEN'); window.__lastRec = { size: 0, type }; return; }
       if (recUrl) URL.revokeObjectURL(recUrl); recUrl = URL.createObjectURL(blob);
       const name = `sporenwald-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.${ext}`;
       const a = document.createElement('a'); a.href = recUrl; a.download = name; document.body.appendChild(a); a.click(); a.remove();
       $('rectime').innerHTML = `VIDEO ${(blob.size / 1048576).toFixed(1)} MB · ${ext.toUpperCase()}<a href="${recUrl}" download="${name}">SPEICHERN</a>`; $('rectime').classList.remove('hide');
       setTimeout(() => { if (!rec) $('rectime').classList.add('hide'); }, 20000);
-      window.__lastRec = { size: blob.size, type, name };
+      window.__lastRec = { size: blob.size, type, name }; window.__lastRecBlob = blob;
     };
     r.start(500); recStart = performance.now(); $('bRec').classList.add('on'); $('rectime').classList.remove('hide');
-  } catch (err) { rec = null; toast('REC FEHLGESCHLAGEN'); console.warn(err); }
+  } catch (err) { rec = null; window.__recOn = false; toast('REC FEHLGESCHLAGEN'); console.warn(err); }
 });
 
 // ---------------------------------------------------------------- quality + resize
@@ -137,7 +142,7 @@ document.querySelectorAll('#qual button').forEach(b => b.onclick = () => { autoQ
 // ---------------------------------------------------------------- frame
 const fpsWin = []; let lowT = 0, warm = 0, manual = false, lastNow = performance.now();
 function frame(dt) {
-  T += dt; const t = T;
+  T += dt; const t = T; SND.update(dt);
   ribMat.uniforms.uTime.value = t; amb.m.uniforms.uTime.value = t; scene.userData.sky.uniforms.uTime.value = t; scene.userData.stars.uniforms.uTime.value = t; mother.spiral.uniforms.uTime.value = t;
   // ambient network chatter
   const rate = (.25 + S.signal * 2.2 + G.connected * .12) * (G.started ? 1 : .6);
@@ -197,7 +202,7 @@ function loop(now) {
 $('mK').textContent = nodes.length; $('mY').textContent = Math.round(edges.reduce((s, e) => s + e.L, 0)) + ' m';
 function enter() {
   if (G.started) return; G.started = true; $('start').classList.add('out'); setTimeout(() => $('start').classList.add('hide'), 1100);
-  O.idle = 0; toast('HÖR DEM NETZ ZU.'); fire(pathNodes[0].i, 1);
+  SND.unlock(); O.idle = 0; toast('HÖR DEM NETZ ZU.'); fire(pathNodes[0].i, 1);
 }
 $('go').onclick = enter;
 setLens(S.lens); hudNet(); hudDens(); hudMode(); document.body.dataset.mode = G.mode;
@@ -217,6 +222,7 @@ window.__SF = {
   state() { return { tier: TIERS[tier].n, mode: G.mode, connected: G.connected, listened: G.listened.size, final: G.final, pulses: pulses.length, nodes: nodes.length, edges: edges.length, cam: camera.position.toArray().map(v => +v.toFixed(2)), walk: [W.x, W.z].map(v => +v.toFixed(2)), awake: mother.awake, decor: decCap.count }; },
   tapHero, listenHero, tapGround, connectAll, finale, setMode, setLens, resetNet, enter, pulseNow, select,
   setTier(t) { autoQ = false; applyTier(t); },
+  audio() { const c = SND.ctx; return { state: c ? c.state : 'none', nodes: SND.stats.nodes, ev: SND.stats.ev, snd: S.snd, vol: S.vol, recAudio: window.__recAudio || 0 }; },
   photo(px, py, pz, tx, ty, tz, fov) { G.mode = 'photo'; $('tip').classList.add('hide'); camera.position.set(px, py, pz); camera.lookAt(tx, ty, tz); if (fov) { camera.fov = fov; camera.updateProjectionMatrix(); } render(); },
   heroes: () => heroes.map(h => ({ x: h.x, z: h.z, y: h.y, top: h.top, sp: h.sem.sp })),
   key(code, down) { keys[code] = down; },
