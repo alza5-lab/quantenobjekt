@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#02040a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EoR Blueprint 2">
+<title>EYE OF RESONANCE · BLUEPRINT 2 · CONSTRUCTION / STRUCTURE / ARCHITECTURE</title>
+<meta name="description" content="Eye of Resonance, Blueprint 2: A Unified Model of Perception, Consciousness and the Quantum Network. Gravity Point = Axon-Knoten. Interaktives 3D-Objekt, Schicht für Schicht gebaut.">
+<meta property="og:title" content="EYE OF RESONANCE · BLUEPRINT 2">
+<meta property="og:description" content="Gravity Point = Axon-Knoten. One Network. Infinite Possibilities.">
+<meta property="og:image" content="https://alza5-lab.github.io/quantenobjekt/blueprint2/og.jpg">
+<meta property="og:url" content="https://alza5-lab.github.io/quantenobjekt/blueprint2/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div id="frame"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+
+  <header id="top">
+    <div id="ttl"><b>EYE OF RESONANCE</b><span>CONSTRUCTION / STRUCTURE / ARCHITECTURE</span><em>A Unified Model of Perception, Consciousness and the Quantum Network</em></div>
+    <div id="status">GP ONLINE · COHERENCE 0.72 · ENTROPY 0.18 · D3 SPACE · 6/6 LAYERS · H1 STABILITY</div>
+  </header>
+  <div id="ctl">
+    <button id="bSnd" class="on">TON AN</button><button id="bRec"><s></s>REC</button><button id="bBP">SOLID</button><button id="bQ">GRAFIK</button><button id="bView">ANSICHT</button>
+  </div>
+
+  <aside id="pL" class="panel">
+    <div class="ph">STEUERUNG <button class="x" data-close>×</button></div>
+    <section class="sec"><h3>CORE PRINCIPLE</h3><p class="cp"><b>Gravity Point = Axon-Knoten.</b><br>Der zentrale Impulsgeber, der alle Strukturen verbindet.</p></section>
+    <section class="sec"><h3>KEY ELEMENTS</h3>
+      <ul id="keys">
+        <li><button data-el="gp"><i style="--c:#e9d8ff"></i>Gravity Point (Axon)</button></li>
+        <li><button data-el="res"><i style="--c:#ff4fd8"></i>Resonance Core</button></li>
+        <li><button data-el="net"><i style="--c:#c06bff"></i>Neural Network</button></li>
+        <li><button data-el="ring"><i style="--c:#3ad6ff"></i>Quantum Ring</button></li>
+        <li><button data-el="field"><i style="--c:#4a7bff"></i>Field Layer</button></li>
+        <li><button data-el="syn"><i style="--c:#9fe8ff"></i>Synaptic Link</button></li>
+        <li><button data-el="bridge"><i style="--c:#ff8ae6"></i>Harmonic Bridge</button></li>
+        <li><button data-el="lat"><i style="--c:#6f8dff"></i>Quantum Lattice 8³</button></li>
+      </ul>
+    </section>
+    <section class="sec"><h3>DIMENSIONS</h3>
+      <div id="dims"><button data-d="0">D0<small>Point</small></button><button data-d="1">D1<small>Line</small></button><button data-d="2">D2<small>Plane</small></button><button data-d="3" class="on">D3<small>Space</small></button><button data-d="4">4D<small>Theory</small></button></div>
+      <input id="dimR" type="range" min="0" max="4" step="0.01" value="3" aria-label="Dimension">
+    </section>
+    <section class="sec"><h3>ARCHITECTURE LAYERS</h3>
+      <ol id="lays">
+        <li><button data-el="L0"><u>1</u>Core Gravity Point</button></li>
+        <li><button data-el="L1"><u>2</u>Neural Lattice</button></li>
+        <li><button data-el="L2"><u>3</u>Resonance Rings</button></li>
+        <li><button data-el="L3"><u>4</u>Field Expansion</button></li>
+        <li><button data-el="L4"><u>5</u>Awareness Layer</button></li>
+        <li><button data-el="L5"><u>6</u>Universal Interface</button></li>
+      </ol>
+      <div class="seg lb"><button id="bBuild">▶ BAUEN</button><button id="bEx">EXPLODE</button></div>
+    </section>
+    <section class="sec"><h3>CALIBRATIONS (6)</h3>
+      <div id="cals"></div>
+    </section>
+    <section class="sec"><h3>H1 / H2</h3>
+      <div id="hh" class="seg"><button data-h="1" class="on">H1 · Stability</button><button data-h="2">H2 · Adaptation</button></div>
+    </section>
+    <section class="sec"><h3>TECH STACK</h3>
+      <div id="chips"></div><p id="infoT">Antippen für eine kurze Erklärung.</p>
+    </section>
+  </aside>
+
+  <aside id="pR" class="panel">
+    <div class="ph">SYSTEM <button class="x" data-close>×</button></div>
+    <section class="sec"><h3>SYSTEM OVERVIEW</h3>
+      <ul id="sys">
+        <li><button data-sys="self" class="on"><span>Self-Organizing</span><em></em></button></li>
+        <li><button data-sys="multi" class="on"><span>Multi-Dimensional</span><em></em></button></li>
+        <li><button data-sys="learn" class="on"><span>Adaptive Learning</span><em></em></button></li>
+        <li><button data-sys="ethic" class="on"><span>Ethical AI Core</span><em></em></button></li>
+        <li><button data-sys="human" class="on"><span>Human-Centric</span><em></em></button></li>
+      </ul>
+    </section>
+    <section class="sec"><h3>INTERFACES</h3>
+      <ul id="ifx">
+        <li><button data-if="mind"><b>MIND</b><em></em><b>AI</b></button></li>
+        <li><button data-if="brain"><b>BRAIN</b><em></em><b>SYSTEM</b></button></li>
+        <li><button data-if="human" class="r"><b>HUMAN</b><em></em><b>NETWORK</b></button></li>
+        <li><button data-if="real"><b>REALITY</b><em></em><b>SIMULATION</b></button></li>
+        <li><button data-if="eth"><b>ETHICS</b><em></em><b>CONTROL</b></button></li>
+      </ul>
+    </section>
+    <section class="sec"><h3>SYNERGY MATRIX</h3><canvas id="synC" width="300" height="180"></canvas><p class="cap">Consciousness = Connection</p></section>
+    <section class="sec"><h3>NETWORK TOPOLOGY</h3><canvas id="topC" width="300" height="170"></canvas><p class="cap">Ring Topology · Universal Model</p></section>
+  </aside>
+
+  <div id="tip" class="hide"><b id="tipT"></b><span id="tipX"></span></div>
+  <div id="lock" class="hide"><b>RESONANCE LOCK</b><span>One Network. Infinite Possibilities.</span></div>
+  <div id="online" class="hide"><b>SYSTEM ONLINE</b><span>One Network. Infinite Possibilities.</span></div>
+  <div id="build" class="hide"><div id="bbT">LAYER 1/6 · CORE · GRAVITY POINT</div><div id="bbD"><i></i><i></i><i></i><i></i><i></i><i></i></div><div id="bbB"><s id="bbP"></s></div><div class="bbs"><button id="bNext">WEITER ›</button><button id="bSkip">ÜBERSPRINGEN</button></div></div>
+
+  <div id="mid">
+    <button id="bPL" class="mob">STEUERUNG</button>
+    <button id="bFire">IMPULS <small>· GRAVITY POINT</small></button>
+    <button id="bPR" class="mob">SYSTEM</button>
+  </div>
+  <nav id="mods">
+    <button data-m="axon"><img src="lib/m2_axon.jpg" alt=""><b>AXON STRUCTURE</b><small>Multi-Branch Network</small></button>
+    <button data-m="field"><img src="lib/m2_field.jpg" alt=""><b>RESONANCE FIELD</b><small>Frequency Coherence</small></button>
+    <button data-m="growth"><img src="lib/m2_growth.jpg" alt=""><b>GROWTH PATTERN</b><small>Organic Expansion</small></button>
+    <button data-m="stab"><img src="lib/m2_stab.jpg" alt=""><b>DYNAMIC STABILITY</b><small>Balance &amp; Adaptation</small></button>
+    <button data-m="gal"><img src="lib/m2_gal.jpg" alt=""><b>INFINITE POTENTIAL</b><small>Beyond Limits</small></button>
+  </nav>
+  <footer id="foot"><span class="tag">One Network. Infinite Possibilities</span><span id="hint">DRAG: DREHEN · PINCH: ZOOM · TAP: AST FEUERT</span><span class="cr">Konzept: Luca Matteo Balzano 1991 · shivas_ocean · JDZ / LMB • v4.0 • 2026</span></footer>
+  <div id="rectime" class="hide">● REC 00:00</div>
+  <div id="toast" class="hide"></div>
+</div>
+
+<div id="start">
+  <div class="kv"></div>
+  <div class="sc">
+    <div class="sl">A UNIFIED MODEL OF PERCEPTION, CONSCIOUSNESS AND THE QUANTUM NETWORK</div>
+    <h1>EYE OF RESONANCE</h1>
+    <div class="ms">BLUEPRINT 2 · CONSTRUCTION / STRUCTURE / ARCHITECTURE</div>
+    <p class="p2"><b>Gravity Point = Axon-Knoten.</b><br>Der zentrale Impulsgeber, der alle Strukturen verbindet. BAUEN setzt das Objekt Schicht für Schicht zusammen, vom ersten Lichtpunkt bis zum Universal Interface. ERKUNDEN zeigt es fertig.</p>
+    <div class="gos"><button id="go" disabled>SYSTEM LÄDT …</button><button id="go2" disabled>…</button></div>
+    <p class="snd">MIT TON · IPHONE: STUMMSCHALTER AUS</p>
+    <div class="scr2">Konzept: Luca Matteo Balzano 1991 · shivas_ocean<br>JDZ / LMB • v4.0 • 2026</div>
+  </div>
+</div>
+<noscript>Bitte JavaScript aktivieren.</noscript>
+<script type="module" src="main.js"></script>
+</body>
+</html>
