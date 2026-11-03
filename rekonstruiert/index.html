@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="REKONSTRUIERT">
+<title>REKONSTRUIERT</title>
+<meta name="description" content="REKONSTRUIERT · 9 Ströme · 1 Kern. Luca Matteo Balzano 1991 · shivas_ocean">
+<meta property="og:title" content="REKONSTRUIERT">
+<meta property="og:description" content="9 Ströme · 1 Kern">
+<meta property="og:image" content="https://alza5-lab.github.io/quantenobjekt/rekonstruiert/og.jpg">
+<meta property="og:url" content="https://alza5-lab.github.io/quantenobjekt/rekonstruiert/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div id="ttl">REKONSTRUIERT</div>
+  <div id="ctl"><button id="bSnd" class="on">TON AN</button><button id="bRec"><s></s>REC</button><button id="bSet" aria-label="Regler">≡</button></div>
+  <div id="set">
+    <label><span>PULS</span><input id="sP" type="range" min="30" max="140" step="1"><b id="sPv"></b></label>
+    <label><span>WIRBEL</span><input id="sW" type="range" min=".2" max="2.4" step=".01"><b id="sWv"></b></label>
+    <label><span>KOHÄRENZ</span><input id="sK" type="range" min="0" max="1" step=".01"><b id="sKv"></b></label>
+    <label><span>DICHTE</span><input id="sD" type="range" min=".15" max="1" step=".01"><b id="sDv"></b></label>
+    <div class="row"><button id="bAuf">AUFBAU</button><button id="bBang">◎</button><button id="bQ">GRAFIK</button></div>
+  </div>
+  <div id="dots"></div>
+  <div id="stat">9/9 · 0.00</div>
+  <div id="cred"><span>Luca Matteo Balzano 1991</span><i> · </i><span>shivas_ocean</span></div>
+  <div id="toast" class="hide"></div>
+  <div id="rectime" class="hide"></div>
+</div>
+<div id="start">
+  <div class="in">
+    <h1>REKONSTRUIERT</h1>
+    <p class="sub">9 → 1</p>
+    <div class="go"><button id="goA" disabled>AUFBAU</button><button id="goF" disabled>FREI</button></div>
+    <p class="hint">MIT TON · IPHONE: STUMMSCHALTER AUS</p>
+  </div>
+  <p class="cr">Luca Matteo Balzano 1991<br>shivas_ocean</p>
+</div>
+<noscript>JavaScript erforderlich.</noscript>
+<script type="module" src="main.js"></script>
+</body>
+</html>
